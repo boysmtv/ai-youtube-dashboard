@@ -1,0 +1,5 @@
+.git
+.ai-agent
+**/node_modules
+**/.next
+**/out

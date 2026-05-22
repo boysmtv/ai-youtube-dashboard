@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube Automation Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./config.js"></script>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">AI YouTube Dashboard</p>
+        <h1>Control plane for the 24/7 engine.</h1>
+        <p class="hero-copy">This dashboard reads and writes the engine registry, shows live worker activity, and triggers scheduler or worker runs without touching code.</p>
+      </div>
+      <form id="connection-form" class="engine-card">
+        <label for="engine-url">Engine API URL</label>
+        <div class="engine-row">
+          <input id="engine-url" name="engineUrl" type="url" placeholder="http://localhost:8080" required>
+          <button type="submit">Connect</button>
+        </div>
+        <p id="connection-status" class="status-line">Waiting for engine connection.</p>
+      </form>
+    </header>
+
+    <main class="dashboard-grid">
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Overview</h2>
+          <button id="refresh-overview" type="button">Refresh</button>
+        </div>
+        <div id="overview-cards" class="metric-grid"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Controls</h2>
+        </div>
+        <div class="control-grid">
+          <button id="create-jobs" type="button">Create Next Jobs</button>
+          <button id="run-worker" type="button">Run Worker Once</button>
+        </div>
+        <label class="inline-option">
+          <input id="enable-upload" type="checkbox">
+          <span>Enable real upload when running worker</span>
+        </label>
+        <div class="approval-guard">
+          <label for="upload-approval-text">Approval Phrase</label>
+          <input id="upload-approval-text" type="text" autocomplete="off" placeholder="Type the engine confirmation text">
+          <label for="upload-operator-name">Operator Name</label>
+          <input id="upload-operator-name" type="text" autocomplete="off" placeholder="Who is authorizing this live upload">
+          <label for="upload-approval-reason">Approval Reason</label>
+          <input id="upload-approval-reason" type="text" autocomplete="off" placeholder="Why this live upload is being approved">
+          <p id="upload-approval-status" class="status-line">Real upload is locked until approval is confirmed.</p>
+        </div>
+      </section>
+
+      <section class="panel panel-wide">
+        <div class="panel-head">
+          <h2>Live Jobs</h2>
+          <div class="filters-row">
+            <select id="job-filter-status">
+              <option value="">All Statuses</option>
+              <option value="queued">Queued</option>
+              <option value="searching">Searching</option>
+              <option value="downloaded">Downloaded</option>
+              <option value="transcribed">Transcribed</option>
+              <option value="planned">Planned</option>
+              <option value="voiceover">Voiceover</option>
+              <option value="rendered">Rendered</option>
+              <option value="uploading">Uploading</option>
+              <option value="uploaded">Uploaded</option>
+              <option value="failed">Failed</option>
+            </select>
+            <select id="job-filter-channel">
+              <option value="">All Channels</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Channel</th>
+                <th>Publish</th>
+                <th>Status</th>
+                <th>Retry</th>
+                <th>Error</th>
+              </tr>
+            </thead>
+            <tbody id="jobs-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel panel-wide">
+        <div class="panel-head">
+          <h2>Job Detail</h2>
+          <div class="detail-head-actions">
+            <p id="job-detail-title" class="status-line">Select a job row to inspect its manifest and artifacts.</p>
+            <div class="button-row">
+              <button id="job-retry-upload" type="button">Retry Upload Only</button>
+              <button id="job-requeue" type="button">Requeue Selected Job</button>
+              <button id="job-run" type="button">Run Selected Job</button>
+            </div>
+          </div>
+        </div>
+        <div id="job-detail-empty" class="detail-empty">No job selected.</div>
+        <div id="job-detail-content" class="detail-grid hidden">
+          <article class="detail-card">
+            <h3>Summary</h3>
+            <dl id="job-detail-summary" class="detail-list"></dl>
+          </article>
+          <article class="detail-card">
+            <h3>Stage Attempts</h3>
+            <ul id="job-detail-attempts" class="activity-list compact-list"></ul>
+          </article>
+          <article class="detail-card">
+            <h3>Artifacts</h3>
+            <ul id="job-detail-artifacts" class="activity-list compact-list"></ul>
+          </article>
+          <article class="detail-card">
+            <h3>Uploads</h3>
+            <ul id="job-detail-uploads" class="activity-list compact-list"></ul>
+          </article>
+          <article class="detail-card">
+            <h3>Approval Audit</h3>
+            <ul id="job-detail-approvals" class="activity-list compact-list"></ul>
+          </article>
+          <article class="detail-card detail-card-wide">
+            <h3>Runtime Log</h3>
+            <ul id="job-detail-events" class="activity-list compact-list"></ul>
+          </article>
+          <article class="detail-card detail-card-wide">
+            <h3>Manifest</h3>
+            <pre id="job-detail-manifest" class="manifest-view"></pre>
+          </article>
+          <article class="detail-card detail-card-wide">
+            <p id="job-action-status" class="status-line">Select a job to enable operator actions.</p>
+          </article>
+          <article class="detail-card detail-card-wide">
+            <div class="panel-head">
+              <h3>File Inspector</h3>
+              <div class="button-row">
+                <button id="job-file-transcript" type="button">Transcript</button>
+                <button id="job-file-plan" type="button">Plan</button>
+              </div>
+            </div>
+            <p id="job-file-status" class="status-line">Select a file to inspect.</p>
+            <pre id="job-file-content" class="manifest-view"></pre>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Recent Attempts</h2>
+        </div>
+        <ul id="attempts-list" class="activity-list"></ul>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Runtime Events</h2>
+        </div>
+        <ul id="events-list" class="activity-list"></ul>
+      </section>
+
+      <section class="panel panel-wide">
+        <div class="panel-head">
+          <h2>Approval Audit</h2>
+          <button id="refresh-approvals" type="button">Refresh</button>
+        </div>
+        <p class="panel-copy">Persistent live-upload approval records from the engine database.</p>
+        <ul id="approval-audit-list" class="activity-list approval-audit-list"></ul>
+      </section>
+
+      <section class="panel panel-wide">
+        <div class="panel-head">
+          <h2>Registry Editor</h2>
+          <div class="button-row">
+            <button id="load-registry" type="button">Load</button>
+            <button id="save-registry" type="button">Save</button>
+          </div>
+        </div>
+        <p class="panel-copy">Everything remains synchronized by editing the same JSON registry the engine uses.</p>
+        <textarea id="registry-editor" spellcheck="false"></textarea>
+      </section>
+    </main>
+  </div>
+
+  <script src="./app.js" defer></script>
+</body>
+</html>

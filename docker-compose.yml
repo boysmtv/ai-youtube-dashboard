@@ -1,0 +1,34 @@
+services:
+  youtube-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ai-youtube-dashboard:local
+    container_name: ai-youtube-dashboard
+    restart: unless-stopped
+    ports:
+      - "${DASHBOARD_PORT:-8088}:80"
+
+  youtube-dashboard-next:
+    build:
+      context: ./dashboard-next
+      dockerfile: Dockerfile
+    image: ai-youtube-dashboard-next:local
+    container_name: ai-youtube-dashboard-next
+    restart: unless-stopped
+    environment:
+      ENGINE_API_BASE_URL: "${ENGINE_API_BASE_URL:-http://host.docker.internal:8080}"
+      NEXT_PUBLIC_ENGINE_API_BASE_URL: "${NEXT_PUBLIC_ENGINE_API_BASE_URL:-http://localhost:8080}"
+      ENGINE_SYNC_STATE_VIEW: "${ENGINE_SYNC_STATE_VIEW:-default}"
+      ENGINE_SYNC_WEBSOCKET_ENABLED: "${ENGINE_SYNC_WEBSOCKET_ENABLED:-1}"
+      ENGINE_SYNC_POLLING_INTERVAL_MS: "${ENGINE_SYNC_POLLING_INTERVAL_MS:-15000}"
+      DASHBOARD_AUTH_ENABLED: "${DASHBOARD_AUTH_ENABLED:-0}"
+      DASHBOARD_AUTH_SECRET: "${DASHBOARD_AUTH_SECRET:-}"
+      DASHBOARD_VIEWER_USERNAME: "${DASHBOARD_VIEWER_USERNAME:-}"
+      DASHBOARD_VIEWER_PASSWORD: "${DASHBOARD_VIEWER_PASSWORD:-}"
+      DASHBOARD_OPERATOR_USERNAME: "${DASHBOARD_OPERATOR_USERNAME:-}"
+      DASHBOARD_OPERATOR_PASSWORD: "${DASHBOARD_OPERATOR_PASSWORD:-}"
+      DASHBOARD_ADMIN_USERNAME: "${DASHBOARD_ADMIN_USERNAME:-}"
+      DASHBOARD_ADMIN_PASSWORD: "${DASHBOARD_ADMIN_PASSWORD:-}"
+    ports:
+      - "${NEXT_DASHBOARD_PORT:-3001}:3000"

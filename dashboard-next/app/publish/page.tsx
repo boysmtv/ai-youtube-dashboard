@@ -14,7 +14,7 @@ export default async function PublishPage() {
       <header className="ta-panel p-6">
         <p className="ta-label text-warning-700">Publish Center</p>
         <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900">Ready items waiting for publish.</h2>
-        <p className="mt-4 max-w-2xl text-gray-500">This page only shows items ready for manual approval and push. YouTube is active now; TikTok follows the same lane when the adapter is ready.</p>
+        <p className="mt-4 max-w-2xl text-gray-500">This page only shows items ready for manual approval and push. YouTube and TikTok are both available when their channel config is enabled and the asset is ready.</p>
         <div className="mt-5 grid gap-3 sm:grid-cols-3">
           <div className="rounded-xl bg-gray-900 p-4 text-white">
             <p className="font-mono text-xs uppercase tracking-[0.14em] text-white/60">Ready</p>

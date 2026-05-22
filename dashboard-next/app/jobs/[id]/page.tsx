@@ -108,15 +108,38 @@ function StageBadge({ state }: Readonly<{ state: JobTimelinePayload["stages"][nu
 }
 
 function PublishPill({ status }: Readonly<{ status: string }>) {
+  const normalized = status.toLowerCase();
   const tone =
-    status === "uploaded"
+    normalized === "uploaded" || normalized === "draft_ready" || normalized === "published"
       ? "bg-success-50 text-success-700"
-      : status === "ready"
+      : normalized === "ready" || normalized === "configured"
         ? "bg-brand-50 text-brand-700"
-        : status === "adapter_missing"
+        : normalized === "adapter_missing" || normalized === "not_configured" || normalized === "token_missing"
           ? "bg-gray-100 text-gray-700"
-          : "bg-warning-50 text-warning-700";
+          : normalized === "processing" || normalized === "pending"
+            ? "bg-warning-50 text-warning-700"
+            : normalized === "failed"
+              ? "bg-error-50 text-error-700"
+            : "bg-warning-50 text-warning-700";
   return <span className={`ta-status font-mono ${tone}`}>{status}</span>;
+}
+
+function deriveTikTokSurfaceState(tiktok: PublishStatePayload["tiktok"]) {
+  const message = `${tiktok.message || ""} ${tiktok.status_reason || ""} ${tiktok.error_message || ""}`.toLowerCase();
+  const status = tiktok.status.toLowerCase();
+  if (!tiktok.available && (status === "adapter_missing" || message.includes("not configured"))) {
+    return "not_configured";
+  }
+  if (message.includes("token is missing") || message.includes("token missing") || message.includes("invalid")) {
+    return "token_missing";
+  }
+  if (tiktok.manual_push_available) {
+    return status;
+  }
+  if (tiktok.available) {
+    return status === "pending" ? "configured" : status;
+  }
+  return status;
 }
 
 function EmptyState({ label }: Readonly<{ label: string }>) {
@@ -183,6 +206,9 @@ function PublishButtonGroup({
 }>) {
   const youtubeReady = publishState.youtube.manual_push_available;
   const tiktokReady = publishState.tiktok.manual_push_available;
+  const tiktokState = publishState.tiktok.status.toLowerCase();
+  const tiktokSurfaceState = deriveTikTokSurfaceState(publishState.tiktok);
+  const tiktokMessage = publishState.tiktok.message || publishState.tiktok.status_reason || publishState.tiktok.error_message || "Not set";
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
@@ -240,13 +266,20 @@ function PublishButtonGroup({
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="ta-label">TikTok</p>
-              <strong className="mt-1 block text-gray-900">Secondary publish path</strong>
+              <strong className="mt-1 block text-gray-900">Publish lane</strong>
             </div>
-            <PublishPill status={publishState.tiktok.status} />
+            <PublishPill status={tiktokSurfaceState} />
           </div>
           <div className="mt-4 space-y-3 text-sm text-gray-700">
+            <DetailRow label="Configured" value={publishState.tiktok.available ? "Yes" : "No"} />
             <DetailRow label="Ready to push" value={tiktokReady ? "Yes" : "No"} />
-            <DetailRow label="Message" value={publishState.tiktok.message} />
+            <DetailRow label="State" value={publishState.tiktok.status} />
+            <DetailRow label="Gate" value={tiktokSurfaceState} />
+            <DetailRow label="Mode" value={publishState.tiktok.publish_mode || "Not set"} />
+            <DetailRow label="Transfer" value={publishState.tiktok.transfer_method || "Not set"} />
+            <DetailRow label="Publish ID" value={publishState.tiktok.publish_id || "Pending"} />
+            <DetailRow label="Post ID" value={publishState.tiktok.post_id || "Pending"} />
+            <DetailRow label="Reason" value={tiktokMessage} />
           </div>
           {tiktokReady ? (
             <form action={pushTiktokDashboardJob} className="mt-4 grid gap-3">
@@ -269,11 +302,19 @@ function PublishButtonGroup({
               </ConfirmSubmitButton>
             </form>
           ) : (
-            <button type="button" disabled className="mt-4 rounded-xl border border-dashed border-gray-200 bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-400">
-              Push to TikTok
-            </button>
+            <div className="mt-4 rounded-xl border border-dashed border-gray-200 bg-gray-50 p-3 text-sm text-gray-500">
+              {publishState.tiktok.available ? "TikTok is configured but this item is not ready for manual push yet." : "TikTok is not configured for this channel."}
+            </div>
           )}
-          <p className="mt-3 text-xs text-gray-500">{tiktokReady ? "TikTok push is available from this lane." : "TikTok push is reserved for the next adapter pass."}</p>
+          <p className="mt-3 text-xs text-gray-500">
+            {tiktokReady
+              ? "TikTok push is available from this lane."
+              : tiktokState === "token_missing"
+                ? "TikTok token is missing or invalid."
+                : publishState.tiktok.available
+                  ? "TikTok is configured, but the current state is still blocked."
+                  : "TikTok publish is not enabled for this channel."}
+          </p>
         </div>
       </div>
     </div>
@@ -307,6 +348,7 @@ export default async function JobDetailPage({
   const outputSpeed = metrics.download_speed_mbps !== null ? `${metrics.download_speed_mbps.toFixed(3)} Mbps` : "Not set";
   const progress = `${timeline.progress_percent.toFixed(0)}%`;
   const currentStage = timeline.current_stage || job.status;
+  const tiktokSurfaceState = deriveTikTokSurfaceState(publishState.tiktok);
 
   return (
     <AppShell>
@@ -444,6 +486,12 @@ export default async function JobDetailPage({
           <div className="mt-4 space-y-3">
             <DetailRow label="YouTube" value={publishState.youtube.status} />
             <DetailRow label="TikTok" value={publishState.tiktok.status} />
+            <DetailRow label="TikTok gate" value={tiktokSurfaceState} />
+            <DetailRow label="TikTok mode" value={publishState.tiktok.publish_mode || "Not set"} />
+            <DetailRow label="TikTok transfer" value={publishState.tiktok.transfer_method || "Not set"} />
+            <DetailRow label="TikTok publish ID" value={publishState.tiktok.publish_id || "Pending"} />
+            <DetailRow label="TikTok post ID" value={publishState.tiktok.post_id || "Pending"} />
+            <DetailRow label="TikTok reason" value={publishState.tiktok.status_reason || publishState.tiktok.message} />
             <DetailRow label="Ready to push" value={publishState.ready_to_push ? "Yes" : "No"} />
             <DetailRow label="Output size" value={outputSize} />
             <DetailRow label="Queue count" value={formatNumber(metrics.queue_count)} />

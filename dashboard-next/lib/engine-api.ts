@@ -16,6 +16,7 @@ import type {
   OverviewPayload,
   ManualPushPayload,
   ManualPushResult,
+  PublishHistoryPayload,
   PublishStatePayload,
   RegistryPayload,
   RuntimeHealthPayload,
@@ -139,6 +140,10 @@ export function engineArtifactDownloadUrl(jobId: number, artifactId: number) {
 
 export async function getRecentApprovals(limit = 30) {
   return fetchEngine<ListPayload<ApprovalAudit>>(`/api/approvals/recent?limit=${limit}`);
+}
+
+export async function getPublishHistory(limit = 50) {
+  return fetchEngine<PublishHistoryPayload>(`/api/publish/history?limit=${limit}`);
 }
 
 export async function getRecentLogs(limit = 100) {

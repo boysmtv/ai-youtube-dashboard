@@ -458,6 +458,33 @@ export type ManualPushResult = {
   manifest_status?: string;
 };
 
+export type PublishHistoryItem = {
+  platform: "youtube" | "tiktok";
+  record_id: number;
+  job_id: number;
+  channel_id: string;
+  job_status: string;
+  status: string;
+  privacy_status?: string | null;
+  publish_at?: string | null;
+  youtube_video_id?: string | null;
+  youtube_url?: string | null;
+  tiktok_publish_id?: string | null;
+  tiktok_post_id?: string | null;
+  publish_mode?: string | null;
+  transfer_method?: string | null;
+  error_message?: string | null;
+  created_at: string;
+};
+
+export type PublishHistoryPayload = {
+  generated_at: string;
+  total: number;
+  platform_counts: Record<string, number>;
+  status_counts: Record<string, number>;
+  items: PublishHistoryItem[];
+};
+
 export type ArtifactIndexItem = {
   job: JobRecord;
   manifest_status: string;

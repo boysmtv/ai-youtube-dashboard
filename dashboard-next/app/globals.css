@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --font-outfit: "Outfit";
+  --font-mono: "IBM Plex Mono";
+}
+
+body {
+  margin: 0;
+  color: #101828;
+  background: #f9fafb;
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: #e4e7ec;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  input,
+  select,
+  textarea {
+    @apply rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm outline-none transition placeholder:text-gray-500 focus:border-brand-500 focus:shadow-focus;
+  }
+
+  button {
+    @apply transition;
+  }
+}
+
+@layer components {
+  .ta-panel {
+    @apply rounded-2xl border border-gray-200 bg-white shadow-panel;
+  }
+
+  .ta-panel-soft {
+    @apply rounded-2xl border border-gray-200 bg-gray-25 shadow-panel;
+  }
+
+  .ta-label {
+    @apply font-mono text-xs font-semibold uppercase tracking-[0.16em] text-gray-500;
+  }
+
+  .ta-button-primary {
+    @apply inline-flex items-center justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-600 focus:shadow-focus;
+  }
+
+  .ta-button-muted {
+    @apply inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50;
+  }
+
+  .ta-input {
+    @apply w-full;
+  }
+
+  .ta-status {
+    @apply inline-flex rounded-full px-2.5 py-1 text-xs font-medium;
+  }
+
+  .ta-empty {
+    @apply rounded-xl border border-dashed border-gray-300 bg-gray-50 p-5 text-sm text-gray-500;
+  }
+
+  .ta-check {
+    @apply h-4 w-4 rounded border-gray-300 text-brand-500 focus:shadow-focus;
+  }
+}

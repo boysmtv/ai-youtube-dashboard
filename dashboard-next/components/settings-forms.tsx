@@ -7,16 +7,18 @@ function Field({
   name,
   defaultValue,
   type = "text",
+  step,
 }: Readonly<{
   label: string;
   name: string;
   defaultValue: string | number;
   type?: string;
+  step?: string;
 }>) {
   return (
     <label className="grid gap-2 text-sm font-semibold text-gray-700">
       {label}
-      <input name={name} type={type} defaultValue={defaultValue} />
+      <input name={name} type={type} step={step} defaultValue={defaultValue} />
     </label>
   );
 }
@@ -119,6 +121,34 @@ export function ChannelSettingsForms({ registry }: Readonly<{ registry: Registry
               <Field label="Token path" name="token_path" defaultValue={channel.token_path} />
               <Field label="Publish slots CSV" name="publish_slots" defaultValue={channel.publish_slots.join(",")} />
               <Field label="Curated sources path" name="curated_sources_path" defaultValue={channel.curated_sources_path} />
+            </div>
+            <div className="mt-5 rounded-xl border border-gray-200 bg-white p-4">
+              <p className="ta-label text-brand-600">TikTok publish</p>
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <Field label="Access token path" name="tiktok_access_token_path" defaultValue={channel.tiktok_publish.access_token_path} />
+                <Field label="Access token env" name="tiktok_access_token_env" defaultValue={channel.tiktok_publish.access_token_env} />
+                <Field label="Transfer method" name="tiktok_transfer_method" defaultValue={channel.tiktok_publish.transfer_method} />
+                <Field label="Verified URL" name="tiktok_verified_url" defaultValue={channel.tiktok_publish.verified_url} />
+                <Field label="Publish mode" name="tiktok_publish_mode" defaultValue={channel.tiktok_publish.publish_mode} />
+                <Field
+                  label="Status poll attempts"
+                  name="tiktok_status_poll_attempts"
+                  type="number"
+                  defaultValue={channel.tiktok_publish.status_poll_attempts}
+                />
+                <Field
+                  label="Status poll delay seconds"
+                  name="tiktok_status_poll_delay_seconds"
+                  type="number"
+                  step="0.1"
+                  defaultValue={channel.tiktok_publish.status_poll_delay_seconds}
+                />
+                <Field label="Chunk size MB" name="tiktok_chunk_size_mb" type="number" defaultValue={channel.tiktok_publish.chunk_size_mb} />
+              </div>
+              <label className="mt-4 flex items-center gap-2 text-sm font-semibold text-gray-700">
+                <input className="ta-check" name="tiktok_enabled" type="checkbox" defaultChecked={channel.tiktok_publish.enabled} />
+                TikTok enabled
+              </label>
             </div>
             <div className="mt-4 flex flex-wrap gap-4 text-sm font-semibold text-gray-700">
               <label className="flex items-center gap-2">

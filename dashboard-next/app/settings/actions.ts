@@ -14,6 +14,11 @@ function intValue(formData: FormData, key: string, fallback: number) {
   return Number.isFinite(value) ? value : fallback;
 }
 
+function floatValue(formData: FormData, key: string, fallback: number) {
+  const value = Number.parseFloat(text(formData, key, String(fallback)));
+  return Number.isFinite(value) ? value : fallback;
+}
+
 function checked(formData: FormData, key: string) {
   return formData.get(key) === "on" || formData.get(key) === "true";
 }
@@ -114,6 +119,23 @@ export async function saveChannelSettings(formData: FormData) {
   channel.curated_sources_path = text(formData, "curated_sources_path", channel.curated_sources_path);
   channel.publish_slots = csv(text(formData, "publish_slots", channel.publish_slots.join(",")));
   channel.enabled = checked(formData, "enabled");
+  channel.tiktok_publish.enabled = checked(formData, "tiktok_enabled");
+  channel.tiktok_publish.access_token_path = text(formData, "tiktok_access_token_path", channel.tiktok_publish.access_token_path);
+  channel.tiktok_publish.access_token_env = text(formData, "tiktok_access_token_env", channel.tiktok_publish.access_token_env);
+  channel.tiktok_publish.transfer_method = text(formData, "tiktok_transfer_method", channel.tiktok_publish.transfer_method);
+  channel.tiktok_publish.verified_url = text(formData, "tiktok_verified_url", channel.tiktok_publish.verified_url);
+  channel.tiktok_publish.publish_mode = text(formData, "tiktok_publish_mode", channel.tiktok_publish.publish_mode);
+  channel.tiktok_publish.status_poll_attempts = intValue(
+    formData,
+    "tiktok_status_poll_attempts",
+    channel.tiktok_publish.status_poll_attempts,
+  );
+  channel.tiktok_publish.status_poll_delay_seconds = floatValue(
+    formData,
+    "tiktok_status_poll_delay_seconds",
+    channel.tiktok_publish.status_poll_delay_seconds,
+  );
+  channel.tiktok_publish.chunk_size_mb = intValue(formData, "tiktok_chunk_size_mb", channel.tiktok_publish.chunk_size_mb);
   channel.upload_preflight.require_client_secret = checked(formData, "require_client_secret");
   channel.upload_preflight.require_token = checked(formData, "require_token");
   channel.upload_preflight.require_curated_sources = checked(formData, "require_curated_sources");

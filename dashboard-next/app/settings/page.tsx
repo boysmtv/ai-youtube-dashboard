@@ -46,6 +46,10 @@ export default async function SettingsPage() {
           <strong className="mt-2 block text-lg text-gray-900">{registry.channels.filter((item) => item.enabled).length}/{registry.channels.length}</strong>
         </div>
         <div className="ta-panel p-4">
+          <p className="ta-label">TikTok</p>
+          <strong className="mt-2 block text-lg text-gray-900">{registry.channels.filter((item) => item.tiktok_publish?.enabled).length} enabled</strong>
+        </div>
+        <div className="ta-panel p-4">
           <p className="ta-label">Upload Guard</p>
           <strong className="mt-2 block text-lg text-gray-900">{registry.upload_approval.enabled ? "Enabled" : "Disabled"}</strong>
         </div>
@@ -110,6 +114,14 @@ export default async function SettingsPage() {
                   </div>
                   <div className="mt-1 font-mono text-xs text-gray-500">
                     {channel.id} niche={channel.niche} slots={(channel.publish_slots.length ? channel.publish_slots : registry.default_publish_slots).join(",")}
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                    <span className="ta-status bg-brand-50 font-mono text-brand-600">
+                      TikTok {channel.tiktok_publish.enabled ? "enabled" : "disabled"}
+                    </span>
+                    <span className="ta-status bg-gray-100 font-mono text-gray-700">
+                      mode={channel.tiktok_publish.publish_mode} transfer={channel.tiktok_publish.transfer_method}
+                    </span>
                   </div>
                 </div>
               ))}

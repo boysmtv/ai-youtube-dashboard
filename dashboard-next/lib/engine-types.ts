@@ -134,6 +134,7 @@ export type ChannelConfig = {
   publish_slots: string[];
   enabled: boolean;
   placeholder: boolean;
+  tiktok_publish: TikTokPublishConfig;
   upload_preflight: {
     require_client_secret: boolean;
     require_token: boolean;
@@ -143,6 +144,18 @@ export type ChannelConfig = {
     auto_bootstrap_allowed: boolean;
   };
   retention?: RetentionPolicy | null;
+};
+
+export type TikTokPublishConfig = {
+  enabled: boolean;
+  access_token_path: string;
+  access_token_env: string;
+  transfer_method: "FILE_UPLOAD" | "PULL_FROM_URL" | string;
+  verified_url: string;
+  publish_mode: "draft" | "direct" | string;
+  status_poll_attempts: number;
+  status_poll_delay_seconds: number;
+  chunk_size_mb: number;
 };
 
 export type RetentionPolicy = {
@@ -375,6 +388,12 @@ export type PublishStatePayload = {
     status: string;
     manual_push_available: boolean;
     message: string;
+    publish_mode?: string | null;
+    transfer_method?: string | null;
+    publish_id?: string | null;
+    post_id?: string | null;
+    status_reason?: string | null;
+    error_message?: string | null;
   };
   actions: PublishActionLink[];
   latest_upload: UploadRecord | null;
@@ -426,6 +445,11 @@ export type ManualPushResult = {
   generated_at: string;
   job_id: number;
   status: string;
+  publish_id?: string | null;
+  post_id?: string | null;
+  status_reason?: string | null;
+  transfer_method?: string;
+  publish_mode?: string;
   youtube_video_id?: string | null;
   youtube_url?: string | null;
   privacy_status?: string;

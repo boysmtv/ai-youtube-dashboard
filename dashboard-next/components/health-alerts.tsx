@@ -78,6 +78,14 @@ export function HealthAlerts({
               <p className="mt-3 text-sm text-gray-700">
                 {item.issues.length ? item.issues.join(", ") : "ready"}
               </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Link className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100" href="/channels">
+                  Open channels
+                </Link>
+                <Link className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50" href="/settings">
+                  Fix settings
+                </Link>
+              </div>
             </div>
           ))
         ) : (

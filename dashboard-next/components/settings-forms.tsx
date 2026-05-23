@@ -101,7 +101,7 @@ export function ChannelSettingsForms({ registry }: Readonly<{ registry: Registry
       <h3 className="mt-2 text-lg font-semibold text-gray-900">Channels</h3>
       <div className="mt-5 space-y-4">
         {registry.channels.map((channel) => (
-          <form key={channel.id} action={saveChannelSettings} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+          <form key={channel.id} id={`settings-${channel.id}`} action={saveChannelSettings} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <input name="channel_id" type="hidden" value={channel.id} />

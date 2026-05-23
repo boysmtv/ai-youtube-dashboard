@@ -45,7 +45,7 @@ export function ChannelGrid({
       </div>
       <div className="mt-5 grid gap-4 xl:grid-cols-2">
         {registry.channels.map((channel) => (
-          <article key={channel.id} className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+          <article key={channel.id} id={`channel-${channel.id}`} className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
             {(() => {
               const item = readinessByChannel.get(channel.id);
               const issues = item?.issues || [];

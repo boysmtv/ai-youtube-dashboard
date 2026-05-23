@@ -17,6 +17,23 @@ function summarizeIssues(issues: string[]) {
   return "blocked";
 }
 
+function shortcutLabel(issues: string[]) {
+  if (issues.includes("missing_token") || issues.includes("missing_client_secret")) {
+    return "Fix settings";
+  }
+  if (issues.includes("oauth_validation_failed")) {
+    return "Open channels";
+  }
+  return "Open channels";
+}
+
+function shortcutHref(channelId: string, issues: string[]) {
+  if (issues.includes("missing_token") || issues.includes("missing_client_secret")) {
+    return `/settings#settings-${channelId}`;
+  }
+  return `/channels#channel-${channelId}`;
+}
+
 export function HealthAlerts({
   readiness,
 }: Readonly<{
@@ -79,11 +96,11 @@ export function HealthAlerts({
                 {item.issues.length ? item.issues.join(", ") : "ready"}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
-                <Link className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100" href="/channels">
-                  Open channels
+                <Link className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100" href={shortcutHref(item.channel_id, item.issues)}>
+                  {shortcutLabel(item.issues)}
                 </Link>
-                <Link className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50" href="/settings">
-                  Fix settings
+                <Link className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50" href={`/channels#channel-${item.channel_id}`}>
+                  Open channel
                 </Link>
               </div>
             </div>

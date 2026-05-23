@@ -25,10 +25,10 @@ export default async function SettingsPage() {
   return (
     <AppShell>
       <header className="ta-panel p-6">
-        <p className="ta-label text-brand-600">Engine Registry</p>
-        <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900 lg:text-5xl">Automation settings.</h2>
+        <p className="ta-label text-brand-600">Pengaturan</p>
+        <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900 lg:text-5xl">Pengaturan channel dan engine.</h2>
         <p className="mt-4 max-w-3xl text-gray-500">
-          This page edits the database-backed engine registry through <span className="font-mono">GET/PUT /api/registry</span>. It replaces manual file edits while keeping every engine parameter available.
+          Gunakan form aman dulu. Edit JSON mentah hanya jika ada parameter yang belum tercover. Perubahan tetap disimpan ke registry database.
         </p>
       </header>
 
@@ -274,35 +274,53 @@ export default async function SettingsPage() {
           </div>
         </div>
 
-        <form action={saveRegistrySettings} className="ta-panel p-5">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <p className="ta-label text-brand-600">Editable Source</p>
-              <h3 className="mt-2 text-lg font-semibold text-gray-900">Registry JSON</h3>
-              <p className="mt-2 max-w-xl text-sm text-gray-500">
-                Advanced mode. Use the safe forms first; edit JSON only when a field is not covered yet. Engine validation runs before saving.
-              </p>
+        <details className="ta-panel p-5">
+          <summary className="cursor-pointer list-none">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="ta-label text-brand-600">Mode lanjutan</p>
+                <h3 className="mt-2 text-lg font-semibold text-gray-900">Registry JSON</h3>
+                <p className="mt-2 max-w-xl text-sm text-gray-500">
+                  Dibuka hanya jika perlu. Form aman di atas adalah jalur utama untuk kebanyakan perubahan.
+                </p>
+              </div>
+              <span className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-semibold text-gray-700">Tutup / buka</span>
             </div>
-            <ConfirmSubmitButton className="px-5 py-3 text-sm" message="Save the raw registry JSON? This can affect all channels and workers.">
-              Save registry
-            </ConfirmSubmitButton>
-          </div>
-          <textarea
-            name="registry_json"
-            defaultValue={registryJson}
-            spellCheck={false}
-            className="mt-5 min-h-[720px] w-full rounded-xl border border-gray-700 bg-gray-900 p-4 font-mono text-xs leading-relaxed text-white outline-none focus:shadow-focus"
-          />
-        </form>
+          </summary>
+          <form action={saveRegistrySettings} className="mt-5">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="ta-label text-brand-600">Editable Source</p>
+                <h3 className="mt-2 text-lg font-semibold text-gray-900">Registry JSON</h3>
+                <p className="mt-2 max-w-xl text-sm text-gray-500">
+                  Advanced mode. Use the safe forms first; edit JSON only when a field is not covered yet. Engine validation runs before saving.
+                </p>
+              </div>
+              <ConfirmSubmitButton className="px-5 py-3 text-sm" message="Save the raw registry JSON? This can affect all channels and workers.">
+                Save registry
+              </ConfirmSubmitButton>
+            </div>
+            <textarea
+              name="registry_json"
+              defaultValue={registryJson}
+              spellCheck={false}
+              className="mt-5 min-h-[720px] w-full rounded-xl border border-gray-700 bg-gray-900 p-4 font-mono text-xs leading-relaxed text-white outline-none focus:shadow-focus"
+            />
+          </form>
+        </details>
       </section>
 
-      <section className="ta-panel mt-6 p-5">
-        <p className="ta-label text-brand-600">Current Raw Payload</p>
-        <h3 className="mt-2 text-lg font-semibold text-gray-900">Read-only preview</h3>
+      <details className="ta-panel mt-6 p-5">
+        <summary className="cursor-pointer list-none">
+          <div>
+            <p className="ta-label text-brand-600">Pratinjau lanjutan</p>
+            <h3 className="mt-2 text-lg font-semibold text-gray-900">Read-only preview</h3>
+          </div>
+        </summary>
         <div className="mt-4">
           <JsonPreview value={registry} />
         </div>
-      </section>
+      </details>
     </AppShell>
   );
 }

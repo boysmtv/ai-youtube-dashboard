@@ -17,13 +17,13 @@ export function JobTable({ jobs, canOperate = true }: Readonly<{ jobs: JobRecord
         <table className="w-full border-collapse text-left text-sm">
           <thead className="bg-gray-50 text-gray-500">
             <tr>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">Item</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">Video</th>
               <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">Channel</th>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">Publish</th>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">Progress</th>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">Retries</th>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">Blocker</th>
-              {canOperate ? <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">Actions</th> : null}
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">Jadwal</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">Status</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">Percobaan</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">Penghambat</th>
+              {canOperate ? <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">Aksi</th> : null}
             </tr>
           </thead>
           <tbody>
@@ -36,7 +36,7 @@ export function JobTable({ jobs, canOperate = true }: Readonly<{ jobs: JobRecord
                   <div className="mt-2 space-y-1">
                     <p className="max-w-sm truncate text-xs text-gray-500">{job.selected_title || "Judul belum dipilih"}</p>
                     <p className="text-xs text-gray-500">
-                      {job.viral_score !== null && job.viral_score !== undefined ? `Skor viral ${job.viral_score}` : "Skor viral belum tersedia"}
+                      {job.viral_score !== null && job.viral_score !== undefined ? `Skor potensi viral ${job.viral_score}` : "Skor potensi viral belum tersedia"}
                     </p>
                   </div>
                 </td>
@@ -44,6 +44,10 @@ export function JobTable({ jobs, canOperate = true }: Readonly<{ jobs: JobRecord
                 <td className="px-4 py-3 font-mono text-xs text-gray-500">{job.publish_at}</td>
                 <td className="px-4 py-3">
                   <StatusBadge status={job.status} />
+                  <p className="mt-2 text-xs text-gray-500">
+                    {job.current_stage ? `Tahap ${job.current_stage}` : "Tahap belum tersedia"}
+                    {job.progress_percent !== null && job.progress_percent !== undefined ? ` / ${job.progress_percent.toFixed(0)}%` : ""}
+                  </p>
                 </td>
                 <td className="px-4 py-3">{job.retry_count}</td>
                 <td className="max-w-md px-4 py-3 text-gray-500">{job.last_error || ""}</td>
@@ -55,7 +59,7 @@ export function JobTable({ jobs, canOperate = true }: Readonly<{ jobs: JobRecord
                           <input name="job_id" type="hidden" value={job.id} />
                           <input name="max_retries" type="hidden" value="3" />
                           <ConfirmSubmitButton message={`Run job #${job.id}? Upload stays disabled unless approval parameters allow it.`} pendingText="Running...">
-                            Launch
+                            Proses
                           </ConfirmSubmitButton>
                         </form>
                       ) : null}
@@ -63,7 +67,7 @@ export function JobTable({ jobs, canOperate = true }: Readonly<{ jobs: JobRecord
                         <form action={pauseDashboardJob}>
                           <input name="job_id" type="hidden" value={job.id} />
                           <ConfirmSubmitButton message={`Pause job #${job.id}?`} tone="warning" pendingText="Pausing...">
-                            Pause
+                            Jeda
                           </ConfirmSubmitButton>
                         </form>
                       ) : null}
@@ -71,7 +75,7 @@ export function JobTable({ jobs, canOperate = true }: Readonly<{ jobs: JobRecord
                         <form action={resumeDashboardJob}>
                           <input name="job_id" type="hidden" value={job.id} />
                           <ConfirmSubmitButton message={`Resume job #${job.id}?`} tone="success" pendingText="Resuming...">
-                            Resume
+                            Lanjut
                           </ConfirmSubmitButton>
                         </form>
                       ) : null}
@@ -79,7 +83,7 @@ export function JobTable({ jobs, canOperate = true }: Readonly<{ jobs: JobRecord
                         <form action={requeueDashboardJob}>
                           <input name="job_id" type="hidden" value={job.id} />
                           <ConfirmSubmitButton message={`Requeue job #${job.id}? This may create another processing attempt.`} tone="muted" pendingText="Requeueing...">
-                            Retry
+                            Coba lagi
                           </ConfirmSubmitButton>
                         </form>
                       ) : null}
@@ -87,7 +91,7 @@ export function JobTable({ jobs, canOperate = true }: Readonly<{ jobs: JobRecord
                         <form action={cancelDashboardJob}>
                           <input name="job_id" type="hidden" value={job.id} />
                           <ConfirmSubmitButton message={`Cancel job #${job.id}?`} tone="danger" pendingText="Cancelling...">
-                            Stop
+                            Batalkan
                           </ConfirmSubmitButton>
                         </form>
                       ) : null}

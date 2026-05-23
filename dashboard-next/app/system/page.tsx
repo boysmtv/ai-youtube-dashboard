@@ -15,10 +15,10 @@ export default async function SystemPage() {
   return (
     <AppShell>
       <header className="ta-panel p-6">
-        <p className="ta-label text-brand-600">System</p>
-        <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900">Worker, scheduler, storage, and quota control.</h2>
+        <p className="ta-label text-brand-600">Admin / System</p>
+        <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900">Kontrol runtime dan infrastruktur.</h2>
         <p className="mt-4 max-w-3xl text-gray-500">
-          This layer is for runtime capacity and infrastructure policy rather than channel or content decisions.
+          Halaman ini khusus admin untuk kapasitas, recovery, dan policy runtime. Bukan untuk keputusan konten harian.
         </p>
       </header>
 

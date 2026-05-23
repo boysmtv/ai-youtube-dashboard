@@ -10,10 +10,10 @@ export default async function LogsPage() {
   return (
     <AppShell>
       <header className="ta-panel p-6">
-        <p className="ta-label text-brand-600">Logs</p>
-        <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900">Recent engine logs.</h2>
+        <p className="ta-label text-brand-600">Admin / Logs</p>
+        <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900">Log teknis terbaru.</h2>
         <p className="mt-4 max-w-2xl text-gray-500">
-          Compact log view for operations. Full historical log storage should stay in host-mounted volumes or external observability.
+          Tampilan teknis untuk admin. Operator normal tidak perlu membuka halaman ini saat produksi harian.
         </p>
       </header>
 

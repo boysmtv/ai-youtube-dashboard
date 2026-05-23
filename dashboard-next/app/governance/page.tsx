@@ -12,10 +12,10 @@ export default async function GovernancePage() {
   return (
     <AppShell>
       <header className="ta-panel p-6">
-        <p className="ta-label text-brand-600">Governance</p>
-        <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900">Who changed what, and how recovery is protected.</h2>
+        <p className="ta-label text-brand-600">Admin / Governance</p>
+        <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900">Audit akses dan pemulihan.</h2>
         <p className="mt-4 max-w-3xl text-gray-500">
-          Governance covers role access, approval audit, and backup control for destructive or recovery actions.
+          Halaman ini untuk audit approval, role access, dan backup recovery. Bukan bagian dari alur bisnis harian.
         </p>
       </header>
 

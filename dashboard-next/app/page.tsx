@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AppShell } from "../components/app-shell";
 import { ApprovalList } from "../components/approval-list";
 import { ChannelGrid } from "../components/channel-grid";
@@ -32,6 +33,14 @@ export default async function DashboardPage() {
   const tiktokHistory = publishHistory.items.filter((item) => item.platform === "tiktok");
   const tiktokPublished = tiktokHistory.filter((item) => ["published", "draft_ready", "uploaded"].includes(item.status)).length;
   const tiktokFailed = tiktokHistory.filter((item) => item.status === "failed" || Boolean(item.error_message)).length;
+  const recommendedAction =
+    queued > 0
+      ? { href: "/queue", label: "Buat Video Baru", description: "Ada antrian siap dikerjakan." }
+      : readyToPublish > 0
+        ? { href: "/publish", label: "Review & Upload", description: "Ada video yang siap direview." }
+        : activeCount > 0
+          ? { href: "/queue", label: "Lihat Antrian", description: "Proses sedang berjalan." }
+          : { href: "/queue#create-video", label: "Buat Video Baru", description: "Belum ada beban kerja aktif." };
 
   return (
     <AppShell>
@@ -39,25 +48,45 @@ export default async function DashboardPage() {
         <p className="ta-label text-brand-600">Business cockpit overview</p>
         <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 className="max-w-4xl text-4xl font-bold leading-none text-gray-900 lg:text-5xl">Business cockpit for short-form production.</h2>
-            <p className="mt-4 max-w-2xl text-gray-500">Use this screen to see what is queued, what is ready, what is published, and what needs attention.</p>
+            <h2 className="max-w-4xl text-4xl font-bold leading-none text-gray-900 lg:text-5xl">Dashboard produksi untuk YouTube Shorts dan TikTok.</h2>
+            <p className="mt-4 max-w-2xl text-gray-500">Lihat apa yang masih antri, sedang diproses, siap direview, butuh persetujuan, sudah published, atau gagal.</p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Link className="ta-button" href={recommendedAction.href}>
+              {recommendedAction.label}
+            </Link>
+            <Link className="ta-button-muted" href="/publish">
+              Review & Upload
+            </Link>
+          </div>
+        </div>
+        <div className="mt-5 rounded-2xl border border-brand-100 bg-brand-25 p-4">
+          <p className="ta-label text-brand-600">Tindakan berikutnya</p>
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">{recommendedAction.label}</h3>
+              <p className="text-sm text-gray-500">{recommendedAction.description}</p>
+            </div>
+            <Link className="ta-button" href={recommendedAction.href}>
+              Buka
+            </Link>
           </div>
         </div>
       </header>
 
       <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <MetricCard label="Queued" value={queued} />
-        <MetricCard label="In progress" value={activeCount} />
-        <MetricCard label="Ready to publish" value={readyToPublish} tone={readyToPublish > 0 ? "warn" : "neutral"} />
+        <MetricCard label="Antrian" value={queued} />
+        <MetricCard label="Sedang diproses" value={activeCount} />
+        <MetricCard label="Siap direview" value={readyToPublish} tone={readyToPublish > 0 ? "warn" : "neutral"} />
         <MetricCard label="Published" value={published} tone="good" />
-        <MetricCard label="Blocked / failed" value={blocked} tone={blocked > 0 ? "warn" : "neutral"} />
+        <MetricCard label="Gagal" value={blocked} tone={blocked > 0 ? "warn" : "neutral"} />
       </section>
 
       <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="TikTok enabled" value={tiktokEnabled} tone={tiktokEnabled > 0 ? "good" : "neutral"} />
-        <MetricCard label="TikTok token missing" value={tiktokTokenMissing} tone={tiktokTokenMissing > 0 ? "warn" : "good"} />
+        <MetricCard label="TikTok aktif" value={tiktokEnabled} tone={tiktokEnabled > 0 ? "good" : "neutral"} />
+        <MetricCard label="TikTok token hilang" value={tiktokTokenMissing} tone={tiktokTokenMissing > 0 ? "warn" : "good"} />
         <MetricCard label="TikTok published" value={tiktokPublished} tone="good" />
-        <MetricCard label="TikTok failed" value={tiktokFailed} tone={tiktokFailed > 0 ? "warn" : "neutral"} />
+        <MetricCard label="TikTok gagal" value={tiktokFailed} tone={tiktokFailed > 0 ? "warn" : "neutral"} />
       </section>
 
       <section className="mt-6">
@@ -75,13 +104,13 @@ export default async function DashboardPage() {
       <section className="mt-6 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <div>
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Publish history</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Riwayat publish</h3>
             <span className="font-mono text-xs text-gray-500">{overview.generated_at}</span>
           </div>
           <PublishHistoryTable history={publishHistory} limitLabel="Recent publish history" />
         </div>
         <div>
-          <h3 className="mb-3 text-lg font-semibold text-gray-900">Production queue</h3>
+          <h3 className="mb-3 text-lg font-semibold text-gray-900">Recent jobs</h3>
           <JobTable jobs={overview.jobs.slice(0, 8)} canOperate={canOperate} />
           <h3 className="mb-3 mt-6 text-lg font-semibold text-gray-900">Publish approvals and operator audit</h3>
           <ApprovalList approvals={approvals.items} />

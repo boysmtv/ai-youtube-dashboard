@@ -117,24 +117,24 @@ export function JobRealtimePanel({ initial, syncSettings }: Readonly<{ initial: 
     <section className="ta-panel p-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="ta-label text-brand-600">Realtime job feed</p>
-          <h3 className="mt-2 text-lg font-semibold text-gray-900">Pipeline state for job #{payload.job.id}</h3>
-          <p className="mt-2 text-sm text-gray-500">This panel updates automatically from the engine websocket for stage progress and recent activity.</p>
+          <p className="ta-label text-brand-600">Aktivitas produksi</p>
+          <h3 className="mt-2 text-lg font-semibold text-gray-900">Status job #{payload.job.id}</h3>
+          <p className="mt-2 text-sm text-gray-500">Panel ini memperbarui tahap kerja, progres, dan aktivitas terbaru secara otomatis.</p>
         </div>
         <span className={`ta-status font-mono ${status === "live" || status === "polling" ? "bg-success-50 text-success-700" : "bg-warning-50 text-warning-700"}`}>{status}</span>
       </div>
 
       <div className="mt-5 rounded-xl border border-gray-200 bg-gray-50 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="ta-label">Current stage</p>
-            <strong className="mt-2 block text-lg text-gray-900">{payload.current_stage || payload.job.current_stage || payload.job.status}</strong>
-          </div>
-          <div className="text-right">
-            <p className="ta-label">Progress</p>
-            <strong className="mt-2 block text-lg text-gray-900">{Number(payload.progress_percent ?? payload.job.progress_percent ?? 0).toFixed(0)}%</strong>
-          </div>
+        <div>
+          <p className="ta-label">Tahap saat ini</p>
+          <strong className="mt-2 block text-lg text-gray-900">{payload.current_stage || payload.job.current_stage || payload.job.status}</strong>
         </div>
+        <div className="text-right">
+          <p className="ta-label">Progres</p>
+          <strong className="mt-2 block text-lg text-gray-900">{Number(payload.progress_percent ?? payload.job.progress_percent ?? 0).toFixed(0)}%</strong>
+        </div>
+      </div>
         <div className="mt-3 h-3 rounded-full bg-white">
           <div
             className="h-3 rounded-full bg-brand-500 transition-all"
@@ -150,33 +150,33 @@ export function JobRealtimePanel({ initial, syncSettings }: Readonly<{ initial: 
 
       <div className="mt-5 grid gap-4 md:grid-cols-4">
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-          <p className="ta-label">Status</p>
+          <p className="ta-label">Status produksi</p>
           <div className="mt-2"><StatusBadge status={payload.job.status} /></div>
         </div>
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-          <p className="ta-label">Attempts</p>
+          <p className="ta-label">Percobaan</p>
           <strong className="mt-2 block text-2xl text-gray-900">{payload.attempts.length}</strong>
         </div>
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-          <p className="ta-label">Artifacts</p>
+          <p className="ta-label">File hasil</p>
           <strong className="mt-2 block text-2xl text-gray-900">{payload.artifacts.length}</strong>
         </div>
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-          <p className="ta-label">Uploads</p>
+          <p className="ta-label">Upload</p>
           <strong className="mt-2 block text-2xl text-gray-900">{payload.uploads.length}</strong>
         </div>
       </div>
 
       <div className="mt-5 grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-          <p className="ta-label">Latest attempts</p>
+          <p className="ta-label">Riwayat tahap</p>
           <div className="mt-3 space-y-3">
             {payload.attempts.slice(0, 4).map((attempt) => (
-              <div key={attempt.id} className="rounded-lg border border-gray-200 bg-white p-3">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <strong className="text-sm text-gray-900">{attempt.stage}</strong>
-                  <StatusBadge status={attempt.status} />
-                </div>
+                <div key={attempt.id} className="rounded-lg border border-gray-200 bg-white p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <strong className="text-sm text-gray-900">{attempt.stage}</strong>
+                    <StatusBadge status={attempt.status} />
+                  </div>
                 <p className="mt-2 font-mono text-xs text-gray-500">{attempt.started_at} to {attempt.finished_at || "open"}</p>
               </div>
             ))}
@@ -184,7 +184,7 @@ export function JobRealtimePanel({ initial, syncSettings }: Readonly<{ initial: 
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-          <p className="ta-label">Latest activity</p>
+          <p className="ta-label">Aktivitas terbaru</p>
           <div className="mt-3 space-y-3">
             {activityFeed.slice(0, 6).map((item, index) => {
               const event = item as Record<string, unknown>;

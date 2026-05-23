@@ -83,7 +83,7 @@ export function UploadApprovalPanel({
     <div className="ta-panel p-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="ta-label text-brand-600">Ready items</p>
+          <p className="ta-label text-brand-600">Butuh persetujuan</p>
           <h3 className="mt-2 text-lg font-semibold text-gray-900">{title}</h3>
         </div>
         <span className="ta-status bg-warning-50 font-mono text-warning-700">{items.length} item(s)</span>
@@ -107,7 +107,7 @@ export function UploadApprovalPanel({
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <span className="ta-status bg-white text-gray-700">{item.selected_title || "Judul belum dipilih"}</span>
-                  <span className="ta-status bg-gray-900 text-white">Skor viral {item.viral_score ?? "Not set"}</span>
+                  <span className="ta-status bg-gray-900 text-white">Skor potensi viral {item.viral_score ?? "Not set"}</span>
                 </div>
               </div>
 

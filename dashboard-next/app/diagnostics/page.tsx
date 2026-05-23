@@ -10,10 +10,10 @@ export default async function DiagnosticsPage() {
   return (
     <AppShell>
       <header className="ta-panel p-6">
-        <p className="ta-label text-brand-600">Diagnostics</p>
-        <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900">Deep runtime inspection.</h2>
+        <p className="ta-label text-brand-600">Admin / Diagnostics</p>
+        <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900">Pemeriksaan runtime tingkat lanjut.</h2>
         <p className="mt-4 max-w-3xl text-gray-500">
-          This page stays technical on purpose: recent events, raw runtime payloads, and troubleshooting context.
+          Halaman ini sengaja teknis untuk troubleshooting admin. Tidak dipakai dalam alur bisnis harian.
         </p>
       </header>
 

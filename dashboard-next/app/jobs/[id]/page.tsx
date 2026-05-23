@@ -230,7 +230,7 @@ function FileCard({
     <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="ta-label text-brand-600">Working file</p>
+          <p className="ta-label text-brand-600">File proses</p>
           <h4 className="mt-1 text-base font-semibold text-gray-900">{title}</h4>
         </div>
         {file && href ? <DownloadLink href={href} label="Download" /> : null}
@@ -268,7 +268,7 @@ function PublishButtonGroup({
     <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="ta-label text-brand-600">Publish center</p>
+          <p className="ta-label text-brand-600">Review & Upload</p>
           <h4 className="mt-1 text-base font-semibold text-gray-900">Manual push</h4>
         </div>
         <PublishPill status={publishState.youtube.status} />
@@ -279,7 +279,7 @@ function PublishButtonGroup({
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="ta-label">YouTube</p>
-              <strong className="mt-1 block text-gray-900">Active publish path</strong>
+              <strong className="mt-1 block text-gray-900">Jalur upload aktif</strong>
             </div>
             <PublishPill status={youtubeReady ? "ready" : publishState.youtube.status} />
           </div>
@@ -323,7 +323,7 @@ function PublishButtonGroup({
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="ta-label">TikTok</p>
-              <strong className="mt-1 block text-gray-900">Publish lane</strong>
+              <strong className="mt-1 block text-gray-900">Lane TikTok</strong>
             </div>
             <PublishPill status={tiktokSurfaceState} />
           </div>
@@ -449,86 +449,111 @@ export default async function JobDetailPage({
     <AppShell>
       <header className="ta-panel p-6">
         <Link className="ta-label text-brand-600 underline-offset-4 hover:underline" href="/jobs">
-          Back to jobs
+          Kembali ke antrian
         </Link>
         <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 className="text-4xl font-bold leading-none text-gray-900 lg:text-5xl">Job #{job.id}</h2>
-            <p className="mt-3 max-w-3xl text-gray-500">Business view for source intake, stage progress, output size, and manual publish control.</p>
+            <h2 className="text-4xl font-bold leading-none text-gray-900 lg:text-5xl">Video #{job.id}</h2>
+            <p className="mt-3 max-w-3xl text-gray-500">Lembar produksi untuk sumber, progres tahap, hasil video, dan upload manual.</p>
           </div>
           <StatusBadge status={job.status} />
         </div>
       </header>
 
       <section className="mt-6 grid gap-4 md:grid-cols-3 xl:grid-cols-6">
-        <MetricCard label="Current stage" value={currentStage} note={`Progress ${progress}`} tone={progressValue >= 80 ? "good" : "warn"} />
-        <MetricCard label="Source size" value={sourceSize} note={sourceManifest?.title ? String(sourceManifest.title) : "Source video"} />
-        <MetricCard label="Output size" value={outputSize} note={`Ratio ${sizeRatio}`} tone={metrics.output_size_bytes > 0 ? "good" : "neutral"} />
-        <MetricCard label="Download speed" value={outputSpeed} note={metrics.download_duration_seconds ? formatSeconds(metrics.download_duration_seconds) : "Not set"} />
-        <MetricCard label="Queue" value={metrics.queue_count ? formatNumber(metrics.queue_count) : "0"} note={metrics.queue_position ? `Position ${metrics.queue_position}` : "Ready lane"} />
-        <MetricCard label="Viral fit" value={metrics.viral_fit_score !== null ? formatNumber(metrics.viral_fit_score) : "Not set"} note={metrics.quality_score_overall !== null ? `Quality ${metrics.quality_score_overall}` : "Plan score"} tone={(metrics.viral_fit_score || 0) >= 80 ? "good" : "warn"} />
+        <MetricCard label="Tahap saat ini" value={currentStage} note={`Progres ${progress}`} tone={progressValue >= 80 ? "good" : "warn"} />
+        <MetricCard label="Ukuran sumber" value={sourceSize} note={sourceManifest?.title ? String(sourceManifest.title) : "Video sumber"} />
+        <MetricCard label="Ukuran hasil" value={outputSize} note={`Ratio ${sizeRatio}`} tone={metrics.output_size_bytes > 0 ? "good" : "neutral"} />
+        <MetricCard label="Kecepatan unduh" value={outputSpeed} note={metrics.download_duration_seconds ? formatSeconds(metrics.download_duration_seconds) : "Not set"} />
+        <MetricCard label="Antrian" value={metrics.queue_count ? formatNumber(metrics.queue_count) : "0"} note={metrics.queue_position ? `Posisi ${metrics.queue_position}` : "Siap diproses"} />
+        <MetricCard label="Skor potensi viral" value={metrics.viral_fit_score !== null ? formatNumber(metrics.viral_fit_score) : "Not set"} note={metrics.quality_score_overall !== null ? `Quality ${metrics.quality_score_overall}` : "Plan score"} tone={(metrics.viral_fit_score || 0) >= 80 ? "good" : "warn"} />
       </section>
 
       {lastError ? (
         <section className="mt-6 rounded-2xl border border-error-200 bg-error-50 p-4 text-sm text-error-700">
-          <strong className="block text-base">Failure reason</strong>
+        <strong className="block text-base">Alasan gagal</strong>
           <p className="mt-2">{lastError}</p>
         </section>
       ) : null}
 
-      <section className="mt-6 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+      <section className="mt-6 grid gap-6 xl:grid-cols-[1.02fr_0.98fr]">
         <div className="ta-panel p-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="ta-label text-brand-600">Pipeline snapshot</p>
-              <h3 className="mt-2 text-lg font-semibold text-gray-900">Source to publish</h3>
-            </div>
-            <PublishPill status={publishState.youtube.status} />
-          </div>
-          <div className="mt-5 space-y-3">
-            {timeline.stages.map((stage) => (
-              <div key={stage.key} className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <strong className="text-sm text-gray-900">{stage.label}</strong>
-                    <p className="mt-1 text-xs text-gray-500">
-                      Attempts: {stage.attempt_count} {stage.duration_seconds !== null && stage.duration_seconds !== undefined ? `- ${formatSeconds(stage.duration_seconds)}` : ""}
-                    </p>
+          <p className="ta-label text-brand-600">Lihat hasil video</p>
+          <h3 className="mt-2 text-lg font-semibold text-gray-900">File final siap review</h3>
+          <div className="mt-4 space-y-4">
+            {finalResult ? (
+              finalResult.available && previewUrl && previewArtifact ? (
+                <>
+                  <div className="overflow-hidden rounded-2xl border border-gray-200 bg-black">
+                    <video className="aspect-[9/16] w-full bg-black" controls playsInline preload="metadata" src={previewUrl} />
                   </div>
-                  <StageBadge state={stage.state} />
+                  <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="ta-label text-brand-600">Final video</p>
+                        <h4 className="mt-1 text-base font-semibold text-gray-900">{previewArtifact.file_name}</h4>
+                      </div>
+                      {downloadUrl && previewArtifact.artifact_id ? (
+                        <DownloadLink href={downloadUrl} label="Download" />
+                      ) : null}
+                    </div>
+                    <div className="mt-4 space-y-3">
+                      <ResultMetaRow label="File name" value={previewArtifact.file_name} />
+                      <ResultMetaRow label="Size" value={formatBytes(previewArtifact.size_bytes)} />
+                      <ResultMetaRow
+                        label="Resolution"
+                        value={previewArtifact.width && previewArtifact.height ? `${formatDimension(previewArtifact.width)} Ã— ${formatDimension(previewArtifact.height)}` : "Not set"}
+                      />
+                      <ResultMetaRow label="Duration" value={formatDuration(previewArtifact.duration_seconds)} />
+                      <ResultMetaRow label="Created" value={previewArtifact.created_at || "Not set"} />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-5 text-sm text-gray-600">
+                  <strong className="block text-base text-gray-900">{finalResult.message}</strong>
+                  <p className="mt-2">
+                    {finalResult.status === "failed"
+                      ? "Video gagal dibuat. Lihat ringkasan error dan activity feed di atas."
+                      : finalResult.status === "rendered" || finalResult.status === "uploaded"
+                        ? "File hasil tidak ditemukan. Output mungkin sudah dibersihkan atau belum tersedia di folder output."
+                        : "Video masih diproses. Preview akan muncul setelah render selesai."}
+                  </p>
                 </div>
-                <div className="mt-3 h-2 rounded-full bg-white">
-                  <div
-                    className={`h-2 rounded-full ${
-                      stage.state === "done"
-                        ? "bg-success-500"
-                        : stage.state === "current"
-                          ? "bg-brand-500"
-                          : stage.state === "failed"
-                            ? "bg-error-500"
-                            : "bg-gray-300"
-                    }`}
-                    style={{ width: stage.state === "done" ? "100%" : stage.state === "current" ? "65%" : stage.state === "failed" ? "100%" : "0%" }}
-                  />
-                </div>
-                {stage.error_message ? <p className="mt-3 text-sm text-error-700">{stage.error_message}</p> : null}
+              )
+            ) : (
+              <EmptyState label={finalResultMessage} />
+            )}
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+              <p className="ta-label text-brand-600">Final artifact list</p>
+              <div className="mt-4 space-y-3">
+                {finalArtifacts.map((artifact, index) => (
+                  <div key={`${artifact.kind}-${index}`} className="rounded-xl border border-gray-200 bg-white p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <strong className="text-sm text-gray-900">{artifact.platform || artifact.kind}</strong>
+                        <p className="mt-1 text-xs text-gray-500">{artifact.file_name}</p>
+                      </div>
+                      {artifact.artifact_id ? (
+                        <DownloadLink href={engineArtifactDownloadUrl(job.id, artifact.artifact_id)} label="Download" />
+                      ) : null}
+                    </div>
+                    <div className="mt-3 space-y-2 text-sm text-gray-700">
+                      <ResultMetaRow label="Size" value={formatBytes(artifact.size_bytes)} />
+                      <ResultMetaRow
+                        label="Resolution"
+                        value={artifact.width && artifact.height ? `${formatDimension(artifact.width)} Ã— ${formatDimension(artifact.height)}` : "Not set"}
+                      />
+                      <ResultMetaRow label="Duration" value={formatDuration(artifact.duration_seconds)} />
+                      <ResultMetaRow label="Created" value={artifact.created_at || "Not set"} />
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
         </div>
 
-        <PublishButtonGroup jobId={job.id} uploadGuard={overview.upload_guard} publishState={publishState} />
-      </section>
-
-      <section className="mt-6">
-        <UploadApprovalPanel items={[publishQueueItem]} uploadGuard={overview.upload_guard} title="Butuh persetujuan" />
-      </section>
-
-      <section className="mt-6">
-        <JobRealtimePanel initial={detail} syncSettings={syncSettings} />
-      </section>
-
-      <section className="mt-6 grid gap-6 xl:grid-cols-[1.02fr_0.98fr]">
         <div className="ta-panel p-5">
           <p className="ta-label text-brand-600">Judul terbaik</p>
           <h3 className="mt-2 text-lg font-semibold text-gray-900">{job.selected_title || "Belum ada judul terpilih"}</h3>
@@ -564,45 +589,96 @@ export default async function JobDetailPage({
               <p className="text-sm text-gray-500">Variasi judul belum tersedia untuk job ini.</p>
             )}
           </div>
-        </div>
-
-        <div className="ta-panel p-5">
-          <p className="ta-label text-brand-600">Skor potensi viral</p>
-          <h3 className="mt-2 text-3xl font-bold text-gray-900">{viralScore !== null && viralScore !== undefined ? formatNumber(viralScore) : "Not set"}</h3>
-          <p className="mt-2 text-sm text-gray-500">
-            {viralAnalysis?.created_at ? `Dihitung pada ${viralAnalysis.created_at}` : "Analisis lokal menunggu data lengkap."}
-          </p>
-          <div className="mt-5 space-y-4">
-            <div>
-              <p className="ta-label text-gray-500">Alasan</p>
-              <div className="mt-2 space-y-2">
-                {viralAnalysis?.reasons?.length ? (
-                  viralAnalysis.reasons.map((reason) => (
-                    <div key={reason} className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
-                      {reason}
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-500">Belum ada alasan analisis yang disimpan.</p>
-                )}
+          <div className="mt-6 rounded-2xl border border-gray-200 bg-gray-50 p-4">
+            <p className="ta-label text-brand-600">Skor potensi viral</p>
+            <h4 className="mt-2 text-3xl font-bold text-gray-900">{viralScore !== null && viralScore !== undefined ? formatNumber(viralScore) : "Not set"}</h4>
+            <p className="mt-2 text-sm text-gray-500">
+              {viralAnalysis?.created_at ? `Dihitung pada ${viralAnalysis.created_at}` : "Analisis lokal menunggu data lengkap."}
+            </p>
+            <div className="mt-4 space-y-4">
+              <div>
+                <p className="ta-label text-gray-500">Alasan</p>
+                <div className="mt-2 space-y-2">
+                  {viralAnalysis?.reasons?.length ? (
+                    viralAnalysis.reasons.map((reason) => (
+                      <div key={reason} className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700">
+                        {reason}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500">Belum ada alasan analisis yang disimpan.</p>
+                  )}
+                </div>
               </div>
-            </div>
-            <div>
-              <p className="ta-label text-gray-500">Saran perbaikan</p>
-              <div className="mt-2 space-y-2">
-                {viralAnalysis?.recommendations?.length ? (
-                  viralAnalysis.recommendations.map((recommendation) => (
-                    <div key={recommendation} className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700">
-                      {recommendation}
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-500">Tidak ada saran mendesak saat ini.</p>
-                )}
+              <div>
+                <p className="ta-label text-gray-500">Saran perbaikan</p>
+                <div className="mt-2 space-y-2">
+                  {viralAnalysis?.recommendations?.length ? (
+                    viralAnalysis.recommendations.map((recommendation) => (
+                      <div key={recommendation} className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700">
+                        {recommendation}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500">Tidak ada saran mendesak saat ini.</p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
+      </section>
+
+      <section className="mt-6 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+        <div className="ta-panel p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+          <p className="ta-label text-brand-600">Tahap produksi</p>
+              <h3 className="mt-2 text-lg font-semibold text-gray-900">Dari sumber ke hasil</h3>
+            </div>
+            <PublishPill status={publishState.youtube.status} />
+          </div>
+          <div className="mt-5 space-y-3">
+            {timeline.stages.map((stage) => (
+              <div key={stage.key} className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <strong className="text-sm text-gray-900">{stage.label}</strong>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Percobaan: {stage.attempt_count} {stage.duration_seconds !== null && stage.duration_seconds !== undefined ? `- ${formatSeconds(stage.duration_seconds)}` : ""}
+                    </p>
+                  </div>
+                  <StageBadge state={stage.state} />
+                </div>
+                <div className="mt-3 h-2 rounded-full bg-white">
+                  <div
+                    className={`h-2 rounded-full ${
+                      stage.state === "done"
+                        ? "bg-success-500"
+                        : stage.state === "current"
+                          ? "bg-brand-500"
+                          : stage.state === "failed"
+                            ? "bg-error-500"
+                            : "bg-gray-300"
+                    }`}
+                    style={{ width: stage.state === "done" ? "100%" : stage.state === "current" ? "65%" : stage.state === "failed" ? "100%" : "0%" }}
+                  />
+                </div>
+                {stage.error_message ? <p className="mt-3 text-sm text-error-700">{stage.error_message}</p> : null}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <PublishButtonGroup jobId={job.id} uploadGuard={overview.upload_guard} publishState={publishState} />
+      </section>
+
+      <section className="mt-6">
+        <UploadApprovalPanel items={[publishQueueItem]} uploadGuard={overview.upload_guard} title="Butuh persetujuan" />
+      </section>
+
+      <section className="mt-6">
+        <JobRealtimePanel initial={detail} syncSettings={syncSettings} />
       </section>
 
       <section className="mt-6 grid gap-6 xl:grid-cols-3">
@@ -631,8 +707,8 @@ export default async function JobDetailPage({
         <div className="ta-panel p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="ta-label text-brand-600">Working files</p>
-              <h3 className="mt-2 text-lg font-semibold text-gray-900">Transcript and plan</h3>
+              <p className="ta-label text-brand-600">File pendukung</p>
+              <h3 className="mt-2 text-lg font-semibold text-gray-900">Transcript dan plan</h3>
             </div>
           </div>
           <div className="mt-4 space-y-3">
@@ -642,8 +718,8 @@ export default async function JobDetailPage({
         </div>
 
         <div className="ta-panel p-5">
-          <p className="ta-label text-brand-600">Rendered outputs</p>
-          <h3 className="mt-2 text-lg font-semibold text-gray-900">Ready assets</h3>
+          <p className="ta-label text-brand-600">Lihat hasil video</p>
+          <h3 className="mt-2 text-lg font-semibold text-gray-900">File final siap review</h3>
           <div className="mt-4 space-y-4">
             {finalResult ? (
               finalResult.available && previewUrl && previewArtifact ? (
@@ -722,8 +798,8 @@ export default async function JobDetailPage({
       <section className="mt-6 grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
         <JobControlPanel job={job} uploadGuard={overview.upload_guard} canOperate={canOperate} />
         <div className="ta-panel p-5">
-          <p className="ta-label text-brand-600">Publish status</p>
-          <h3 className="mt-2 text-lg font-semibold text-gray-900">Current output state</h3>
+          <p className="ta-label text-brand-600">Status upload</p>
+          <h3 className="mt-2 text-lg font-semibold text-gray-900">Status terkini</h3>
           <div className="mt-4 space-y-3">
             <DetailRow label="YouTube" value={publishState.youtube.status} />
             <DetailRow label="TikTok" value={publishState.tiktok.status} />

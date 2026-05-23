@@ -24,21 +24,21 @@ export function JobCreateForm({
   }
 
   return (
-    <form action={createDashboardJob} className="ta-panel p-5">
+    <form id="create-video" action={createDashboardJob} className="ta-panel p-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="ta-label text-brand-600">Dashboard to DB to engine</p>
-          <h3 className="mt-2 text-lg font-semibold text-gray-900">Create parameterized job</h3>
-          <p className="mt-1 text-sm text-gray-500">Every field is persisted first, then consumed by the engine worker.</p>
+          <p className="ta-label text-brand-600">Buat Video Baru</p>
+          <h3 className="mt-2 text-lg font-semibold text-gray-900">Simpan job produksi</h3>
+          <p className="mt-1 text-sm text-gray-500">Semua parameter disimpan dulu ke database, lalu diambil worker engine.</p>
         </div>
         <ConfirmSubmitButton className="px-5 py-3 text-sm" message="Create this parameterized job in the engine database?">
-          Save job
+          Simpan Job
         </ConfirmSubmitButton>
       </div>
 
       <div className="mt-5 grid gap-4 md:grid-cols-3">
         <label className="grid gap-2 text-sm font-semibold">
-          Channel
+          Channel tujuan
           <select name="channel_id" required defaultValue={firstChannel?.id}>
             {registry.channels.map((channel) => (
               <option key={channel.id} value={channel.id}>
@@ -48,23 +48,23 @@ export function JobCreateForm({
           </select>
         </label>
         <label className="grid gap-2 text-sm font-semibold">
-          Publish at
+          Jadwal publish
           <input name="publish_at" required placeholder="2026-05-23T08:00:00+07:00" />
         </label>
         <label className="grid gap-2 text-sm font-semibold">
-          Max retries
+          Maks percobaan
           <input name="max_retries" type="number" min="0" max="10" placeholder="3" />
         </label>
         <label className="grid gap-2 text-sm font-semibold">
-          Niche override
+          Topik / niche
           <input name="niche" placeholder={firstChannel?.niche || "football"} />
         </label>
         <label className="grid gap-2 text-sm font-semibold">
-          Language
+          Bahasa
           <input name="language" placeholder={firstChannel?.language || "id"} />
         </label>
         <label className="grid gap-2 text-sm font-semibold">
-          Upload approval
+          Persetujuan upload
           <input name="upload_approval" placeholder={uploadGuard.confirmation_text} />
         </label>
       </div>
@@ -75,7 +75,7 @@ export function JobCreateForm({
           <input name="approval_operator_name" placeholder="operator name" />
         </label>
         <label className="grid gap-2 text-sm font-semibold">
-          Reason
+          Alasan
           <input name="approval_reason" placeholder={uploadGuard.reason} />
         </label>
       </div>
@@ -83,15 +83,15 @@ export function JobCreateForm({
       <div className="mt-4 flex flex-wrap gap-4 text-sm font-semibold text-gray-700">
         <label className="flex items-center gap-2">
           <input className="ta-check" name="enable_upload" type="checkbox" />
-          Enable upload
+          Aktifkan upload
         </label>
         <label className="flex items-center gap-2">
           <input className="ta-check" name="require_credentials" type="checkbox" />
-          Require credentials
+          Wajib kredensial
         </label>
         <label className="flex items-center gap-2">
           <input className="ta-check" name="keep_downloads" type="checkbox" />
-          Keep downloads
+          Simpan unduhan
         </label>
       </div>
     </form>

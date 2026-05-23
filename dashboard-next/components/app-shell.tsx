@@ -5,34 +5,35 @@ import { logoutDashboard } from "../app/login/actions";
 
 const navSections: Array<{ heading: string; items: Array<{ href: string; label: string; role: DashboardRole }> }> = [
   {
-    heading: "Business",
+    heading: "Menu Utama",
     items: [
       { href: "/dashboard", label: "Dashboard", role: "viewer" },
-      { href: "/queue", label: "Production Queue", role: "viewer" },
-      { href: "/publish", label: "Publish Center", role: "operator" },
-      { href: "/channels", label: "Channel Setup", role: "viewer" },
-      { href: "/artifacts", label: "Deliverables", role: "viewer" },
-      { href: "/analytics", label: "Analytics", role: "viewer" },
+      { href: "/queue#create-video", label: "Buat Video", role: "viewer" },
+      { href: "/queue#antrian", label: "Antrian", role: "viewer" },
+      { href: "/publish", label: "Review & Upload", role: "operator" },
+      { href: "/channels", label: "Channel", role: "viewer" },
+      { href: "/settings", label: "Pengaturan", role: "admin" },
     ],
   },
-    {
-      heading: "Advanced Ops",
-      items: [
-        { href: "/worker", label: "Worker", role: "operator" },
-        { href: "/scheduler", label: "Scheduler", role: "operator" },
-        { href: "/approvals", label: "Approvals", role: "operator" },
-        { href: "/jobs", label: "Jobs", role: "viewer" },
-        { href: "/quota", label: "Quota", role: "viewer" },
-        { href: "/logs", label: "Logs", role: "admin" },
-        { href: "/health", label: "Health", role: "admin" },
-        { href: "/registry", label: "Registry", role: "admin" },
-        { href: "/settings", label: "Settings", role: "admin" },
-        { href: "/system", label: "System", role: "admin" },
-        { href: "/governance", label: "Governance", role: "admin" },
-        { href: "/diagnostics", label: "Diagnostics", role: "admin" },
-      ],
-    },
-  ];
+  {
+    heading: "Admin / Lanjutan",
+    items: [
+      { href: "/worker", label: "Worker", role: "operator" },
+      { href: "/scheduler", label: "Scheduler", role: "operator" },
+      { href: "/approvals", label: "Approvals", role: "operator" },
+      { href: "/jobs", label: "Jobs", role: "viewer" },
+      { href: "/quota", label: "Quota", role: "viewer" },
+      { href: "/logs", label: "Logs", role: "admin" },
+      { href: "/health", label: "Health", role: "admin" },
+      { href: "/registry", label: "Registry", role: "admin" },
+      { href: "/system", label: "System", role: "admin" },
+      { href: "/governance", label: "Governance", role: "admin" },
+      { href: "/diagnostics", label: "Diagnostics", role: "admin" },
+      { href: "/analytics", label: "Analytics", role: "viewer" },
+      { href: "/artifacts", label: "Deliverables", role: "viewer" },
+    ],
+  },
+];
 
 export async function AppShell({ children }: Readonly<{ children: React.ReactNode }>) {
   const session = getDashboardSession();
@@ -50,7 +51,7 @@ export async function AppShell({ children }: Readonly<{ children: React.ReactNod
           <div className="grid h-11 w-11 place-items-center rounded-xl bg-brand-500 text-lg font-bold text-white shadow-elevated">YT</div>
           <div>
             <p className="ta-label">AI YouTube</p>
-            <h1 className="text-xl font-bold leading-none text-gray-900">Business Cockpit</h1>
+            <h1 className="text-xl font-bold leading-none text-gray-900">Production Cockpit</h1>
           </div>
         </div>
         <nav className="mt-8 space-y-6">

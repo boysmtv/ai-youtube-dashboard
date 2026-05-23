@@ -28,7 +28,7 @@ export default async function SettingsPage() {
         <p className="ta-label text-brand-600">Engine Registry</p>
         <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900 lg:text-5xl">Automation settings.</h2>
         <p className="mt-4 max-w-3xl text-gray-500">
-          This page edits the engine registry through <span className="font-mono">GET/PUT /api/registry</span>. It replaces manual JSON file edits while keeping every engine parameter available.
+          This page edits the database-backed engine registry through <span className="font-mono">GET/PUT /api/registry</span>. It replaces manual file edits while keeping every engine parameter available.
         </p>
       </header>
 

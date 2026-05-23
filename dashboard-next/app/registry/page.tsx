@@ -14,7 +14,7 @@ export default async function RegistryPage() {
         <p className="ta-label text-brand-600">Registry</p>
         <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900">Runtime parameter registry.</h2>
         <p className="mt-4 max-w-2xl text-gray-500">
-          Dashboard reads this engine registry as source of truth. Editing is centralized in Settings to keep one validated save path.
+          Dashboard reads this database-backed engine registry as source of truth. Editing is centralized in Settings to keep one validated save path.
         </p>
         <Link className="ta-button-primary mt-5" href="/settings">
           Open registry editor

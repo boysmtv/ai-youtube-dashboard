@@ -102,6 +102,8 @@ export type JobRecord = {
   language: string;
   publish_at: string;
   status: string;
+  current_stage?: string | null;
+  progress_percent?: number | null;
   manifest_path?: string | null;
   output_dir?: string | null;
   retry_count: number;
@@ -301,6 +303,18 @@ export type UploadRecord = {
   created_at: string;
 };
 
+export type JobEventRecord = {
+  id: number;
+  job_id: number;
+  stage: string;
+  level: string;
+  message: string;
+  details: Record<string, unknown>;
+  progress_percent?: number | null;
+  created_at: string;
+  timestamp?: string;
+};
+
 export type JobDetailPayload = {
   job: JobRecord;
   attempts: StageAttempt[];
@@ -308,6 +322,10 @@ export type JobDetailPayload = {
   uploads: UploadRecord[];
   approval_audits: ApprovalAudit[];
   parameters: JobParameters | null;
+  current_stage: string;
+  progress_percent: number;
+  last_error?: string | null;
+  job_events: JobEventRecord[];
   runtime_events: RuntimeEvent[];
   manifest: Record<string, unknown> | null;
   manifest_status: string;
@@ -330,9 +348,11 @@ export type JobTimelinePayload = {
   job: JobRecord;
   current_stage: string;
   progress_percent: number;
+  last_error?: string | null;
   stages: JobTimelineStage[];
   latest_upload: UploadRecord | null;
   render_sizes: Record<string, number>;
+  job_events: JobEventRecord[];
   recent_events: RuntimeEvent[];
   manifest_status: string;
   manifest_error: string;

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AppShell } from "../../../components/app-shell";
 import { ConfirmSubmitButton } from "../../../components/confirm-submit-button";
 import { JobControlPanel } from "../../../components/job-control-panel";
+import { JobRealtimePanel } from "../../../components/job-realtime-panel";
 import { StatusBadge } from "../../../components/status-badge";
 import { hasDashboardRole, requireDashboardSession } from "../../../lib/dashboard-auth";
 import {
@@ -346,8 +347,10 @@ export default async function JobDetailPage({
   const outputSize = formatBytes(metrics.output_size_bytes);
   const sizeRatio = metrics.size_ratio !== null ? formatPercent(metrics.size_ratio * 100) : "Not set";
   const outputSpeed = metrics.download_speed_mbps !== null ? `${metrics.download_speed_mbps.toFixed(3)} Mbps` : "Not set";
-  const progress = `${timeline.progress_percent.toFixed(0)}%`;
-  const currentStage = timeline.current_stage || job.status;
+  const currentStage = detail.current_stage || timeline.current_stage || job.current_stage || job.status;
+  const progressValue = detail.progress_percent ?? timeline.progress_percent ?? job.progress_percent ?? 0;
+  const progress = `${progressValue.toFixed(0)}%`;
+  const lastError = detail.last_error || timeline.last_error || job.last_error || "";
   const tiktokSurfaceState = deriveTikTokSurfaceState(publishState.tiktok);
 
   return (
@@ -366,13 +369,20 @@ export default async function JobDetailPage({
       </header>
 
       <section className="mt-6 grid gap-4 md:grid-cols-3 xl:grid-cols-6">
-        <MetricCard label="Current stage" value={currentStage} note={`Progress ${progress}`} tone={timeline.progress_percent >= 80 ? "good" : "warn"} />
+        <MetricCard label="Current stage" value={currentStage} note={`Progress ${progress}`} tone={progressValue >= 80 ? "good" : "warn"} />
         <MetricCard label="Source size" value={sourceSize} note={sourceManifest?.title ? String(sourceManifest.title) : "Source video"} />
         <MetricCard label="Output size" value={outputSize} note={`Ratio ${sizeRatio}`} tone={metrics.output_size_bytes > 0 ? "good" : "neutral"} />
         <MetricCard label="Download speed" value={outputSpeed} note={metrics.download_duration_seconds ? formatSeconds(metrics.download_duration_seconds) : "Not set"} />
         <MetricCard label="Queue" value={metrics.queue_count ? formatNumber(metrics.queue_count) : "0"} note={metrics.queue_position ? `Position ${metrics.queue_position}` : "Ready lane"} />
         <MetricCard label="Viral fit" value={metrics.viral_fit_score !== null ? formatNumber(metrics.viral_fit_score) : "Not set"} note={metrics.quality_score_overall !== null ? `Quality ${metrics.quality_score_overall}` : "Plan score"} tone={(metrics.viral_fit_score || 0) >= 80 ? "good" : "warn"} />
       </section>
+
+      {lastError ? (
+        <section className="mt-6 rounded-2xl border border-error-200 bg-error-50 p-4 text-sm text-error-700">
+          <strong className="block text-base">Failure reason</strong>
+          <p className="mt-2">{lastError}</p>
+        </section>
+      ) : null}
 
       <section className="mt-6 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <div className="ta-panel p-5">
@@ -416,6 +426,10 @@ export default async function JobDetailPage({
         </div>
 
         <PublishButtonGroup jobId={job.id} uploadGuard={overview.upload_guard} publishState={publishState} />
+      </section>
+
+      <section className="mt-6">
+        <JobRealtimePanel initial={detail} syncSettings={syncSettings} />
       </section>
 
       <section className="mt-6 grid gap-6 xl:grid-cols-3">

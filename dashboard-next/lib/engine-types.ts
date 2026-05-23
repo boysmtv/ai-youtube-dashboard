@@ -108,6 +108,8 @@ export type JobRecord = {
   output_dir?: string | null;
   retry_count: number;
   last_error?: string | null;
+  selected_title?: string | null;
+  viral_score?: number | null;
 };
 
 export type JobParameters = {
@@ -320,6 +322,27 @@ export type JobResultArtifact = {
   exists: boolean;
 };
 
+export type TitleVariantRecord = {
+  id: number;
+  job_id: number;
+  variant_rank: number;
+  title: string;
+  strategy: string;
+  score: number;
+  reason: string;
+  selected: boolean;
+  created_at: string;
+};
+
+export type ViralAnalysisRecord = {
+  id: number;
+  job_id: number;
+  score: number;
+  reasons: string[];
+  recommendations: string[];
+  created_at: string;
+};
+
 export type JobEventRecord = {
   id: number;
   job_id: number;
@@ -339,6 +362,8 @@ export type JobDetailPayload = {
   uploads: UploadRecord[];
   approval_audits: ApprovalAudit[];
   parameters: JobParameters | null;
+  title_variants: TitleVariantRecord[];
+  viral_analysis: ViralAnalysisRecord | null;
   current_stage: string;
   progress_percent: number;
   last_error?: string | null;

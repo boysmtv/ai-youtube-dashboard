@@ -382,6 +382,9 @@ export default async function JobDetailPage({
   const progressValue = detail.progress_percent ?? timeline.progress_percent ?? job.progress_percent ?? 0;
   const progress = `${progressValue.toFixed(0)}%`;
   const lastError = detail.last_error || timeline.last_error || job.last_error || "";
+  const titleVariants = detail.title_variants || [];
+  const viralAnalysis = detail.viral_analysis;
+  const viralScore = viralAnalysis?.score ?? job.viral_score ?? metrics.viral_fit_score;
   const tiktokSurfaceState = deriveTikTokSurfaceState(publishState.tiktok);
   const finalResult = result as JobResultPayload | null;
   const previewUrl = finalResult?.preview_url ? `${engineBrowserBaseUrl()}${finalResult.preview_url}` : null;
@@ -465,6 +468,83 @@ export default async function JobDetailPage({
 
       <section className="mt-6">
         <JobRealtimePanel initial={detail} syncSettings={syncSettings} />
+      </section>
+
+      <section className="mt-6 grid gap-6 xl:grid-cols-[1.02fr_0.98fr]">
+        <div className="ta-panel p-5">
+          <p className="ta-label text-brand-600">Judul terbaik</p>
+          <h3 className="mt-2 text-lg font-semibold text-gray-900">{job.selected_title || "Belum ada judul terpilih"}</h3>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">
+              Skor potensi viral {viralScore !== null && viralScore !== undefined ? formatNumber(viralScore) : "Not set"}
+            </span>
+            <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">
+              {titleVariants.length ? `${titleVariants.length} pilihan judul` : "Belum ada variasi judul"}
+            </span>
+          </div>
+          <p className="mt-4 text-sm text-gray-500">
+            Judul terbaik dipilih secara lokal dari source title, transcript, niche, dan konteks durasi tanpa API LLM berbayar.
+          </p>
+          <div className="mt-5 space-y-3">
+            <p className="ta-label text-gray-500">Pilihan judul lain</p>
+            {titleVariants.length ? (
+              titleVariants.map((variant) => (
+                <div key={variant.id} className={`rounded-2xl border p-4 ${variant.selected ? "border-brand-200 bg-brand-50" : "border-gray-200 bg-gray-50"}`}>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <strong className="block text-sm text-gray-900">{variant.title}</strong>
+                      <p className="mt-1 text-xs text-gray-500">{variant.reason}</p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-gray-700">Skor {formatNumber(variant.score)}</span>
+                      {variant.selected ? <span className="rounded-full bg-success-50 px-3 py-1 text-xs font-semibold text-success-700">Terpilih</span> : null}
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-gray-500">Variasi judul belum tersedia untuk job ini.</p>
+            )}
+          </div>
+        </div>
+
+        <div className="ta-panel p-5">
+          <p className="ta-label text-brand-600">Skor potensi viral</p>
+          <h3 className="mt-2 text-3xl font-bold text-gray-900">{viralScore !== null && viralScore !== undefined ? formatNumber(viralScore) : "Not set"}</h3>
+          <p className="mt-2 text-sm text-gray-500">
+            {viralAnalysis?.created_at ? `Dihitung pada ${viralAnalysis.created_at}` : "Analisis lokal menunggu data lengkap."}
+          </p>
+          <div className="mt-5 space-y-4">
+            <div>
+              <p className="ta-label text-gray-500">Alasan</p>
+              <div className="mt-2 space-y-2">
+                {viralAnalysis?.reasons?.length ? (
+                  viralAnalysis.reasons.map((reason) => (
+                    <div key={reason} className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
+                      {reason}
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500">Belum ada alasan analisis yang disimpan.</p>
+                )}
+              </div>
+            </div>
+            <div>
+              <p className="ta-label text-gray-500">Saran perbaikan</p>
+              <div className="mt-2 space-y-2">
+                {viralAnalysis?.recommendations?.length ? (
+                  viralAnalysis.recommendations.map((recommendation) => (
+                    <div key={recommendation} className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700">
+                      {recommendation}
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500">Tidak ada saran mendesak saat ini.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section className="mt-6 grid gap-6 xl:grid-cols-3">

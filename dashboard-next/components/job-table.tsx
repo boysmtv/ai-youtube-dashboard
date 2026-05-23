@@ -33,6 +33,12 @@ export function JobTable({ jobs, canOperate = true }: Readonly<{ jobs: JobRecord
                   <Link className="font-semibold text-brand-600 underline-offset-4 hover:underline" href={`/jobs/${job.id}`}>
                     #{job.id} / {job.niche}
                   </Link>
+                  <div className="mt-2 space-y-1">
+                    <p className="max-w-sm truncate text-xs text-gray-500">{job.selected_title || "Judul belum dipilih"}</p>
+                    <p className="text-xs text-gray-500">
+                      {job.viral_score !== null && job.viral_score !== undefined ? `Skor viral ${job.viral_score}` : "Skor viral belum tersedia"}
+                    </p>
+                  </div>
                 </td>
                 <td className="px-4 py-3">{job.channel_id}</td>
                 <td className="px-4 py-3 font-mono text-xs text-gray-500">{job.publish_at}</td>

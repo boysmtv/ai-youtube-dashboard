@@ -103,7 +103,7 @@ export function ChannelGrid({
                 </strong>
               </div>
             </div>
-            <div className="mt-4 rounded-xl border border-gray-200 bg-white p-3 text-sm">
+            <div id={`channel-health-${channel.id}`} className="mt-4 rounded-xl border border-gray-200 bg-white p-3 text-sm">
               <p className="ta-label">Publish readiness</p>
               <p className="mt-2 text-gray-700">
                 Last upload: {String(item?.last_upload?.status || "none")} | latest job: {item?.latest_job ? `${item.latest_job.status} (#${item.latest_job.id})` : "none"}

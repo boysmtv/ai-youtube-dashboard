@@ -22,14 +22,20 @@ function shortcutLabel(issues: string[]) {
     return "Fix settings";
   }
   if (issues.includes("oauth_validation_failed")) {
-    return "Open channels";
+    return "Open channel health";
   }
   return "Open channels";
 }
 
 function shortcutHref(channelId: string, issues: string[]) {
-  if (issues.includes("missing_token") || issues.includes("missing_client_secret")) {
-    return `/settings#settings-${channelId}`;
+  if (issues.includes("missing_token")) {
+    return `/settings#settings-${channelId}-token-path`;
+  }
+  if (issues.includes("missing_client_secret")) {
+    return `/settings#settings-${channelId}-client-secret-path`;
+  }
+  if (issues.includes("oauth_validation_failed")) {
+    return `/channels#channel-health-${channelId}`;
   }
   return `/channels#channel-${channelId}`;
 }

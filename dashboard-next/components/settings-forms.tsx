@@ -8,17 +8,19 @@ function Field({
   defaultValue,
   type = "text",
   step,
+  id,
 }: Readonly<{
   label: string;
   name: string;
   defaultValue: string | number;
   type?: string;
   step?: string;
+  id?: string;
 }>) {
   return (
     <label className="grid gap-2 text-sm font-semibold text-gray-700">
       {label}
-      <input name={name} type={type} step={step} defaultValue={defaultValue} />
+      <input id={id} name={name} type={type} step={step} defaultValue={defaultValue} />
     </label>
   );
 }
@@ -117,15 +119,15 @@ export function ChannelSettingsForms({ registry }: Readonly<{ registry: Registry
               <Field label="Niche" name="niche" defaultValue={channel.niche} />
               <Field label="Language" name="language" defaultValue={channel.language} />
               <Field label="GCP project" name="gcp_project_id" defaultValue={channel.gcp_project_id} />
-              <Field label="Client secret path" name="client_secret_path" defaultValue={channel.client_secret_path} />
-              <Field label="Token path" name="token_path" defaultValue={channel.token_path} />
+              <Field id={`settings-${channel.id}-client-secret-path`} label="Client secret path" name="client_secret_path" defaultValue={channel.client_secret_path} />
+              <Field id={`settings-${channel.id}-token-path`} label="Token path" name="token_path" defaultValue={channel.token_path} />
               <Field label="Publish slots CSV" name="publish_slots" defaultValue={channel.publish_slots.join(",")} />
               <Field label="Curated sources path" name="curated_sources_path" defaultValue={channel.curated_sources_path} />
             </div>
             <div className="mt-5 rounded-xl border border-gray-200 bg-white p-4">
               <p className="ta-label text-brand-600">TikTok publish</p>
               <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <Field label="Access token path" name="tiktok_access_token_path" defaultValue={channel.tiktok_publish.access_token_path} />
+                <Field id={`settings-${channel.id}-tiktok-access-token-path`} label="Access token path" name="tiktok_access_token_path" defaultValue={channel.tiktok_publish.access_token_path} />
                 <Field label="Access token env" name="tiktok_access_token_env" defaultValue={channel.tiktok_publish.access_token_env} />
                 <Field label="Transfer method" name="tiktok_transfer_method" defaultValue={channel.tiktok_publish.transfer_method} />
                 <Field label="Verified URL" name="tiktok_verified_url" defaultValue={channel.tiktok_publish.verified_url} />

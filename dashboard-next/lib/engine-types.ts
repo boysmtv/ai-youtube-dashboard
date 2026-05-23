@@ -112,6 +112,21 @@ export type JobRecord = {
   viral_score?: number | null;
 };
 
+export type UploadApprovalRecord = {
+  id: number;
+  job_id: number;
+  platform: "youtube" | "tiktok" | string;
+  approved_by: string;
+  note: string;
+  status: string;
+  approved_at: string;
+  expires_at?: string | null;
+  revoked_at?: string | null;
+  created_at: string;
+  updated_at: string;
+  is_active?: boolean;
+};
+
 export type JobParameters = {
   job_id: number;
   enable_upload: boolean;
@@ -361,6 +376,7 @@ export type JobDetailPayload = {
   artifacts: ArtifactRecord[];
   uploads: UploadRecord[];
   approval_audits: ApprovalAudit[];
+  upload_approvals: UploadApprovalRecord[];
   parameters: JobParameters | null;
   title_variants: TitleVariantRecord[];
   viral_analysis: ViralAnalysisRecord | null;
@@ -434,6 +450,10 @@ export type PublishStatePayload = {
   job_id: number;
   status: string;
   ready_to_push: boolean;
+  approvals: {
+    items: UploadApprovalRecord[];
+    by_platform: Record<string, UploadApprovalRecord & { is_active: boolean } | Record<string, unknown>>;
+  };
   render_sizes: Record<string, number>;
   youtube: {
     available: boolean;
@@ -444,6 +464,7 @@ export type PublishStatePayload = {
     publish_at?: string | null;
     error_message?: string | null;
     manual_push_available: boolean;
+    approval?: UploadApprovalRecord & { is_active: boolean };
   };
   tiktok: {
     available: boolean;
@@ -456,11 +477,28 @@ export type PublishStatePayload = {
     post_id?: string | null;
     status_reason?: string | null;
     error_message?: string | null;
+    approval?: UploadApprovalRecord & { is_active: boolean };
   };
   actions: PublishActionLink[];
   latest_upload: UploadRecord | null;
   manifest_status: string;
   manifest_error: string;
+};
+
+export type PublishQueueItem = {
+  job: JobRecord;
+  selected_title?: string | null;
+  viral_score?: number | null;
+  status: string;
+  publish_state: PublishStatePayload;
+  upload_approvals: UploadApprovalRecord[];
+  approval_summary: PublishStatePayload["approvals"];
+};
+
+export type PublishQueuePayload = {
+  generated_at: string;
+  total: number;
+  items: PublishQueueItem[];
 };
 
 export type ListPayload<T> = {
@@ -515,6 +553,17 @@ export type ManualPushPayload = {
   approval_operator_name?: string;
   approval_reason?: string;
   require_credentials?: boolean;
+};
+
+export type UploadApprovalPayload = {
+  approved_by: string;
+  note?: string;
+  expires_in_minutes?: number | null;
+};
+
+export type UploadRevokePayload = {
+  revoked_by: string;
+  note?: string;
 };
 
 export type ManualPushResult = {

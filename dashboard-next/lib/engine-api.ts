@@ -17,10 +17,13 @@ import type {
   OverviewPayload,
   ManualPushPayload,
   ManualPushResult,
+  PublishQueuePayload,
   PublishHistoryPayload,
   PublishStatePayload,
   RegistryPayload,
   RuntimeHealthPayload,
+  UploadApprovalPayload,
+  UploadRevokePayload,
 } from "./engine-types";
 import type { EngineStateView } from "./sync-settings";
 
@@ -151,6 +154,10 @@ export async function getPublishHistory(limit = 50) {
   return fetchEngine<PublishHistoryPayload>(`/api/publish/history?limit=${limit}`);
 }
 
+export async function getPublishQueue(limit = 100) {
+  return fetchEngine<PublishQueuePayload>(`/api/publish/queue?limit=${limit}`);
+}
+
 export async function getRecentLogs(limit = 100) {
   return fetchEngine<ListPayload<Record<string, unknown>>>(`/api/logs/recent?limit=${limit}`);
 }
@@ -193,6 +200,22 @@ export async function pushYoutubeJob(jobId: number, payload: ManualPushPayload =
 
 export async function pushTiktokJob(jobId: number, payload: ManualPushPayload = {}, headers: EngineMutationHeaders = {}) {
   return fetchEngine<ManualPushResult>(`/api/jobs/${jobId}/push/tiktok`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function approveUploadJob(jobId: number, platform: "youtube" | "tiktok", payload: UploadApprovalPayload, headers: EngineMutationHeaders = {}) {
+  return fetchEngine<{ status: string; job_id: number; platform: string; approval: Record<string, unknown> }>(`/api/jobs/${jobId}/approvals/${platform}`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function revokeUploadJob(jobId: number, platform: "youtube" | "tiktok", payload: UploadRevokePayload, headers: EngineMutationHeaders = {}) {
+  return fetchEngine<{ status: string; job_id: number; platform: string }>(`/api/jobs/${jobId}/approvals/${platform}/revoke`, {
     method: "POST",
     headers,
     body: JSON.stringify(payload),

@@ -3,17 +3,21 @@ import { ApprovalList } from "../../components/approval-list";
 import { PublishHistoryTable } from "../../components/publish-history";
 import { UploadApprovalPanel } from "../../components/upload-approval-panel";
 import { requireDashboardRole } from "../../lib/dashboard-auth";
-import { getJobs, getOverview, getPublishHistory, getRecentApprovals } from "../../lib/engine-api";
+import { getOverview, getPublishHistory, getPublishQueue, getRecentApprovals } from "../../lib/engine-api";
 
 export default async function PublishPage() {
   requireDashboardRole("operator", "/publish");
-  const [overview, approvals, renderedJobs, publishHistory] = await Promise.all([
+  const [overview, approvals, publishQueue, publishHistory] = await Promise.all([
     getOverview(),
     getRecentApprovals(50),
-    getJobs(200),
+    getPublishQueue(100),
     getPublishHistory(50),
   ]);
-  const publishReadyJobs = renderedJobs.items.filter((job) => job.status === "rendered");
+  const queueItems = publishQueue.items.filter((item) => item.status !== "uploaded");
+  const queueTotal = queueItems.length;
+  const approvalReady = queueItems.filter(
+    (item) => item.publish_state.youtube.manual_push_available || item.publish_state.tiktok.manual_push_available,
+  ).length;
   const youtubeHistory = publishHistory.platform_counts.youtube || 0;
   const tiktokHistory = publishHistory.platform_counts.tiktok || 0;
 
@@ -26,7 +30,11 @@ export default async function PublishPage() {
         <div className="mt-5 grid gap-3 sm:grid-cols-4">
           <div className="rounded-xl bg-gray-900 p-4 text-white">
             <p className="font-mono text-xs uppercase tracking-[0.14em] text-white/60">Ready</p>
-            <strong className="mt-1 block">{publishReadyJobs.length}</strong>
+            <strong className="mt-1 block">{approvalReady}</strong>
+          </div>
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+            <p className="ta-label">Queue items</p>
+            <strong className="mt-1 block text-gray-900">{queueTotal}</strong>
           </div>
           <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
             <p className="ta-label">YouTube history</p>
@@ -45,7 +53,7 @@ export default async function PublishPage() {
 
       <section className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <div className="space-y-6">
-          <UploadApprovalPanel jobs={publishReadyJobs} uploadGuard={overview.upload_guard} />
+          <UploadApprovalPanel items={queueItems} uploadGuard={overview.upload_guard} title="Butuh persetujuan" />
           <PublishHistoryTable history={publishHistory} limitLabel="Publish history" />
         </div>
         <div>

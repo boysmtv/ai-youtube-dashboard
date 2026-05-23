@@ -4,6 +4,7 @@ import { ConfirmSubmitButton } from "../../../components/confirm-submit-button";
 import { JobControlPanel } from "../../../components/job-control-panel";
 import { JobRealtimePanel } from "../../../components/job-realtime-panel";
 import { StatusBadge } from "../../../components/status-badge";
+import { UploadApprovalPanel } from "../../../components/upload-approval-panel";
 import { hasDashboardRole, requireDashboardSession } from "../../../lib/dashboard-auth";
 import {
   engineBrowserBaseUrl,
@@ -17,7 +18,13 @@ import {
   getJobTimeline,
   getOverview,
 } from "../../../lib/engine-api";
-import type { JobFilePayload, JobResultPayload, JobTimelinePayload, PublishStatePayload } from "../../../lib/engine-types";
+import type {
+  JobFilePayload,
+  JobResultPayload,
+  JobTimelinePayload,
+  PublishQueueItem,
+  PublishStatePayload,
+} from "../../../lib/engine-types";
 import { parseEngineSyncSettings } from "../../../lib/sync-settings";
 import { pushTiktokDashboardJob, pushYoutubeDashboardJob } from "../actions";
 
@@ -112,6 +119,7 @@ function StageBadge({ state }: Readonly<{ state: JobTimelinePayload["stages"][nu
 
 function PublishPill({ status }: Readonly<{ status: string }>) {
   const normalized = status.toLowerCase();
+  const displayLabel = normalized === "approval_required" ? "Butuh persetujuan" : status;
   const tone =
     normalized === "uploaded" || normalized === "draft_ready" || normalized === "published"
       ? "bg-success-50 text-success-700"
@@ -121,10 +129,10 @@ function PublishPill({ status }: Readonly<{ status: string }>) {
           ? "bg-gray-100 text-gray-700"
           : normalized === "processing" || normalized === "pending"
             ? "bg-warning-50 text-warning-700"
-            : normalized === "failed"
+          : normalized === "failed"
               ? "bg-error-50 text-error-700"
             : "bg-warning-50 text-warning-700";
-  return <span className={`ta-status font-mono ${tone}`}>{status}</span>;
+  return <span className={`ta-status font-mono ${tone}`}>{displayLabel}</span>;
 }
 
 function deriveTikTokSurfaceState(tiktok: PublishStatePayload["tiktok"]) {
@@ -262,6 +270,7 @@ function PublishButtonGroup({
           </div>
           <div className="mt-4 space-y-3 text-sm text-gray-700">
             <DetailRow label="Ready to push" value={youtubeReady ? "Yes" : "No"} />
+            <DetailRow label="Approval" value={publishState.youtube.approval?.is_active ? "Siap upload" : "Butuh persetujuan"} />
             <DetailRow label="Publish at" value={publishState.youtube.publish_at || "Not set"} />
             <DetailRow label="Video ID" value={publishState.youtube.youtube_video_id || "Pending"} />
             <DetailRow label="URL" value={publishState.youtube.youtube_url || "Pending"} />
@@ -288,7 +297,9 @@ function PublishButtonGroup({
             </form>
           ) : (
             <div className="mt-4 rounded-xl border border-dashed border-gray-200 bg-gray-50 p-3 text-sm text-gray-500">
-              YouTube push becomes available after the item reaches the rendered state.
+              {publishState.youtube.approval?.is_active
+                ? "YouTube push becomes available after the item reaches the rendered state."
+                : "YouTube upload is waiting for manual approval."}
             </div>
           )}
         </div>
@@ -302,10 +313,11 @@ function PublishButtonGroup({
             <PublishPill status={tiktokSurfaceState} />
           </div>
           <div className="mt-4 space-y-3 text-sm text-gray-700">
+            <DetailRow label="Approval" value={publishState.tiktok.approval?.is_active ? "Siap upload" : "Butuh persetujuan"} />
             <DetailRow label="Configured" value={publishState.tiktok.available ? "Yes" : "No"} />
             <DetailRow label="Ready to push" value={tiktokReady ? "Yes" : "No"} />
             <DetailRow label="State" value={publishState.tiktok.status} />
-            <DetailRow label="Gate" value={tiktokSurfaceState} />
+            <DetailRow label="Gate" value={tiktokSurfaceState === "approval_required" ? "Butuh persetujuan" : tiktokSurfaceState} />
             <DetailRow label="Mode" value={publishState.tiktok.publish_mode || "Not set"} />
             <DetailRow label="Transfer" value={publishState.tiktok.transfer_method || "Not set"} />
             <DetailRow label="Publish ID" value={publishState.tiktok.publish_id || "Pending"} />
@@ -334,7 +346,11 @@ function PublishButtonGroup({
             </form>
           ) : (
             <div className="mt-4 rounded-xl border border-dashed border-gray-200 bg-gray-50 p-3 text-sm text-gray-500">
-              {publishState.tiktok.available ? "TikTok is configured but this item is not ready for manual push yet." : "TikTok is not configured for this channel."}
+              {publishState.tiktok.approval?.is_active
+                ? publishState.tiktok.available
+                  ? "TikTok is configured but this item is not ready for manual push yet."
+                  : "TikTok is not configured for this channel."
+                : "TikTok upload is waiting for manual approval."}
             </div>
           )}
           <p className="mt-3 text-xs text-gray-500">
@@ -390,6 +406,15 @@ export default async function JobDetailPage({
   const previewUrl = finalResult?.preview_url ? `${engineBrowserBaseUrl()}${finalResult.preview_url}` : null;
   const downloadUrl = finalResult?.download_url ? `${engineBrowserBaseUrl()}${finalResult.download_url}` : null;
   const previewArtifact = finalResult?.preview_artifact || null;
+  const publishQueueItem: PublishQueueItem = {
+    job,
+    selected_title: job.selected_title,
+    viral_score: viralScore ?? null,
+    status: job.status,
+    publish_state: publishState,
+    upload_approvals: detail.upload_approvals || [],
+    approval_summary: publishState.approvals,
+  };
 
   return (
     <AppShell>
@@ -464,6 +489,10 @@ export default async function JobDetailPage({
         </div>
 
         <PublishButtonGroup jobId={job.id} uploadGuard={overview.upload_guard} publishState={publishState} />
+      </section>
+
+      <section className="mt-6">
+        <UploadApprovalPanel items={[publishQueueItem]} uploadGuard={overview.upload_guard} title="Butuh persetujuan" />
       </section>
 
       <section className="mt-6">

@@ -174,6 +174,21 @@ function DownloadLink({ href, label }: Readonly<{ href: string; label: string }>
   );
 }
 
+type FinalArtifactView = {
+  artifact_id?: number | null;
+  job_id: number;
+  platform?: string | null;
+  kind: string;
+  file_name: string;
+  path: string;
+  size_bytes?: number | null;
+  width?: number | null;
+  height?: number | null;
+  duration_seconds?: number | null;
+  created_at?: string | null;
+  exists: boolean;
+};
+
 function ResultMetaRow({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <div className="flex items-start justify-between gap-4 border-b border-gray-100 py-3 last:border-b-0 last:pb-0">
@@ -403,9 +418,23 @@ export default async function JobDetailPage({
   const viralScore = viralAnalysis?.score ?? job.viral_score ?? metrics.viral_fit_score;
   const tiktokSurfaceState = deriveTikTokSurfaceState(publishState.tiktok);
   const finalResult = result as JobResultPayload | null;
+  const finalResultMessage = finalResult?.message || "Video belum selesai";
   const previewUrl = finalResult?.preview_url ? `${engineBrowserBaseUrl()}${finalResult.preview_url}` : null;
   const downloadUrl = finalResult?.download_url ? `${engineBrowserBaseUrl()}${finalResult.download_url}` : null;
   const previewArtifact = finalResult?.preview_artifact || null;
+  const finalArtifacts: FinalArtifactView[] = finalResult?.artifacts.length
+    ? finalResult.artifacts
+    : detail.artifacts.map((artifact) => ({
+        artifact_id: artifact.id,
+        job_id: job.id,
+        platform: artifact.kind.split(":")[1] || "render",
+        kind: artifact.kind,
+        file_name: artifact.path.split(/[\\/]/).pop() || artifact.path,
+        path: artifact.path,
+        size_bytes: artifact.size_bytes,
+        created_at: artifact.created_at,
+        exists: true,
+      }));
   const publishQueueItem: PublishQueueItem = {
     job,
     selected_title: job.selected_title,
@@ -657,22 +686,12 @@ export default async function JobDetailPage({
                 </div>
               )
             ) : (
-              <EmptyState label={finalResult?.message || "Video belum selesai"} />
+              <EmptyState label={finalResultMessage} />
             )}
             <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
               <p className="ta-label text-brand-600">Final artifact list</p>
               <div className="mt-4 space-y-3">
-                {(finalResult?.artifacts.length ? finalResult.artifacts : detail.artifacts.map((artifact) => ({
-                  artifact_id: artifact.id,
-                  job_id: job.id,
-                  platform: artifact.kind.split(":")[1] || "render",
-                  kind: artifact.kind,
-                  file_name: artifact.path.split(/[\\/]/).pop() || artifact.path,
-                  path: artifact.path,
-                  size_bytes: artifact.size_bytes,
-                  created_at: artifact.created_at,
-                  exists: true,
-                }))).map((artifact, index) => (
+                {finalArtifacts.map((artifact, index) => (
                   <div key={`${artifact.kind}-${index}`} className="rounded-xl border border-gray-200 bg-white p-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>

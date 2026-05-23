@@ -1,13 +1,221 @@
 services:
-  youtube-dashboard:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: ai-youtube-dashboard:local
-    container_name: ai-youtube-dashboard
+  automation-postgres:
+    image: postgres:16-alpine
+    container_name: ai-youtube-langchain-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: automation_local
+      POSTGRES_USER: automation_local
+      POSTGRES_PASSWORD: change-me-local-postgres-password
+    ports:
+      - "5432:5432"
+    volumes:
+      - automation_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U automation_local -d automation_local"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  automation-redis:
+    image: redis:7-alpine
+    container_name: ai-youtube-langchain-redis
     restart: unless-stopped
     ports:
-      - "${DASHBOARD_PORT:-8088}:80"
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - automation_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  automation-api:
+    build:
+      context: ../ai-youtube-langchain
+      dockerfile: Dockerfile.core
+    image: ai-youtube-langchain:local
+    container_name: ai-youtube-langchain-api
+    restart: unless-stopped
+    env_file:
+      - ../ai-youtube-langchain/.env
+    environment:
+      PYTHONUNBUFFERED: "1"
+      ENABLE_YOUTUBE_UPLOAD: "0"
+      LLM_PROVIDER: "local_disabled"
+      AUTOMATION_API_CORS_ORIGINS: "http://localhost:3001,http://127.0.0.1:3001,http://localhost:8088,http://127.0.0.1:8088"
+      DATABASE_URL: "postgresql://automation_local:change-me-local-postgres-password@automation-postgres:5432/automation_local"
+      AUTOMATION_DASHBOARD_REDIS_ENABLED: "1"
+      AUTOMATION_DASHBOARD_REDIS_URL: "redis://automation-redis:6379/0"
+      AUTOMATION_DASHBOARD_REDIS_PREFIX: "automation:runtime"
+      AUTOMATION_WORKER_SERVICE_URL: "http://automation-worker:8091"
+      AUTOMATION_PUBLISHER_SERVICE_URL: "http://automation-publisher:8092"
+    command:
+      - uvicorn
+      - src.automation.api:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8080"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../ai-youtube-langchain/config:/app/config
+      - ../ai-youtube-langchain/data:/app/data
+      - ../ai-youtube-langchain/output:/app/output
+      - ../ai-youtube-langchain/downloads:/app/downloads
+      - ../ai-youtube-langchain/.ai-agent:/app/.ai-agent
+      - ../ai-youtube-langchain/credentials:/app/credentials
+    depends_on:
+      automation-postgres:
+        condition: service_healthy
+      automation-redis:
+        condition: service_healthy
+      automation-worker:
+        condition: service_healthy
+      automation-publisher:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=5)"]
+      interval: 60s
+      timeout: 20s
+      retries: 3
+      start_period: 30s
+
+  automation-scheduler:
+    build:
+      context: ../ai-youtube-langchain
+      dockerfile: Dockerfile.core
+    image: ai-youtube-langchain:local
+    container_name: ai-youtube-langchain-scheduler
+    restart: unless-stopped
+    env_file:
+      - ../ai-youtube-langchain/.env
+    environment:
+      PYTHONUNBUFFERED: "1"
+      ENABLE_YOUTUBE_UPLOAD: "0"
+      LLM_PROVIDER: "local_disabled"
+      DATABASE_URL: "postgresql://automation_local:change-me-local-postgres-password@automation-postgres:5432/automation_local"
+      AUTOMATION_DASHBOARD_REDIS_ENABLED: "1"
+      AUTOMATION_DASHBOARD_REDIS_URL: "redis://automation-redis:6379/0"
+      AUTOMATION_DASHBOARD_REDIS_PREFIX: "automation:runtime"
+    command:
+      - python
+      - -m
+      - src.automation.cli
+      - scheduler
+      - --days-ahead
+      - "1"
+      - --interval-minutes
+      - "30"
+    volumes:
+      - ../ai-youtube-langchain/config:/app/config
+      - ../ai-youtube-langchain/data:/app/data
+      - ../ai-youtube-langchain/output:/app/output
+      - ../ai-youtube-langchain/downloads:/app/downloads
+      - ../ai-youtube-langchain/.ai-agent:/app/.ai-agent
+      - ../ai-youtube-langchain/credentials:/app/credentials
+    depends_on:
+      automation-postgres:
+        condition: service_healthy
+      automation-redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-m", "src.automation.cli", "health", "--recover-stuck", "--stuck-minutes", "60", "--max-retries", "3"]
+      interval: 60s
+      timeout: 20s
+      retries: 3
+      start_period: 30s
+
+  automation-worker:
+    build:
+      context: ../ai-youtube-langchain
+      dockerfile: Dockerfile.worker
+    image: ai-youtube-langchain-worker:local
+    container_name: ai-youtube-langchain-worker
+    restart: unless-stopped
+    env_file:
+      - ../ai-youtube-langchain/.env
+    environment:
+      PYTHONUNBUFFERED: "1"
+      ENABLE_YOUTUBE_UPLOAD: "0"
+      LLM_PROVIDER: "local_disabled"
+      DATABASE_URL: "postgresql://automation_local:change-me-local-postgres-password@automation-postgres:5432/automation_local"
+      AUTOMATION_DASHBOARD_REDIS_ENABLED: "1"
+      AUTOMATION_DASHBOARD_REDIS_URL: "redis://automation-redis:6379/0"
+      AUTOMATION_DASHBOARD_REDIS_PREFIX: "automation:runtime"
+      AUTOMATION_WORKER_SERVICE_URL: "http://automation-worker:8091"
+    command:
+      - uvicorn
+      - src.worker_service.api:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8091"
+    ports:
+      - "8091:8091"
+    volumes:
+      - ../ai-youtube-langchain/config:/app/config
+      - ../ai-youtube-langchain/data:/app/data
+      - ../ai-youtube-langchain/output:/app/output
+      - ../ai-youtube-langchain/downloads:/app/downloads
+      - ../ai-youtube-langchain/.ai-agent:/app/.ai-agent
+      - ../ai-youtube-langchain/credentials:/app/credentials
+    depends_on:
+      automation-postgres:
+        condition: service_healthy
+      automation-redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8091/health', timeout=5)"]
+      interval: 60s
+      timeout: 20s
+      retries: 3
+      start_period: 30s
+
+  automation-publisher:
+    build:
+      context: ../ai-youtube-langchain
+      dockerfile: Dockerfile.publisher
+    image: ai-youtube-langchain-publisher:local
+    container_name: ai-youtube-langchain-publisher
+    restart: unless-stopped
+    env_file:
+      - ../ai-youtube-langchain/.env
+    environment:
+      PYTHONUNBUFFERED: "1"
+      AUTOMATION_PUBLISHER_SERVICE_URL: "http://automation-publisher:8092"
+    command:
+      - uvicorn
+      - src.publisher_service.api:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8092"
+    ports:
+      - "8092:8092"
+    volumes:
+      - ../ai-youtube-langchain/config:/app/config
+      - ../ai-youtube-langchain/data:/app/data
+      - ../ai-youtube-langchain/output:/app/output
+      - ../ai-youtube-langchain/downloads:/app/downloads
+      - ../ai-youtube-langchain/.ai-agent:/app/.ai-agent
+      - ../ai-youtube-langchain/credentials:/app/credentials
+    depends_on:
+      automation-postgres:
+        condition: service_healthy
+      automation-redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8092/health', timeout=5)"]
+      interval: 60s
+      timeout: 20s
+      retries: 3
+      start_period: 30s
 
   youtube-dashboard-next:
     build:
@@ -17,18 +225,45 @@ services:
     container_name: ai-youtube-dashboard-next
     restart: unless-stopped
     environment:
-      ENGINE_API_BASE_URL: "${ENGINE_API_BASE_URL:-http://host.docker.internal:8080}"
-      NEXT_PUBLIC_ENGINE_API_BASE_URL: "${NEXT_PUBLIC_ENGINE_API_BASE_URL:-http://localhost:8080}"
-      ENGINE_SYNC_STATE_VIEW: "${ENGINE_SYNC_STATE_VIEW:-default}"
-      ENGINE_SYNC_WEBSOCKET_ENABLED: "${ENGINE_SYNC_WEBSOCKET_ENABLED:-1}"
-      ENGINE_SYNC_POLLING_INTERVAL_MS: "${ENGINE_SYNC_POLLING_INTERVAL_MS:-15000}"
-      DASHBOARD_AUTH_ENABLED: "${DASHBOARD_AUTH_ENABLED:-0}"
-      DASHBOARD_AUTH_SECRET: "${DASHBOARD_AUTH_SECRET:-}"
-      DASHBOARD_VIEWER_USERNAME: "${DASHBOARD_VIEWER_USERNAME:-}"
-      DASHBOARD_VIEWER_PASSWORD: "${DASHBOARD_VIEWER_PASSWORD:-}"
-      DASHBOARD_OPERATOR_USERNAME: "${DASHBOARD_OPERATOR_USERNAME:-}"
-      DASHBOARD_OPERATOR_PASSWORD: "${DASHBOARD_OPERATOR_PASSWORD:-}"
-      DASHBOARD_ADMIN_USERNAME: "${DASHBOARD_ADMIN_USERNAME:-}"
-      DASHBOARD_ADMIN_PASSWORD: "${DASHBOARD_ADMIN_PASSWORD:-}"
+      ENGINE_API_BASE_URL: "http://automation-api:8080"
+      NEXT_PUBLIC_ENGINE_API_BASE_URL: "http://localhost:8080"
+      HOSTNAME: "0.0.0.0"
+      PORT: "3000"
+      ENGINE_SYNC_STATE_VIEW: "default"
+      ENGINE_SYNC_WEBSOCKET_ENABLED: "1"
+      ENGINE_SYNC_POLLING_INTERVAL_MS: "15000"
+      DASHBOARD_AUTH_ENABLED: "0"
+      DASHBOARD_AUTH_SECRET: ""
+      DASHBOARD_VIEWER_USERNAME: ""
+      DASHBOARD_VIEWER_PASSWORD: ""
+      DASHBOARD_OPERATOR_USERNAME: ""
+      DASHBOARD_OPERATOR_PASSWORD: ""
+      DASHBOARD_ADMIN_USERNAME: ""
+      DASHBOARD_ADMIN_PASSWORD: ""
     ports:
-      - "${NEXT_DASHBOARD_PORT:-3001}:3000"
+      - "3001:3000"
+    depends_on:
+      automation-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:3000/"]
+      interval: 60s
+      timeout: 20s
+      retries: 3
+      start_period: 30s
+
+  youtube-dashboard:
+    profiles:
+      - legacy
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ai-youtube-dashboard:local
+    container_name: ai-youtube-dashboard
+    restart: unless-stopped
+    ports:
+      - "8088:80"
+
+volumes:
+  automation_postgres_data:
+  automation_redis_data:

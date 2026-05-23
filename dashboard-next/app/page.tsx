@@ -1,6 +1,7 @@
 import { AppShell } from "../components/app-shell";
 import { ApprovalList } from "../components/approval-list";
 import { ChannelGrid } from "../components/channel-grid";
+import { HealthAlerts } from "../components/health-alerts";
 import { FlowBoard } from "../components/flow-board";
 import { JobTable } from "../components/job-table";
 import { MetricCard } from "../components/metric-card";
@@ -57,6 +58,10 @@ export default async function DashboardPage() {
         <MetricCard label="TikTok token missing" value={tiktokTokenMissing} tone={tiktokTokenMissing > 0 ? "warn" : "good"} />
         <MetricCard label="TikTok published" value={tiktokPublished} tone="good" />
         <MetricCard label="TikTok failed" value={tiktokFailed} tone={tiktokFailed > 0 ? "warn" : "neutral"} />
+      </section>
+
+      <section className="mt-6">
+        <HealthAlerts readiness={readiness} />
       </section>
 
       <section className="mt-6 grid gap-6">

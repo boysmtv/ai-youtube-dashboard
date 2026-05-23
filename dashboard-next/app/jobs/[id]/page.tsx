@@ -6,16 +6,18 @@ import { JobRealtimePanel } from "../../../components/job-realtime-panel";
 import { StatusBadge } from "../../../components/status-badge";
 import { hasDashboardRole, requireDashboardSession } from "../../../lib/dashboard-auth";
 import {
+  engineBrowserBaseUrl,
   engineArtifactDownloadUrl,
   engineJobFileDownloadUrl,
   getJobDetail,
   getJobFile,
   getJobMetrics,
   getJobPublishState,
+  getJobResult,
   getJobTimeline,
   getOverview,
 } from "../../../lib/engine-api";
-import type { JobFilePayload, JobTimelinePayload, PublishStatePayload } from "../../../lib/engine-types";
+import type { JobFilePayload, JobResultPayload, JobTimelinePayload, PublishStatePayload } from "../../../lib/engine-types";
 import { parseEngineSyncSettings } from "../../../lib/sync-settings";
 import { pushTiktokDashboardJob, pushYoutubeDashboardJob } from "../actions";
 
@@ -162,6 +164,34 @@ function DownloadLink({ href, label }: Readonly<{ href: string; label: string }>
       {label}
     </a>
   );
+}
+
+function ResultMetaRow({ label, value }: Readonly<{ label: string; value: string }>) {
+  return (
+    <div className="flex items-start justify-between gap-4 border-b border-gray-100 py-3 last:border-b-0 last:pb-0">
+      <span className="ta-label">{label}</span>
+      <span className="max-w-[70%] break-words text-right text-sm text-gray-700">{value}</span>
+    </div>
+  );
+}
+
+function formatDimension(value?: number | null) {
+  if (!value || value <= 0) {
+    return "Not set";
+  }
+  return new Intl.NumberFormat("en-US").format(value);
+}
+
+function formatDuration(value?: number | null) {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return "Not set";
+  }
+  if (value < 60) {
+    return `${value.toFixed(1)}s`;
+  }
+  const minutes = Math.floor(value / 60);
+  const seconds = Math.round(value % 60);
+  return `${minutes}m ${seconds}s`;
 }
 
 function FileCard({
@@ -329,7 +359,7 @@ export default async function JobDetailPage({
   const session = requireDashboardSession(`/jobs/${params.id}`);
   const syncSettings = parseEngineSyncSettings(searchParams);
   const jobId = Number(params.id);
-  const [detail, overview, transcriptFile, planFile, timeline, metrics, publishState] = await Promise.all([
+  const [detail, overview, transcriptFile, planFile, timeline, metrics, publishState, result] = await Promise.all([
     getJobDetail(jobId, syncSettings.stateView),
     getOverview(syncSettings.stateView),
     getJobFile(jobId, "transcript").catch(() => null),
@@ -337,6 +367,7 @@ export default async function JobDetailPage({
     getJobTimeline(jobId, syncSettings.stateView),
     getJobMetrics(jobId, syncSettings.stateView),
     getJobPublishState(jobId, syncSettings.stateView),
+    getJobResult(jobId, syncSettings.stateView).catch(() => null),
   ]);
   const { job } = detail;
   const canOperate = hasDashboardRole(session, "operator");
@@ -352,6 +383,10 @@ export default async function JobDetailPage({
   const progress = `${progressValue.toFixed(0)}%`;
   const lastError = detail.last_error || timeline.last_error || job.last_error || "";
   const tiktokSurfaceState = deriveTikTokSurfaceState(publishState.tiktok);
+  const finalResult = result as JobResultPayload | null;
+  const previewUrl = finalResult?.preview_url ? `${engineBrowserBaseUrl()}${finalResult.preview_url}` : null;
+  const downloadUrl = finalResult?.download_url ? `${engineBrowserBaseUrl()}${finalResult.download_url}` : null;
+  const previewArtifact = finalResult?.preview_artifact || null;
 
   return (
     <AppShell>
@@ -471,23 +506,87 @@ export default async function JobDetailPage({
         <div className="ta-panel p-5">
           <p className="ta-label text-brand-600">Rendered outputs</p>
           <h3 className="mt-2 text-lg font-semibold text-gray-900">Ready assets</h3>
-          <div className="mt-4 space-y-3">
-            {detail.artifacts.length ? (
-              detail.artifacts.map((artifact) => (
-                <div key={artifact.id} className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <strong className="text-sm text-gray-900">{artifact.kind}</strong>
-                    <DownloadLink href={engineArtifactDownloadUrl(job.id, artifact.id)} label="Download" />
+          <div className="mt-4 space-y-4">
+            {finalResult ? (
+              finalResult.available && previewUrl && previewArtifact ? (
+                <>
+                  <div className="overflow-hidden rounded-2xl border border-gray-200 bg-black">
+                    <video className="aspect-[9/16] w-full bg-black" controls playsInline preload="metadata" src={previewUrl} />
                   </div>
-                  <p className="mt-3 break-all text-sm text-gray-700">{artifact.path}</p>
-                  <p className="mt-2 text-xs text-gray-500">
-                    {formatBytes(artifact.size_bytes)} - {artifact.created_at}
+                  <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="ta-label text-brand-600">Final video</p>
+                        <h4 className="mt-1 text-base font-semibold text-gray-900">{previewArtifact.file_name}</h4>
+                      </div>
+                      {downloadUrl && previewArtifact.artifact_id ? (
+                        <DownloadLink href={downloadUrl} label="Download" />
+                      ) : null}
+                    </div>
+                    <div className="mt-4 space-y-3">
+                      <ResultMetaRow label="File name" value={previewArtifact.file_name} />
+                      <ResultMetaRow label="Size" value={formatBytes(previewArtifact.size_bytes)} />
+                      <ResultMetaRow
+                        label="Resolution"
+                        value={previewArtifact.width && previewArtifact.height ? `${formatDimension(previewArtifact.width)} × ${formatDimension(previewArtifact.height)}` : "Not set"}
+                      />
+                      <ResultMetaRow label="Duration" value={formatDuration(previewArtifact.duration_seconds)} />
+                      <ResultMetaRow label="Created" value={previewArtifact.created_at || "Not set"} />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-5 text-sm text-gray-600">
+                  <strong className="block text-base text-gray-900">{finalResult.message}</strong>
+                  <p className="mt-2">
+                    {finalResult.status === "failed"
+                      ? "Video gagal dibuat. Lihat ringkasan error dan activity feed di atas."
+                      : finalResult.status === "rendered" || finalResult.status === "uploaded"
+                        ? "File hasil tidak ditemukan. Output mungkin sudah dibersihkan atau belum tersedia di folder output."
+                        : "Video masih diproses. Preview akan muncul setelah render selesai."}
                   </p>
                 </div>
-              ))
+              )
             ) : (
-              <EmptyState label="No rendered outputs yet." />
+              <EmptyState label={finalResult?.message || "Video belum selesai"} />
             )}
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+              <p className="ta-label text-brand-600">Final artifact list</p>
+              <div className="mt-4 space-y-3">
+                {(finalResult?.artifacts.length ? finalResult.artifacts : detail.artifacts.map((artifact) => ({
+                  artifact_id: artifact.id,
+                  job_id: job.id,
+                  platform: artifact.kind.split(":")[1] || "render",
+                  kind: artifact.kind,
+                  file_name: artifact.path.split(/[\\/]/).pop() || artifact.path,
+                  path: artifact.path,
+                  size_bytes: artifact.size_bytes,
+                  created_at: artifact.created_at,
+                  exists: true,
+                }))).map((artifact, index) => (
+                  <div key={`${artifact.kind}-${index}`} className="rounded-xl border border-gray-200 bg-white p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <strong className="text-sm text-gray-900">{artifact.platform || artifact.kind}</strong>
+                        <p className="mt-1 text-xs text-gray-500">{artifact.file_name}</p>
+                      </div>
+                      {artifact.artifact_id ? (
+                        <DownloadLink href={engineArtifactDownloadUrl(job.id, artifact.artifact_id)} label="Download" />
+                      ) : null}
+                    </div>
+                    <div className="mt-3 space-y-2 text-sm text-gray-700">
+                      <ResultMetaRow label="Size" value={formatBytes(artifact.size_bytes)} />
+                      <ResultMetaRow
+                        label="Resolution"
+                        value={artifact.width && artifact.height ? `${formatDimension(artifact.width)} × ${formatDimension(artifact.height)}` : "Not set"}
+                      />
+                      <ResultMetaRow label="Duration" value={formatDuration(artifact.duration_seconds)} />
+                      <ResultMetaRow label="Created" value={artifact.created_at || "Not set"} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>

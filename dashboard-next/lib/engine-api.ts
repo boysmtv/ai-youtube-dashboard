@@ -11,6 +11,7 @@ import type {
   JobMutationResult,
   JobRecord,
   JobMetricsPayload,
+  JobResultPayload,
   JobTimelinePayload,
   ListPayload,
   OverviewPayload,
@@ -124,6 +125,10 @@ export async function getJobMetrics(jobId: number, stateView: EngineStateView = 
 
 export async function getJobPublishState(jobId: number, stateView: EngineStateView = "default") {
   return fetchEngine<PublishStatePayload>(withStateView(`/api/jobs/${jobId}/publish-state`, stateView));
+}
+
+export async function getJobResult(jobId: number, stateView: EngineStateView = "default") {
+  return fetchEngine<JobResultPayload>(withStateView(`/api/jobs/${jobId}/result`, stateView));
 }
 
 export async function getJobFile(jobId: number, fileKey: "transcript" | "plan") {

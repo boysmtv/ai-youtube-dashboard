@@ -303,6 +303,23 @@ export type UploadRecord = {
   created_at: string;
 };
 
+export type JobResultArtifact = {
+  artifact_id?: number | null;
+  job_id: number;
+  platform?: string | null;
+  kind: string;
+  file_name: string;
+  path: string;
+  size_bytes?: number | null;
+  width?: number | null;
+  height?: number | null;
+  duration_seconds?: number | null;
+  codec_video?: string | null;
+  codec_audio?: string | null;
+  created_at?: string | null;
+  exists: boolean;
+};
+
 export type JobEventRecord = {
   id: number;
   job_id: number;
@@ -451,6 +468,20 @@ export type JobFilePayload = {
   text: string;
   exists?: boolean;
   json?: Record<string, unknown> | null;
+};
+
+export type JobResultPayload = {
+  generated_at: string;
+  job_id: number;
+  status: string;
+  available: boolean;
+  message: string;
+  preview_url?: string | null;
+  download_url?: string | null;
+  preview_artifact?: JobResultArtifact | null;
+  artifacts: JobResultArtifact[];
+  manifest_status: string;
+  manifest_error: string;
 };
 
 export type ManualPushPayload = {

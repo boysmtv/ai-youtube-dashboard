@@ -18,6 +18,12 @@ type DashboardAccount = {
   role: DashboardRole;
 };
 
+type DashboardAuthConfig = {
+  enabled: boolean;
+  secret: string;
+  accounts: DashboardAccount[];
+};
+
 const SESSION_COOKIE = "dashboard_session";
 const ROLE_WEIGHT: Record<DashboardRole, number> = {
   viewer: 1,
@@ -48,23 +54,39 @@ function configuredAccounts(): DashboardAccount[] {
 }
 
 function authSecret() {
-  return process.env.DASHBOARD_AUTH_SECRET || "";
+  return (process.env.DASHBOARD_AUTH_SECRET || "").trim();
+}
+
+function authEnabledRequested() {
+  const envFlag = (process.env.DASHBOARD_AUTH_ENABLED || "").trim().toLowerCase();
+  return !(envFlag === "0" || envFlag === "false" || envFlag === "off" || envFlag === "");
+}
+
+function resolveAuthConfig(): DashboardAuthConfig {
+  const secret = authSecret();
+  const accounts = configuredAccounts();
+  if (!authEnabledRequested()) {
+    return { enabled: false, secret, accounts };
+  }
+  if (!secret) {
+    throw new Error("DASHBOARD_AUTH_SECRET is required when dashboard auth is enabled.");
+  }
+  if (!accounts.length) {
+    throw new Error("At least one dashboard account is required when dashboard auth is enabled.");
+  }
+  return { enabled: true, secret, accounts };
 }
 
 export function isDashboardAuthEnabled() {
-  const envFlag = (process.env.DASHBOARD_AUTH_ENABLED || "").trim().toLowerCase();
-  if (envFlag === "0" || envFlag === "false" || envFlag === "off") {
-    return false;
-  }
-  return Boolean(authSecret() && configuredAccounts().length);
+  return resolveAuthConfig().enabled;
 }
 
 export function dashboardAuthReadiness() {
-  const accounts = configuredAccounts();
+  const config = resolveAuthConfig();
   return {
-    enabled: isDashboardAuthEnabled(),
-    secret_present: Boolean(authSecret()),
-    account_count: accounts.length,
+    enabled: config.enabled,
+    secret_present: Boolean(config.secret),
+    account_count: config.accounts.length,
     expected_env: [
       "DASHBOARD_AUTH_ENABLED",
       "DASHBOARD_AUTH_SECRET",
@@ -79,7 +101,8 @@ export function dashboardAuthReadiness() {
 }
 
 function signValue(value: string) {
-  return createHmac("sha256", authSecret()).update(value).digest("base64url");
+  const config = resolveAuthConfig();
+  return createHmac("sha256", config.secret).update(value).digest("base64url");
 }
 
 function verifyValue(value: string, signature: string) {
@@ -115,10 +138,14 @@ function decodeSession(value: string | undefined): DashboardSession | null {
 }
 
 export function authenticateDashboardUser(username: string, password: string): DashboardAccount | null {
-  return configuredAccounts().find((item) => item.username === username.trim() && item.password === password) || null;
+  return resolveAuthConfig().accounts.find((item) => item.username === username.trim() && item.password === password) || null;
 }
 
 export function setDashboardSession(account: DashboardAccount) {
+  const config = resolveAuthConfig();
+  if (!config.enabled) {
+    throw new Error("Dashboard auth is disabled.");
+  }
   cookies().set(SESSION_COOKIE, encodeSession({ username: account.username, role: account.role }), {
     httpOnly: true,
     sameSite: "lax",
@@ -133,7 +160,8 @@ export function clearDashboardSession() {
 }
 
 export function getDashboardSession(): DashboardSession {
-  if (!isDashboardAuthEnabled()) {
+  const config = resolveAuthConfig();
+  if (!config.enabled) {
     return { username: "local-admin", role: "admin", authEnabled: false };
   }
 

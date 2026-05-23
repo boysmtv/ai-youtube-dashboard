@@ -8,7 +8,9 @@ export default async function ChannelsPage() {
   requireDashboardSession("/channels");
   const [registry, overview, readiness] = await Promise.all([getRegistry(), getOverview(), getChannelReadiness(60)]);
   const readyCount = readiness.items.filter((item) => item.upload_ready).length;
-  const blockedCount = readiness.items.filter((item) => item.issues.length > 0).length;
+  const missingTokenCount = readiness.items.filter((item) => item.issues.includes("missing_token")).length;
+  const configuredCount = readiness.items.filter((item) => item.enabled && !item.upload_ready && !item.issues.includes("missing_token")).length;
+  const blockedCount = readiness.items.filter((item) => !item.enabled || item.issues.length > 0).length;
   const totalChecks = readiness.items.reduce((sum, item) => sum + item.checks.length, 0);
   const passingChecks = readiness.items.reduce((sum, item) => sum + item.readiness_score, 0);
 
@@ -23,10 +25,12 @@ export default async function ChannelsPage() {
       </header>
 
       <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Configured" value={registry.channels.length} />
+        <MetricCard label="Total lanes" value={registry.channels.length} />
         <MetricCard label="Enabled" value={registry.channels.filter((item) => item.enabled).length} tone="good" />
         <MetricCard label="Upload Ready" value={readyCount} tone={readyCount ? "good" : "warn"} />
-        <MetricCard label="Needs Attention" value={blockedCount} tone={blockedCount ? "warn" : "good"} />
+        <MetricCard label="Configured" value={configuredCount} tone={configuredCount ? "good" : "neutral"} />
+        <MetricCard label="Missing token" value={missingTokenCount} tone={missingTokenCount ? "warn" : "good"} />
+        <MetricCard label="Blocked" value={blockedCount} tone={blockedCount ? "warn" : "good"} />
         <MetricCard label="Checks Passing" value={`${passingChecks}/${totalChecks || 0}`} tone={blockedCount ? "warn" : "good"} />
       </section>
 

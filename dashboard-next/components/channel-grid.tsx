@@ -12,6 +12,26 @@ export function ChannelGrid({
 }>) {
   const readinessByChannel = new Map(readiness.items.map((item) => [item.channel_id, item]));
 
+  function deriveHealth(item: (typeof readiness.items)[number] | undefined, channelEnabled: boolean) {
+    if (!channelEnabled) {
+      return { label: "disabled", tone: "bg-gray-100 text-gray-700" };
+    }
+    if (!item) {
+      return { label: "blocked", tone: "bg-warning-50 text-warning-700" };
+    }
+    const issueSet = new Set(item.issues);
+    if (item.upload_ready) {
+      return { label: "ready", tone: "bg-success-50 text-success-700" };
+    }
+    if (issueSet.has("missing_token")) {
+      return { label: "missing token", tone: "bg-warning-50 text-warning-700" };
+    }
+    if (item.enabled) {
+      return { label: "configured", tone: "bg-brand-50 text-brand-700" };
+    }
+    return { label: "blocked", tone: "bg-warning-50 text-warning-700" };
+  }
+
   return (
     <section className="ta-panel p-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -29,6 +49,7 @@ export function ChannelGrid({
             {(() => {
               const item = readinessByChannel.get(channel.id);
               const issues = item?.issues || [];
+              const health = deriveHealth(item, channel.enabled);
               return (
                 <>
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -39,15 +60,9 @@ export function ChannelGrid({
                 </p>
               </div>
               <span
-                className={`ta-status font-mono ${
-                  !channel.enabled
-                    ? "bg-gray-100 text-gray-700"
-                    : item?.upload_ready
-                      ? "bg-success-50 text-success-700"
-                      : "bg-warning-50 text-warning-700"
-                }`}
+                className={`ta-status font-mono ${health.tone}`}
               >
-                {!channel.enabled ? "disabled" : item?.upload_ready ? "upload ready" : "attention"}
+                {health.label}
               </span>
             </div>
             <div className="mt-4 grid gap-2 text-sm">
@@ -79,6 +94,12 @@ export function ChannelGrid({
                 <span className="text-gray-500">Connection</span>
                 <strong className="text-gray-900">
                   {item?.paths.token_exists ? "token ok" : "token missing"} / {item?.paths.client_secret_exists ? "secret ok" : "secret missing"}
+                </strong>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span className="text-gray-500">Health</span>
+                <strong className="text-gray-900">
+                  {item?.upload_ready ? "ready" : issues.includes("missing_token") ? "missing token" : channel.enabled ? "configured" : "disabled"}
                 </strong>
               </div>
             </div>

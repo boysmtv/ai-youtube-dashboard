@@ -48,6 +48,39 @@ function withStateView(path: string, stateView: EngineStateView = "default") {
   return `${pathname}?${params.toString()}`;
 }
 
+function parseEngineErrorMessage(text: string) {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    return "";
+  }
+  try {
+    const parsed = JSON.parse(trimmed) as unknown;
+    if (parsed && typeof parsed === "object" && "detail" in parsed) {
+      const detail = (parsed as { detail?: unknown }).detail;
+      if (Array.isArray(detail)) {
+        return detail
+          .map((item) => {
+            if (item && typeof item === "object" && "msg" in item) {
+              return String((item as { msg?: unknown }).msg || "");
+            }
+            return String(item || "");
+          })
+          .filter(Boolean)
+          .join(" ");
+      }
+      if (typeof detail === "string") {
+        return detail;
+      }
+      if (detail !== undefined && detail !== null) {
+        return String(detail);
+      }
+    }
+  } catch {
+    // Fall back to raw text below.
+  }
+  return trimmed;
+}
+
 async function fetchEngine<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${engineBaseUrl()}${path}`, {
     cache: "no-store",
@@ -60,7 +93,7 @@ async function fetchEngine<T>(path: string, init?: RequestInit): Promise<T> {
 
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(text || `Engine request failed: ${response.status}`);
+    throw new Error(parseEngineErrorMessage(text) || `Engine request failed: ${response.status}`);
   }
 
   return response.json() as Promise<T>;

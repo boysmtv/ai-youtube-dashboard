@@ -133,7 +133,7 @@ export async function updateRegistry(payload: RegistryPayload, headers: EngineMu
   });
 }
 
-export async function getJobs(limit = 100, stateView: EngineStateView = "default") {
+export async function getJobs(limit = 50, stateView: EngineStateView = "default") {
   return fetchEngine<ListPayload<JobRecord>>(withStateView(`/api/jobs?limit=${limit}`, stateView));
 }
 
@@ -187,11 +187,11 @@ export async function getPublishHistory(limit = 50) {
   return fetchEngine<PublishHistoryPayload>(`/api/publish/history?limit=${limit}`);
 }
 
-export async function getPublishQueue(limit = 100) {
+export async function getPublishQueue(limit = 50) {
   return fetchEngine<PublishQueuePayload>(`/api/publish/queue?limit=${limit}`);
 }
 
-export async function getRecentLogs(limit = 100) {
+export async function getRecentLogs(limit = 50) {
   return fetchEngine<ListPayload<Record<string, unknown>>>(`/api/logs/recent?limit=${limit}`);
 }
 

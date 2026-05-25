@@ -6,8 +6,10 @@ import { getJobs, getOverview, getRegistry } from "../../lib/engine-api";
 
 export default async function JobsPage() {
   const session = requireDashboardSession("/jobs");
-  const [payload, registry, overview] = await Promise.all([getJobs(100), getRegistry(), getOverview()]);
+  const [payload, registry, overview] = await Promise.all([getJobs(50), getRegistry(), getOverview()]);
   const canOperate = hasDashboardRole(session, "operator");
+  const currentChannelIds = new Set(registry.channels.map((channel) => channel.id));
+  const jobs = payload.items.filter((job) => currentChannelIds.has(job.channel_id));
 
   return (
     <AppShell>
@@ -20,7 +22,7 @@ export default async function JobsPage() {
         <JobCreateForm registry={registry} uploadGuard={overview.upload_guard} canOperate={canOperate} />
       </section>
       <section className="mt-6">
-        <JobTable jobs={payload.items} canOperate={canOperate} />
+        <JobTable jobs={jobs} canOperate={canOperate} />
       </section>
     </AppShell>
   );

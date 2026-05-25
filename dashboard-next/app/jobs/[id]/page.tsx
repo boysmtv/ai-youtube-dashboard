@@ -290,6 +290,12 @@ function PublishButtonGroup({
             <DetailRow label="Video ID" value={publishState.youtube.youtube_video_id || "Pending"} />
             <DetailRow label="URL" value={publishState.youtube.youtube_url || "Pending"} />
           </div>
+          <div className="mt-4 rounded-xl border border-warning-200 bg-warning-50 p-4 text-sm text-warning-900">
+            <strong className="block">Peringatan copyright</strong>
+            <p className="mt-2">
+              Pastikan sumber video/audio dimiliki, berlisensi, atau boleh digunakan. Upload hanya boleh dilakukan setelah operator menyetujui risiko ini.
+            </p>
+          </div>
           {youtubeReady ? (
             <form action={pushYoutubeDashboardJob} className="mt-4 grid gap-3">
               <input name="job_id" type="hidden" value={jobId} />
@@ -305,6 +311,10 @@ function PublishButtonGroup({
               <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                 <input className="ta-check" name="require_credentials" type="checkbox" defaultChecked />
                 Require credentials
+              </label>
+              <label className="flex items-start gap-2 text-sm font-semibold text-gray-700">
+                <input className="ta-check mt-1" name="copyright_acknowledged" type="checkbox" required />
+                <span>Saya memahami risiko copyright untuk sumber video/audio ini.</span>
               </label>
               <ConfirmSubmitButton className="px-4 py-2 text-sm" message={`Push job #${jobId} to YouTube now?`} pendingText="Pushing...">
                 Push to YouTube
@@ -339,6 +349,12 @@ function PublishButtonGroup({
             <DetailRow label="Post ID" value={publishState.tiktok.post_id || "Pending"} />
             <DetailRow label="Reason" value={tiktokMessage} />
           </div>
+          <div className="mt-4 rounded-xl border border-warning-200 bg-warning-50 p-4 text-sm text-warning-900">
+            <strong className="block">Peringatan copyright</strong>
+            <p className="mt-2">
+              Pastikan sumber video/audio dimiliki, berlisensi, atau boleh digunakan. Upload hanya boleh dilakukan setelah operator menyetujui risiko ini.
+            </p>
+          </div>
           {tiktokReady ? (
             <form action={pushTiktokDashboardJob} className="mt-4 grid gap-3">
               <input name="job_id" type="hidden" value={jobId} />
@@ -354,6 +370,10 @@ function PublishButtonGroup({
               <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                 <input className="ta-check" name="require_credentials" type="checkbox" defaultChecked />
                 Require credentials
+              </label>
+              <label className="flex items-start gap-2 text-sm font-semibold text-gray-700">
+                <input className="ta-check mt-1" name="copyright_acknowledged" type="checkbox" required />
+                <span>Saya memahami risiko copyright untuk sumber video/audio ini.</span>
               </label>
               <ConfirmSubmitButton className="px-4 py-2 text-sm" message={`Push job #${jobId} to TikTok now?`} pendingText="Pushing...">
                 Push to TikTok

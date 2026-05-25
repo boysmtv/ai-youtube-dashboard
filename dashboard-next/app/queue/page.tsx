@@ -7,8 +7,10 @@ import { getJobs, getOverview, getRegistry } from "../../lib/engine-api";
 
 export default async function QueuePage() {
   const session = requireDashboardSession("/queue");
-  const [payload, registry, overview] = await Promise.all([getJobs(100), getRegistry(), getOverview()]);
+  const [payload, registry, overview] = await Promise.all([getJobs(50), getRegistry(), getOverview()]);
   const canOperate = hasDashboardRole(session, "operator");
+  const currentChannelIds = new Set(registry.channels.map((channel) => channel.id));
+  const jobs = payload.items.filter((job) => currentChannelIds.has(job.channel_id));
   const activeCount = ["searching", "downloaded", "transcribed", "planned", "voiceover", "rendered", "uploading"].reduce(
     (total, status) => total + (overview.job_counts[status] || 0),
     0,
@@ -44,7 +46,7 @@ export default async function QueuePage() {
           </div>
           <p className="text-sm text-gray-500">Urutan kerja paling baru ditampilkan di atas.</p>
         </div>
-        <JobTable jobs={payload.items} canOperate={canOperate} />
+        <JobTable jobs={jobs} canOperate={canOperate} />
       </section>
     </AppShell>
   );

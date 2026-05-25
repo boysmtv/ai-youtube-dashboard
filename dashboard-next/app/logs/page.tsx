@@ -5,7 +5,7 @@ import { getRecentLogs } from "../../lib/engine-api";
 
 export default async function LogsPage() {
   requireDashboardSession("/logs");
-  const logs = await getRecentLogs(120);
+  const logs = await getRecentLogs(50);
 
   return (
     <AppShell>

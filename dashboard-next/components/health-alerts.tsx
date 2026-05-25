@@ -52,6 +52,7 @@ export function HealthAlerts({
   const blocked = readiness.items.filter((item) => item.issues.length > 0).length;
   const alerts = readiness.items.filter((item) => item.issues.length > 0).slice(0, 4);
   const youtube = runtimeHealth?.youtube_upload || null;
+  const audio = runtimeHealth?.audio || null;
 
   return (
     <section className="ta-panel p-5">
@@ -87,9 +88,33 @@ export function HealthAlerts({
             {youtube.messages.map((message) => (
               <p key={message}>{message}</p>
             ))}
+            <p className="text-xs text-gray-500">
+              GCP OAuth client: {youtube.client_secret_exists ? "tersedia" : "belum tersedia"}
+            </p>
+            <p className="text-xs text-gray-500">
+              Token OAuth: {youtube.token_exists ? "tersedia" : "belum tersedia"}
+            </p>
+            <p className="text-xs text-gray-500">Token path writable: {youtube.token_writable ? "ya" : "tidak"}</p>
             <p className="text-xs text-gray-500">Path client: {youtube.client_secret_path}</p>
             <p className="text-xs text-gray-500">Path token: {youtube.token_path}</p>
             <p className="text-xs text-gray-500">Status upload: {youtube.upload_allowed ? "siap" : `blocked (${youtube.blocked_reason})`}</p>
+          </div>
+        </div>
+      ) : null}
+
+      {audio ? (
+        <div className="mt-5 rounded-2xl border border-gray-200 bg-gray-50 p-4">
+          <p className="ta-label text-gray-600">Audio readiness</p>
+          <div className="mt-3 space-y-2 text-sm text-gray-700">
+            {audio.messages.map((message) => (
+              <p key={message}>{message}</p>
+            ))}
+            <p className="text-xs text-gray-500">Mode: {audio.mode}</p>
+            <p className="text-xs text-gray-500">Local TTS: {audio.local_tts_available ? "tersedia" : "tidak tersedia"}</p>
+            <p className="text-xs text-gray-500">Source audio allowed: {audio.source_audio_allowed ? "ya" : "tidak"}</p>
+            <p className="text-xs text-gray-500">ElevenLabs available: {audio.elevenlabs_available ? "ya" : "tidak"}</p>
+            <p className="text-xs text-gray-500">Tone placeholder: {audio.tone_placeholder_enabled ? "aktif" : "nonaktif"}</p>
+            <p className="text-xs text-gray-500">Status: {audio.ready ? "siap" : `blocked (${audio.blocked_reason})`}</p>
           </div>
         </div>
       ) : null}

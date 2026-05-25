@@ -11,7 +11,7 @@ export default async function PublishPage() {
   const [overview, approvals, publishQueue, publishHistory] = await Promise.all([
     getOverview(),
     getRecentApprovals(50),
-    getPublishQueue(100),
+    getPublishQueue(50),
     getPublishHistory(50),
   ]);
   const queueItems = publishQueue.items.filter((item) => item.status !== "uploaded");

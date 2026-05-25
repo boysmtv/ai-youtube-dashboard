@@ -38,6 +38,11 @@ export function UploadApprovalPanel({
     const note = String(formData.get("note") || "").trim();
     const expiresInMinutesText = String(formData.get("expires_in_minutes") || "").trim();
     const expiresInMinutes = expiresInMinutesText ? Number(expiresInMinutesText) : uploadGuard.session_minutes;
+    const copyrightAcknowledged = formData.get("copyright_acknowledged") === "on" || formData.get("copyright_acknowledged") === "true";
+    if (!copyrightAcknowledged) {
+      setNotice("Peringatan copyright harus dicentang sebelum persetujuan manual diberikan.");
+      return;
+    }
     setPendingKey(`${jobId}:${platform}:approve`);
     setNotice("");
     startTransition(async () => {
@@ -87,6 +92,12 @@ export function UploadApprovalPanel({
           <h3 className="mt-2 text-lg font-semibold text-gray-900">{title}</h3>
         </div>
         <span className="ta-status bg-warning-50 font-mono text-warning-700">{items.length} item(s)</span>
+      </div>
+      <div className="mt-4 rounded-xl border border-warning-200 bg-warning-50 p-4 text-sm text-warning-900">
+        <strong className="block">Peringatan copyright</strong>
+        <p className="mt-2">
+          Pastikan sumber video/audio dimiliki, berlisensi, atau boleh digunakan. Upload hanya boleh dilakukan setelah operator menyetujui risiko ini.
+        </p>
       </div>
       {notice ? <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">{notice}</div> : null}
       <div className="mt-5 grid gap-4">
@@ -160,6 +171,12 @@ export function UploadApprovalPanel({
                           <input name="approved_by" placeholder="operator name" required={uploadGuard.require_operator_name} />
                           <input name="note" placeholder={uploadGuard.reason} required={uploadGuard.require_reason} />
                           <input name="expires_in_minutes" placeholder={`${uploadGuard.session_minutes}`} defaultValue={String(uploadGuard.session_minutes)} />
+                          <label className="flex items-start gap-2 text-sm text-gray-700">
+                            <input className="ta-check mt-1" name="copyright_acknowledged" type="checkbox" />
+                            <span>
+                              Saya memahami risiko copyright untuk sumber video/audio ini dan menyetujui review manual sebelum upload.
+                            </span>
+                          </label>
                           <button
                             className="inline-flex items-center justify-center rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
                             disabled={isPending && pendingKey === `${item.job.id}:${platform}:approve`}

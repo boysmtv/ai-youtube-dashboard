@@ -45,6 +45,16 @@ export type RuntimeHealthPayload = {
     blocked_reason: string;
     messages: string[];
   } | null;
+  audio?: {
+    mode: string;
+    local_tts_available: boolean;
+    source_audio_allowed: boolean;
+    elevenlabs_available: boolean;
+    tone_placeholder_enabled: boolean;
+    blocked_reason: string;
+    ready: boolean;
+    messages: string[];
+  } | null;
   recovery: {
     attempted: boolean;
     recovered_stuck_jobs: number;
@@ -565,6 +575,7 @@ export type ManualPushPayload = {
   approval_operator_name?: string;
   approval_reason?: string;
   require_credentials?: boolean;
+  copyright_acknowledged?: boolean;
 };
 
 export type UploadApprovalPayload = {

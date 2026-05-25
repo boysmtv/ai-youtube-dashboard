@@ -286,6 +286,7 @@ function PublishButtonGroup({
           <div className="mt-4 space-y-3 text-sm text-gray-700">
             <DetailRow label="Ready to push" value={youtubeReady ? "Yes" : "No"} />
             <DetailRow label="Approval" value={publishState.youtube.approval?.is_active ? "Siap upload" : "Butuh persetujuan"} />
+            <DetailRow label="Publish mode" value={publishState.youtube.publish_mode || "private_immediate"} />
             <DetailRow label="Publish at" value={publishState.youtube.publish_at || "Not set"} />
             <DetailRow label="Video ID" value={publishState.youtube.youtube_video_id || "Pending"} />
             <DetailRow label="URL" value={publishState.youtube.youtube_url || "Pending"} />

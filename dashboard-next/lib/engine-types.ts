@@ -484,6 +484,7 @@ export type PublishStatePayload = {
     youtube_url?: string | null;
     privacy_status: string;
     publish_at?: string | null;
+    publish_mode?: string | null;
     error_message?: string | null;
     manual_push_available: boolean;
     approval?: UploadApprovalRecord & { is_active: boolean };

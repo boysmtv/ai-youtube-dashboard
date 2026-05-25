@@ -46,6 +46,10 @@ services:
     environment:
       PYTHONUNBUFFERED: "1"
       ENABLE_YOUTUBE_UPLOAD: "0"
+      YOUTUBE_UPLOAD_ENABLED: "0"
+      YOUTUBE_UPLOAD_REQUIRE_APPROVAL: "1"
+      YOUTUBE_OAUTH_CLIENT_FILE: "/app/credentials/youtube-oauth-client.json"
+      YOUTUBE_OAUTH_TOKEN_FILE: "/app/credentials/youtube-oauth-token.json"
       LLM_PROVIDER: "local_disabled"
       YTDLP_COOKIES_FILE: "/app/assets/cookies/youtube.txt"
       AUTOMATION_API_CORS_ORIGINS: "http://localhost:3001,http://127.0.0.1:3001,http://localhost:8088,http://127.0.0.1:8088"
@@ -100,6 +104,10 @@ services:
     environment:
       PYTHONUNBUFFERED: "1"
       ENABLE_YOUTUBE_UPLOAD: "0"
+      YOUTUBE_UPLOAD_ENABLED: "0"
+      YOUTUBE_UPLOAD_REQUIRE_APPROVAL: "1"
+      YOUTUBE_OAUTH_CLIENT_FILE: "/app/credentials/youtube-oauth-client.json"
+      YOUTUBE_OAUTH_TOKEN_FILE: "/app/credentials/youtube-oauth-token.json"
       LLM_PROVIDER: "local_disabled"
       YTDLP_COOKIES_FILE: "/app/assets/cookies/youtube.txt"
       DATABASE_URL: "postgresql://automation_local:change-me-local-postgres-password@automation-postgres:5432/automation_local"
@@ -147,6 +155,10 @@ services:
     environment:
       PYTHONUNBUFFERED: "1"
       ENABLE_YOUTUBE_UPLOAD: "0"
+      YOUTUBE_UPLOAD_ENABLED: "0"
+      YOUTUBE_UPLOAD_REQUIRE_APPROVAL: "1"
+      YOUTUBE_OAUTH_CLIENT_FILE: "/app/credentials/youtube-oauth-client.json"
+      YOUTUBE_OAUTH_TOKEN_FILE: "/app/credentials/youtube-oauth-token.json"
       LLM_PROVIDER: "local_disabled"
       YTDLP_COOKIES_FILE: "/app/assets/cookies/youtube.txt"
       DATABASE_URL: "postgresql://automation_local:change-me-local-postgres-password@automation-postgres:5432/automation_local"
@@ -194,6 +206,10 @@ services:
       - ../ai-youtube-langchain/.env
     environment:
       PYTHONUNBUFFERED: "1"
+      YOUTUBE_UPLOAD_ENABLED: "0"
+      YOUTUBE_UPLOAD_REQUIRE_APPROVAL: "1"
+      YOUTUBE_OAUTH_CLIENT_FILE: "/app/credentials/youtube-oauth-client.json"
+      YOUTUBE_OAUTH_TOKEN_FILE: "/app/credentials/youtube-oauth-token.json"
       AUTOMATION_PUBLISHER_SERVICE_URL: "http://automation-publisher:8092"
     command:
       - uvicorn

@@ -33,6 +33,18 @@ export type RuntimeHealthPayload = {
     ok: boolean;
     missing: Array<Record<string, unknown>>;
   };
+  youtube_upload?: {
+    enabled: boolean;
+    approval_required: boolean;
+    client_secret_path: string;
+    token_path: string;
+    client_secret_exists: boolean;
+    token_exists: boolean;
+    token_writable: boolean;
+    upload_allowed: boolean;
+    blocked_reason: string;
+    messages: string[];
+  } | null;
   recovery: {
     attempted: boolean;
     recovered_stuck_jobs: number;

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { ChannelReadinessPayload } from "../lib/engine-types";
+import type { ChannelReadinessPayload, RuntimeHealthPayload } from "../lib/engine-types";
 
 function summarizeIssues(issues: string[]) {
   if (!issues.length) {
@@ -42,13 +42,16 @@ function shortcutHref(channelId: string, issues: string[]) {
 
 export function HealthAlerts({
   readiness,
+  runtimeHealth,
 }: Readonly<{
   readiness: ChannelReadinessPayload;
+  runtimeHealth?: RuntimeHealthPayload | null;
 }>) {
   const ready = readiness.items.filter((item) => item.upload_ready).length;
   const missingToken = readiness.items.filter((item) => item.issues.includes("missing_token")).length;
   const blocked = readiness.items.filter((item) => item.issues.length > 0).length;
   const alerts = readiness.items.filter((item) => item.issues.length > 0).slice(0, 4);
+  const youtube = runtimeHealth?.youtube_upload || null;
 
   return (
     <section className="ta-panel p-5">
@@ -76,6 +79,20 @@ export function HealthAlerts({
           <strong className="mt-2 block text-2xl text-gray-900">{blocked}</strong>
         </div>
       </div>
+
+      {youtube ? (
+        <div className="mt-5 rounded-2xl border border-brand-100 bg-brand-25 p-4">
+          <p className="ta-label text-brand-600">YouTube readiness</p>
+          <div className="mt-3 space-y-2 text-sm text-gray-700">
+            {youtube.messages.map((message) => (
+              <p key={message}>{message}</p>
+            ))}
+            <p className="text-xs text-gray-500">Path client: {youtube.client_secret_path}</p>
+            <p className="text-xs text-gray-500">Path token: {youtube.token_path}</p>
+            <p className="text-xs text-gray-500">Status upload: {youtube.upload_allowed ? "siap" : `blocked (${youtube.blocked_reason})`}</p>
+          </div>
+        </div>
+      ) : null}
 
       <div className="mt-5 space-y-3">
         {alerts.length ? (

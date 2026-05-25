@@ -8,16 +8,17 @@ import { JobTable } from "../components/job-table";
 import { MetricCard } from "../components/metric-card";
 import { PublishHistoryTable } from "../components/publish-history";
 import { hasDashboardRole, requireDashboardSession } from "../lib/dashboard-auth";
-import { getChannelReadiness, getOverview, getPublishHistory, getRecentApprovals, getRegistry } from "../lib/engine-api";
+import { getChannelReadiness, getOverview, getPublishHistory, getRecentApprovals, getRegistry, getRuntimeHealth } from "../lib/engine-api";
 
 export default async function DashboardPage() {
   const session = requireDashboardSession("/");
-  const [overview, approvals, registry, readiness, publishHistory] = await Promise.all([
+  const [overview, approvals, registry, readiness, publishHistory, runtimeHealth] = await Promise.all([
     getOverview(),
     getRecentApprovals(5),
     getRegistry(),
     getChannelReadiness(20),
     getPublishHistory(20),
+    getRuntimeHealth(),
   ]);
   const canOperate = hasDashboardRole(session, "operator");
   const activeCount = ["searching", "downloaded", "transcribed", "planned", "voiceover", "rendered", "uploading"].reduce(
@@ -90,7 +91,7 @@ export default async function DashboardPage() {
       </section>
 
       <section className="mt-6">
-        <HealthAlerts readiness={readiness} />
+        <HealthAlerts readiness={readiness} runtimeHealth={runtimeHealth} />
       </section>
 
       <section className="mt-6 grid gap-6">

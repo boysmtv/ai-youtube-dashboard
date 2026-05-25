@@ -43,6 +43,19 @@ export function ServiceHealthPanel({
           </div>
         ))}
       </div>
+      {runtime?.youtube_upload ? (
+        <div className="mt-5 rounded-xl border border-brand-100 bg-brand-25 p-4">
+          <p className="ta-label text-brand-600">YouTube upload readiness</p>
+          <div className="mt-3 space-y-2 text-sm text-gray-700">
+            {runtime.youtube_upload.messages.map((message) => (
+              <p key={message}>{message}</p>
+            ))}
+            <p className="text-xs text-gray-500">Path client: {runtime.youtube_upload.client_secret_path}</p>
+            <p className="text-xs text-gray-500">Path token: {runtime.youtube_upload.token_path}</p>
+            <p className="text-xs text-gray-500">Status upload: {runtime.youtube_upload.upload_allowed ? "siap" : `blocked (${runtime.youtube_upload.blocked_reason})`}</p>
+          </div>
+        </div>
+      ) : null}
       {runtime ? (
         <div className="mt-5 grid gap-6 xl:grid-cols-2">
           <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">

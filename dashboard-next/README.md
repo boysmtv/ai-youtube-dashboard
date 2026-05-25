@@ -2,7 +2,9 @@
 
 Next.js operator control-plane scaffold for `ai-youtube-langchain`.
 
-The static Nginx dashboard remains available as a fallback. This app is the upgrade path toward the technology direction described in `.brief/brief.tech.md` and `.brief/brief.v2.md`.
+This is the canonical dashboard for the MVP. The root `docker-compose.yml` starts this service by default as `youtube-dashboard-next`.
+
+The static Nginx dashboard is legacy fallback only and is started separately with the `legacy` profile. This app is the upgrade path toward the technology direction described in `.brief/brief.tech.md` and `.brief/brief.v2.md`.
 
 ## Runtime
 

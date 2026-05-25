@@ -1,2 +1,5 @@
 .ai-agent/
+dashboard-next/.next/
+dashboard-next/node_modules/
+dashboard-next/tsconfig.tsbuildinfo
 

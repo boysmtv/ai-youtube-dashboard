@@ -47,6 +47,7 @@ services:
       PYTHONUNBUFFERED: "1"
       ENABLE_YOUTUBE_UPLOAD: "0"
       LLM_PROVIDER: "local_disabled"
+      YTDLP_COOKIES_FILE: "/app/assets/cookies/youtube.txt"
       AUTOMATION_API_CORS_ORIGINS: "http://localhost:3001,http://127.0.0.1:3001,http://localhost:8088,http://127.0.0.1:8088"
       DATABASE_URL: "postgresql://automation_local:change-me-local-postgres-password@automation-postgres:5432/automation_local"
       AUTOMATION_DASHBOARD_REDIS_ENABLED: "1"
@@ -68,6 +69,7 @@ services:
       - ../ai-youtube-langchain/data:/app/data
       - ../ai-youtube-langchain/output:/app/output
       - ../ai-youtube-langchain/downloads:/app/downloads
+      - ../ai-youtube-langchain/assets/cookies:/app/assets/cookies
       - ../ai-youtube-langchain/.ai-agent:/app/.ai-agent
       - ../ai-youtube-langchain/credentials:/app/credentials
     depends_on:
@@ -99,6 +101,7 @@ services:
       PYTHONUNBUFFERED: "1"
       ENABLE_YOUTUBE_UPLOAD: "0"
       LLM_PROVIDER: "local_disabled"
+      YTDLP_COOKIES_FILE: "/app/assets/cookies/youtube.txt"
       DATABASE_URL: "postgresql://automation_local:change-me-local-postgres-password@automation-postgres:5432/automation_local"
       AUTOMATION_DASHBOARD_REDIS_ENABLED: "1"
       AUTOMATION_DASHBOARD_REDIS_URL: "redis://automation-redis:6379/0"
@@ -117,6 +120,7 @@ services:
       - ../ai-youtube-langchain/data:/app/data
       - ../ai-youtube-langchain/output:/app/output
       - ../ai-youtube-langchain/downloads:/app/downloads
+      - ../ai-youtube-langchain/assets/cookies:/app/assets/cookies
       - ../ai-youtube-langchain/.ai-agent:/app/.ai-agent
       - ../ai-youtube-langchain/credentials:/app/credentials
     depends_on:
@@ -144,6 +148,7 @@ services:
       PYTHONUNBUFFERED: "1"
       ENABLE_YOUTUBE_UPLOAD: "0"
       LLM_PROVIDER: "local_disabled"
+      YTDLP_COOKIES_FILE: "/app/assets/cookies/youtube.txt"
       DATABASE_URL: "postgresql://automation_local:change-me-local-postgres-password@automation-postgres:5432/automation_local"
       AUTOMATION_DASHBOARD_REDIS_ENABLED: "1"
       AUTOMATION_DASHBOARD_REDIS_URL: "redis://automation-redis:6379/0"
@@ -163,6 +168,7 @@ services:
       - ../ai-youtube-langchain/data:/app/data
       - ../ai-youtube-langchain/output:/app/output
       - ../ai-youtube-langchain/downloads:/app/downloads
+      - ../ai-youtube-langchain/assets/cookies:/app/assets/cookies
       - ../ai-youtube-langchain/.ai-agent:/app/.ai-agent
       - ../ai-youtube-langchain/credentials:/app/credentials
     depends_on:

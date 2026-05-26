@@ -1,4 +1,5 @@
 import type { ChannelConfig, ChannelReadinessItem, JobRecord, PublishHistoryItem, ReviewModeOption, ReviewSummary } from "./engine-types";
+import { getChannelBusinessProfile } from "./channel-profiles";
 
 function lower(value: string) {
   return value.trim().toLowerCase();
@@ -89,12 +90,11 @@ export function channelReadinessLabel(item: ChannelReadinessItem | undefined, en
 }
 
 export function channelProfileLabel(channel: Pick<ChannelConfig, "niche" | "id"> & { display_name?: string | null }) {
-  const value = lower(channel.niche || channel.id);
-  if (value.includes("game")) return "Gaming";
-  if (value.includes("talk") || value.includes("viral") || value.includes("cerita")) return "Hot Talk / Cerita Viral";
-  if (value.includes("foot") || value.includes("goal")) return "Football";
-  if (value.includes("short") || value.includes("fact")) return "Short Facts / Recap";
-  return channel.display_name || channel.id;
+  return getChannelBusinessProfile(channel).niche_label;
+}
+
+export function channelBusinessProfile(channel: Pick<ChannelConfig, "niche" | "id"> & { display_name?: string | null }) {
+  return getChannelBusinessProfile(channel);
 }
 
 export function businessRightsStatus(summary: ReviewSummary | undefined | null) {

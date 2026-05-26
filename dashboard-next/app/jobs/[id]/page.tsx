@@ -7,7 +7,7 @@ import { JobReviewPanel } from "../../../components/job-review-panel";
 import { PageHeader } from "../../../components/page-header";
 import { StatusBadge } from "../../../components/status-badge";
 import { hasDashboardRole, requireDashboardSession } from "../../../lib/dashboard-auth";
-import { businessUploadModeLabel } from "../../../lib/business-copy";
+import { businessUploadModeLabel, channelProfileLabel } from "../../../lib/business-copy";
 import {
   engineJobFileDownloadUrl,
   getJobDetail,
@@ -251,7 +251,7 @@ export default async function JobDetailPage({
             <div className="mt-4 space-y-3">
               <DetailRow label="Video" value={String(detail.job.id)} />
               <DetailRow label="Channel" value={detail.job.channel_id} />
-              <DetailRow label="Topik" value={detail.job.niche} />
+              <DetailRow label="Profile Channel" value={channelProfileLabel({ id: detail.job.channel_id, niche: detail.job.niche })} />
               <DetailRow label="Target Waktu" value={detail.job.publish_at} />
               <DetailRow label="Status proses" value={detail.current_stage || detail.job.status} />
               <DetailRow label="Progres" value={`${Number(detail.progress_percent || 0).toFixed(0)}%`} />

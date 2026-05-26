@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { JobRecord } from "../lib/engine-types";
-import { businessJobStatus, friendlyErrorMessage } from "../lib/business-copy";
+import { businessJobStatus, channelProfileLabel, friendlyErrorMessage } from "../lib/business-copy";
 import { StatusBadge } from "./status-badge";
 
 function lower(value: string) {
@@ -74,7 +74,9 @@ export function JobTable({ jobs, canOperate = true }: Readonly<{ jobs: JobRecord
                     </Link>
                     <div className="mt-2 space-y-1">
                       <p className="text-xs text-gray-500">ID #{job.id}</p>
-                      <p className="max-w-sm truncate text-xs text-gray-500">{job.selected_title || job.niche || "Topik belum dipilih"}</p>
+                      <p className="max-w-sm truncate text-xs text-gray-500">
+                        {job.selected_title || channelProfileLabel({ id: job.channel_id, niche: job.niche }) || "Topik belum dipilih"}
+                      </p>
                       <p className="text-xs text-gray-500">
                         {job.viral_score !== null && job.viral_score !== undefined ? `Skor potensi viral ${job.viral_score}` : "Skor potensi viral belum tersedia"}
                       </p>

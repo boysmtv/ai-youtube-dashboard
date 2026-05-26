@@ -115,7 +115,7 @@ export function operatorDecisionForJob(job: JobRecord, reviewSummary?: ReviewSum
 
   if (hasStatus(status, ["queued", "searching"])) {
     return {
-      label: "Menunggu Diproses",
+      label: "Perlu Review",
       tone: "neutral",
       explanation: "Video sudah dibuat dan sedang menunggu giliran proses.",
       nextAction: "Pantau proses",
@@ -421,7 +421,7 @@ export function buildChannelNextAction(item: ChannelReadinessItem | undefined, e
   }
   if (item.issues.includes("missing_token")) {
     return {
-      label: "Perlu Login",
+      label: "Perlu Login YouTube",
       nextAction: "Login ulang YouTube",
       targetLink: "/settings",
       reason: "Token YouTube belum tersedia.",

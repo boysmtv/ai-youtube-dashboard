@@ -6,7 +6,7 @@ function lower(value: string) {
 
 export function businessJobStatus(status: string) {
   const normalized = lower(status);
-  if (["queued", "searching", "pending"].includes(normalized)) return "Menunggu Diproses";
+  if (["queued", "searching", "pending"].includes(normalized)) return "Menunggu";
   if (["downloaded", "transcribed", "planned", "voiceover", "rendering", "uploading", "processing"].includes(normalized)) return "Sedang Diproses";
   if (normalized === "rendered") return "Siap Review";
   if (["uploaded", "published", "draft_ready"].includes(normalized)) return "Sudah Upload Private";
@@ -101,6 +101,14 @@ export function businessRightsStatus(summary: ReviewSummary | undefined | null) 
   if (!summary) return { label: "Perlu Review", tone: "bg-warning-50 text-warning-700" };
   if (summary.production_allowed) return { label: "Aman", tone: "bg-success-50 text-success-700" };
   if (summary.production_blockers.length) return { label: "Diblokir", tone: "bg-error-50 text-error-700" };
+  return { label: "Perlu Review", tone: "bg-warning-50 text-warning-700" };
+}
+
+export function businessRiskStatus(value?: string | null) {
+  const normalized = lower(value || "");
+  if (!normalized) return { label: "Perlu Review", tone: "bg-warning-50 text-warning-700" };
+  if (["low", "aman", "safe", "ok"].includes(normalized)) return { label: "Aman", tone: "bg-success-50 text-success-700" };
+  if (["high", "blocked", "diblokir", "unsafe"].includes(normalized)) return { label: "Diblokir", tone: "bg-error-50 text-error-700" };
   return { label: "Perlu Review", tone: "bg-warning-50 text-warning-700" };
 }
 

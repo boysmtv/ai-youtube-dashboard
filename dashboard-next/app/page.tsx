@@ -90,7 +90,7 @@ export default async function DashboardPage() {
           { href: "/publish", label: "Review Sekarang", tone: "secondary" },
         ]}
         breadcrumbs={[{ href: "/", label: "Dashboard" }]}
-        description="Lihat apa yang harus dikerjakan hari ini, video yang siap review, channel yang bermasalah, dan status sistem utama. Detail teknis tetap ada di area lanjutan."
+        description="Lihat keputusan hari ini, video yang siap review, channel yang perlu perhatian, dan status sistem bisnis utama."
         eyebrow="Dashboard"
         title="Apa yang harus saya lakukan hari ini?"
       />
@@ -135,7 +135,7 @@ export default async function DashboardPage() {
           <NextActionItem href="/queue" title="Cek video bermasalah" description="Lihat job yang perlu dipulihkan atau diulang." count={needsAttention} />
           <NextActionItem href="/publish" title="Lengkapi data copyright" description="Periksa metadata, rights, dan disclosure sebelum upload." count={copyrightBlocked} />
           <NextActionItem href="/channels" title="Cek channel perlu login" description="Cari channel yang butuh token atau perbaikan setup." count={readiness.items.filter((item) => item.issues.includes("missing_token")).length} />
-          <NextActionItem href="/analytics" title="Lihat laporan" description="Ringkasan operasional upload YouTube terbaru." count={youtubeHistory.total} />
+          <NextActionItem href="/analytics" title="Lihat laporan" description="Ringkasan operasional upload terbaru." count={youtubeHistory.total} />
           <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-4">
             <p className="ta-label text-brand-600">Error penting</p>
             <p className="mt-2 text-sm text-gray-700">{latestError}</p>
@@ -147,7 +147,7 @@ export default async function DashboardPage() {
         <MetricCard href="/queue#antrian" label="Video Sedang Diproses" value={activeCount} />
         <MetricCard href="/publish" label="Video Siap Review" value={readyToReview} tone={readyToReview > 0 ? "warn" : "neutral"} />
         <MetricCard href="/queue" label="Video Bermasalah" value={needsAttention} tone={needsAttention > 0 ? "warn" : "neutral"} />
-          <MetricCard href="/publish" label="Upload Private Sukses" value={uploadPrivateSuccess} tone="good" />
+        <MetricCard href="/publish" label="Upload Private Sukses" value={uploadPrivateSuccess} tone="good" />
         <MetricCard href="/publish" label="Diblokir Copyright" value={copyrightBlocked} tone={copyrightBlocked > 0 ? "warn" : "neutral"} />
         <MetricCard href="/channels" label="Channel Perlu Perhatian" value={channelAttentionCount} tone={channelAttentionCount > 0 ? "warn" : "neutral"} />
       </section>
@@ -159,14 +159,14 @@ export default async function DashboardPage() {
           <p className="mt-1 text-sm text-gray-500">Operator bisa lanjut ke workflow utama tanpa gangguan.</p>
         </div>
         <div className="rounded-2xl border border-gray-200 bg-white p-4">
-          <p className="ta-label text-brand-600">Database PostgreSQL aktif</p>
-          <strong className="mt-2 block text-lg text-gray-900">Sumber data utama</strong>
-          <p className="mt-1 text-sm text-gray-500">Semua data bisnis dibaca dari engine API yang memakai PostgreSQL.</p>
+          <p className="ta-label text-brand-600">Database aktif</p>
+          <strong className="mt-2 block text-lg text-gray-900">Data tersimpan</strong>
+          <p className="mt-1 text-sm text-gray-500">Semua data bisnis tersimpan aman di sistem utama.</p>
         </div>
         <div className="rounded-2xl border border-gray-200 bg-white p-4">
-          <p className="ta-label text-brand-600">Queue Redis aktif</p>
-          <strong className="mt-2 block text-lg text-gray-900">Queue / signal layer</strong>
-          <p className="mt-1 text-sm text-gray-500">Redis hanya dipakai sebagai lapisan antrean dan sinyal runtime.</p>
+          <p className="ta-label text-brand-600">Antrian aktif</p>
+          <strong className="mt-2 block text-lg text-gray-900">Proses berjalan</strong>
+          <p className="mt-1 text-sm text-gray-500">Video baru, proses kerja, dan tindak lanjut tetap terpantau.</p>
         </div>
       </section>
 
@@ -215,7 +215,7 @@ export default async function DashboardPage() {
           </div>
           <div>
             <h3 className="mb-3 text-lg font-semibold text-gray-900">Riwayat review dan publish</h3>
-            <PublishHistoryTable history={youtubeHistory} limitLabel="Riwayat publish YouTube" />
+            <PublishHistoryTable history={youtubeHistory} limitLabel="Riwayat upload terbaru" />
           </div>
           <div>
             <h3 className="mb-3 text-lg font-semibold text-gray-900">Audit operator</h3>
@@ -223,7 +223,7 @@ export default async function DashboardPage() {
               <div className="grid gap-3">
                 {approvals.items.slice(0, 3).map((item) => (
                   <div key={item.id} className="ta-panel p-4">
-                    <p className="ta-label text-brand-600">{item.job_id ? `Video #${item.job_id}` : "Worker"}</p>
+                    <p className="ta-label text-brand-600">{item.job_id ? `Video #${item.job_id}` : "Video"}</p>
                     <p className="mt-2 text-sm text-gray-700">{item.action}</p>
                     <p className="mt-2 text-xs text-gray-500">{item.operator_name || "unknown"} / {item.created_at}</p>
                   </div>

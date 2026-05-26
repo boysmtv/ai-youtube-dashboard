@@ -22,6 +22,7 @@ export function JobCreateForm({
     registry.channels.find((channel) => channel.id === defaultChannelId) ||
     registry.channels.find((channel) => channel.enabled) ||
     registry.channels[0];
+  const internalPublishAt = defaultPublishAt();
 
   if (!canOperate) {
     return (
@@ -35,11 +36,12 @@ export function JobCreateForm({
 
   return (
     <form id="create-video" action={createDashboardJob} className="ta-panel p-5">
+      <input name="publish_at" type="hidden" defaultValue={internalPublishAt} />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="ta-label text-brand-600">Step 1 of 6</p>
           <h3 className="mt-2 text-lg font-semibold text-gray-900">Simpan rencana video ke antrian</h3>
-          <p className="mt-1 text-sm text-gray-500">Pilih channel dan masukkan ide. Upload tidak dilakukan otomatis; video akan masuk review dulu.</p>
+          <p className="mt-1 text-sm text-gray-500">Pilih channel, ide, dan gaya caption. Detail teknis tetap disembunyikan dari form utama.</p>
         </div>
         <ConfirmSubmitButton className="px-5 py-3 text-sm" message="Simpan video baru ke antrian?" pendingText="Saving...">
           Simpan Video
@@ -58,23 +60,18 @@ export function JobCreateForm({
           </select>
         </label>
         <label className="grid gap-2 text-sm font-semibold">
-          Waktu Kerja
-          <input name="publish_at" required defaultValue={defaultPublishAt()} placeholder="2026-05-27T09:00" />
-          <span className="text-xs font-normal text-gray-500">Dipakai sebagai target kerja, bukan jadwal upload publik.</span>
-        </label>
-        <label className="grid gap-2 text-sm font-semibold">
-          Topik / Ide Video
+          Ide / Topik Video
           <input name="niche" defaultValue={selectedChannel?.niche} placeholder="football, gaming, viral story" />
         </label>
         <label className="grid gap-2 text-sm font-semibold">
-          Bahasa / Gaya Caption
+          Gaya Caption
           <input name="language" defaultValue={selectedChannel?.language} placeholder="id" />
         </label>
       </div>
 
       <div className="mt-4 rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
         <p className="ta-label text-brand-600">Sumber Video</p>
-        <p className="mt-2">Sumber video dipilih dari curated source channel. Operator cukup memilih channel dan topik; detail sumber tetap dikelola engine.</p>
+        <p className="mt-2">Sumber video dikelola dari channel yang dipilih dan sumber kurasi yang sudah disiapkan sistem. Operator tidak perlu mengatur detail sumber di sini.</p>
       </div>
 
       <label className="mt-4 grid gap-2 text-sm font-semibold">
@@ -97,9 +94,15 @@ export function JobCreateForm({
             <span className="ta-status bg-white text-gray-700">Tutup / buka</span>
           </div>
         </summary>
-        <div className="mt-4 rounded-xl border border-dashed border-gray-200 bg-white p-4 text-sm text-gray-600">
-          <p>Pengaturan upload, retry, dan kredensial tetap ada di halaman review dan setting teknis.</p>
-          <p className="mt-2">Form ini sengaja hanya menampilkan input yang dipakai operator untuk menyusun rencana video.</p>
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <label className="grid gap-2 text-sm font-semibold">
+            Target Kerja Internal
+            <input readOnly value={internalPublishAt} />
+          </label>
+          <div className="rounded-xl border border-dashed border-gray-200 bg-white p-4 text-sm text-gray-600">
+            <p>Pengaturan teknis lain tetap dikelola oleh sistem dan detail review.</p>
+            <p className="mt-2">Form utama hanya menampilkan input yang dibutuhkan operator harian.</p>
+          </div>
         </div>
       </details>
     </form>

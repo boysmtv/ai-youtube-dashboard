@@ -56,11 +56,11 @@ export function ChannelGrid({
 
                   <div className="mt-4 grid gap-2 text-sm">
                     <div className="flex justify-between gap-4">
-                      <span className="text-gray-500">Nama channel</span>
+                      <span className="text-gray-500">Channel</span>
                       <strong className="text-gray-900">{channel.display_name || channel.id}</strong>
                     </div>
                     <div className="flex justify-between gap-4">
-                      <span className="text-gray-500">Profil / strategi</span>
+                      <span className="text-gray-500">Strategy / profile</span>
                       <strong className="text-gray-900">{channelProfileLabel(channel)}</strong>
                     </div>
                     <div className="flex justify-between gap-4">
@@ -68,19 +68,15 @@ export function ChannelGrid({
                       <strong className="text-gray-900">{item?.upload_ready ? "Siap" : issues.includes("missing_token") ? "Perlu Login YouTube" : issues.length ? "Perlu Review" : "Siap"}</strong>
                     </div>
                     <div className="flex justify-between gap-4">
-                      <span className="text-gray-500">Sumber kurasi</span>
-                      <strong className="text-gray-900">{item?.paths.curated_sources_exists ? "Aktif" : "Perlu sumber pilihan"}</strong>
-                    </div>
-                    <div className="flex justify-between gap-4">
                       <span className="text-gray-500">Video aktif</span>
                       <strong className="text-gray-900">{overview.jobs_by_channel[channel.id] || 0}</strong>
                     </div>
                     <div className="flex justify-between gap-4">
-                      <span className="text-gray-500">Upload terakhir sukses</span>
+                      <span className="text-gray-500">Upload terakhir</span>
                       <strong className="text-gray-900">{lastUploadLabel(item?.last_upload as Record<string, unknown> | null | undefined)}</strong>
                     </div>
                     <div className="flex justify-between gap-4">
-                      <span className="text-gray-500">Rekomendasi berikutnya</span>
+                      <span className="text-gray-500">Langkah berikutnya</span>
                       <strong className="text-gray-900">{nextAction.nextAction}</strong>
                     </div>
                   </div>
@@ -117,28 +113,28 @@ export function ChannelGrid({
                         <span className="ta-status bg-gray-100 text-gray-700">Tutup / buka</span>
                       </div>
                     </summary>
-                      <div className="mt-3 space-y-3 text-sm text-gray-700">
-                        <div className="flex justify-between gap-4">
-                          <span>Language</span>
-                          <strong>{channel.language}</strong>
-                        </div>
-                        <div className="flex justify-between gap-4">
-                          <span>Publish slots</span>
-                          <strong>{(channel.publish_slots.length ? channel.publish_slots : registry.default_publish_slots).join(", ")}</strong>
-                        </div>
-                        <div className="flex justify-between gap-4">
-                          <span>OAuth token</span>
-                          <strong>{item?.paths.token_exists ? "tersedia" : "belum ada"}</strong>
-                        </div>
-                        <div className="flex justify-between gap-4">
-                          <span>Client secret</span>
-                          <strong>{item?.paths.client_secret_exists ? "tersedia" : "belum ada"}</strong>
-                        </div>
-                        <div className="flex justify-between gap-4">
-                          <span>Issue list</span>
-                          <strong>{issues.length ? issues.join(", ") : "Tidak ada"}</strong>
-                        </div>
+                    <div className="mt-3 space-y-3 text-sm text-gray-700">
+                      <div className="flex justify-between gap-4">
+                        <span>Language</span>
+                        <strong>{channel.language}</strong>
                       </div>
+                      <div className="flex justify-between gap-4">
+                        <span>Publish slots</span>
+                        <strong>{(channel.publish_slots.length ? channel.publish_slots : registry.default_publish_slots).join(", ")}</strong>
+                      </div>
+                      <div className="flex justify-between gap-4">
+                        <span>OAuth token</span>
+                        <strong>{item?.paths.token_exists ? "tersedia" : "belum ada"}</strong>
+                      </div>
+                      <div className="flex justify-between gap-4">
+                        <span>Client secret</span>
+                        <strong>{item?.paths.client_secret_exists ? "tersedia" : "belum ada"}</strong>
+                      </div>
+                      <div className="flex justify-between gap-4">
+                        <span>Issue list</span>
+                        <strong>{issues.length ? issues.join(", ") : "Tidak ada"}</strong>
+                      </div>
+                    </div>
                     </details>
                 </>
               );

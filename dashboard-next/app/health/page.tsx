@@ -14,18 +14,18 @@ export default async function HealthPage() {
   return (
     <AppShell>
       <header className="ta-panel p-6">
-        <p className="ta-label text-brand-600">Health</p>
-        <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900">Kesehatan sistem.</h2>
+        <p className="ta-label text-brand-600">Advanced / Admin</p>
+        <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900">Status sistem.</h2>
         <p className="mt-4 max-w-2xl text-gray-500">
-          Health checks combine the FastAPI `/health` response with overview metrics from the same engine database.
+          Halaman ini dipakai admin untuk melihat status sistem, bukan alur kerja harian operator.
         </p>
       </header>
 
       <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Engine" value={health.status} tone={health.status === "ok" ? "good" : "warn"} />
-        <MetricCard label="Free Disk" value={`${freeGb} GB`} tone={diskTone} />
-        <MetricCard label="Min Disk" value={`${overview.worker.min_free_disk_gb} GB`} />
-        <MetricCard label="Stuck Jobs" value={runtimeHealth.counts.stuck_jobs} tone={runtimeHealth.counts.stuck_jobs ? "warn" : "good"} />
+        <MetricCard label="Sistem" value={health.status} tone={health.status === "ok" ? "good" : "warn"} />
+        <MetricCard label="Ruang Bebas" value={`${freeGb} GB`} tone={diskTone} />
+        <MetricCard label="Batas Aman" value={`${overview.worker.min_free_disk_gb} GB`} />
+        <MetricCard label="Video Tersendat" value={runtimeHealth.counts.stuck_jobs} tone={runtimeHealth.counts.stuck_jobs ? "warn" : "good"} />
       </section>
 
       <section className="mt-6 grid gap-6">

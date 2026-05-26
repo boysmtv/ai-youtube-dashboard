@@ -7,6 +7,7 @@ import { JobReviewPanel } from "../../../components/job-review-panel";
 import { PageHeader } from "../../../components/page-header";
 import { StatusBadge } from "../../../components/status-badge";
 import { hasDashboardRole, requireDashboardSession } from "../../../lib/dashboard-auth";
+import { businessUploadModeLabel } from "../../../lib/business-copy";
 import {
   engineJobFileDownloadUrl,
   getJobDetail,
@@ -169,7 +170,7 @@ export default async function JobDetailPage({
           { href: "/queue", label: "Produksi Video" },
           { href: `/jobs/${detail.job.id}`, label: "Detail Video" },
         ]}
-        description="Halaman ini menempatkan preview, status utama, title/caption/hashtag, copyright, dan label AI di depan. Detail teknis tetap tersedia di bagian lanjutan."
+        description="Halaman ini menempatkan preview, status utama, metadata final, copyright, dan label AI di depan. Detail teknis tetap tersedia di bagian lanjutan."
         eyebrow="Video Detail"
         title={`Review video #${detail.job.id}`}
       />
@@ -186,9 +187,8 @@ export default async function JobDetailPage({
 
       <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-2xl border border-gray-200 bg-white p-4">
-          <p className="ta-label text-brand-600">Status produksi</p>
+          <p className="ta-label text-brand-600">Status Utama</p>
           <div className="mt-2 flex flex-wrap gap-2">
-            <StatusBadge status={detail.job.status} />
             <span className={`ta-status ${decision.tone === "good" ? "bg-success-50 text-success-700" : decision.tone === "error" ? "bg-error-50 text-error-700" : "bg-warning-50 text-warning-700"}`}>{decision.label}</span>
           </div>
         </div>
@@ -197,14 +197,12 @@ export default async function JobDetailPage({
           <strong className="mt-2 block text-gray-900">{previewReady ? "Tersedia" : "Belum tersedia"}</strong>
         </div>
         <div className="rounded-2xl border border-gray-200 bg-white p-4">
-          <p className="ta-label text-brand-600">Siap Upload Private?</p>
-          <strong className={`mt-2 block ${(reviewSummary?.private_validation_allowed ?? reviewSummary?.production_allowed) ? "text-success-700" : "text-warning-700"}`}>
-            {(reviewSummary?.private_validation_allowed ?? reviewSummary?.production_allowed) ? "Ya" : "Tidak"}
-          </strong>
+          <p className="ta-label text-brand-600">Langkah Berikutnya</p>
+          <strong className="mt-2 block text-gray-900">{decision.nextAction}</strong>
         </div>
         <div className="rounded-2xl border border-gray-200 bg-white p-4">
-          <p className="ta-label text-brand-600">Siap Production?</p>
-          <strong className={`mt-2 block ${reviewSummary?.production_allowed ? "text-success-700" : "text-warning-700"}`}>{reviewSummary?.production_allowed ? "Ya" : "Tidak"}</strong>
+          <p className="ta-label text-brand-600">Mode Upload</p>
+          <strong className="mt-2 block text-gray-900">{businessUploadModeLabel(reviewSummary?.selected_upload_mode || "private_validation")}</strong>
         </div>
       </section>
       <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-4 text-sm text-gray-700">
@@ -251,7 +249,7 @@ export default async function JobDetailPage({
           <div className="ta-panel p-5">
             <p className="ta-label text-brand-600">Ringkas Video</p>
             <div className="mt-4 space-y-3">
-              <DetailRow label="ID Video" value={String(detail.job.id)} />
+              <DetailRow label="Video" value={String(detail.job.id)} />
               <DetailRow label="Channel" value={detail.job.channel_id} />
               <DetailRow label="Topik" value={detail.job.niche} />
               <DetailRow label="Target Waktu" value={detail.job.publish_at} />

@@ -16,7 +16,7 @@ const navSections: Array<{ heading: string; items: Array<{ href: string; label: 
     ],
   },
   {
-    heading: "Admin / Lanjutan",
+    heading: "Advanced/Admin",
     items: [
       { href: "/jobs", label: "Detail Video", role: "viewer" },
       { href: "/artifacts", label: "File Video", role: "viewer" },
@@ -56,21 +56,47 @@ export async function AppShell({ children }: Readonly<{ children: React.ReactNod
         <nav className="mt-8 space-y-6">
           {allowedSections.map((section) => (
             <div key={section.heading}>
-              <p className={`ta-label px-3 ${section.heading === "Menu Utama" ? "text-gray-500" : "text-gray-400"}`}>{section.heading}</p>
-              <div className="mt-2 grid gap-1">
-                {section.items.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition hover:bg-brand-50 hover:text-brand-600 ${
-                      section.heading === "Menu Utama" ? "text-gray-800" : "text-gray-600"
-                    }`}
-                  >
-                    <span className="h-2 w-2 rounded-full bg-gray-300 transition group-hover:bg-brand-500" />
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
+              {section.heading === "Menu Utama" ? (
+                <>
+                  <p className="ta-label px-3 text-gray-500">{section.heading}</p>
+                  <div className="mt-2 grid gap-1">
+                    {section.items.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-800 transition hover:bg-brand-50 hover:text-brand-600"
+                      >
+                        <span className="h-2 w-2 rounded-full bg-gray-300 transition group-hover:bg-brand-500" />
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <details className="rounded-2xl border border-gray-200 bg-gray-50 p-3">
+                  <summary className="cursor-pointer list-none">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="ta-label text-gray-500">{section.heading}</p>
+                        <p className="mt-1 text-xs text-gray-500">Area teknis untuk troubleshooting. Tidak diperlukan untuk workflow harian.</p>
+                      </div>
+                      <span className="ta-status bg-white text-gray-700">Buka</span>
+                    </div>
+                  </summary>
+                  <div className="mt-3 grid gap-1">
+                    {section.items.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition hover:bg-white hover:text-brand-600"
+                      >
+                        <span className="h-2 w-2 rounded-full bg-gray-300 transition group-hover:bg-brand-500" />
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                </details>
+              )}
             </div>
           ))}
         </nav>

@@ -11,7 +11,7 @@ export function ApprovalList({ approvals }: Readonly<{ approvals: ApprovalAudit[
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p className="ta-label text-brand-600">
-                  {approval.job_id ? `Job #${approval.job_id}` : "Worker run"}
+                  {approval.job_id ? `Video #${approval.job_id}` : "Operasi"}
                 </p>
                 <h3 className="mt-2 text-lg font-semibold text-gray-900">Riwayat persetujuan</h3>
               </div>

@@ -35,79 +35,97 @@ export default async function SettingsPage() {
           { href: "/", label: "Dashboard" },
           { href: "/settings", label: "Pengaturan" },
         ]}
-        description="Bagian utama untuk operator menampilkan pengaturan yang aman. Detail teknis, backup, dan registry mentah tetap tersedia di bawah sebagai advanced/admin."
+        description="Bagian utama untuk operator menampilkan pengaturan bisnis yang aman. Detail teknis, backup, dan registry mentah tetap ada di area advanced/admin."
         eyebrow="Pengaturan"
         title="Pengaturan operasional dan safety."
       />
 
-      <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
         <div className="ta-panel p-4">
           <p className="ta-label">Pengaturan Umum</p>
-          <strong className="mt-2 block text-lg text-gray-900">Zona waktu, storage, dan worker</strong>
+          <strong className="mt-2 block text-lg text-gray-900">Zona waktu, kapasitas, dan jadwal kerja</strong>
         </div>
         <div className="ta-panel p-4">
           <p className="ta-label">Copyright & Safety</p>
           <strong className="mt-2 block text-lg text-gray-900">Blokir upload jika belum aman</strong>
         </div>
         <div className="ta-panel p-4">
+          <p className="ta-label">Caption & Hashtag</p>
+          <strong className="mt-2 block text-lg text-gray-900">Aturan metadata siap pakai</strong>
+        </div>
+        <div className="ta-panel p-4">
+          <p className="ta-label">YouTube Upload</p>
+          <strong className="mt-2 block text-lg text-gray-900">{registry.upload_approval.enabled ? "Aktif" : "Nonaktif"}</strong>
+        </div>
+        <div className="ta-panel p-4">
           <p className="ta-label">Channel</p>
           <strong className="mt-2 block text-lg text-gray-900">{registry.channels.filter((item) => item.enabled).length}/{registry.channels.length} aktif</strong>
         </div>
         <div className="ta-panel p-4">
-          <p className="ta-label">Upload Guard</p>
-          <strong className="mt-2 block text-lg text-gray-900">{registry.upload_approval.enabled ? "Aktif" : "Nonaktif"}</strong>
+          <p className="ta-label">Advanced/Admin</p>
+          <strong className="mt-2 block text-lg text-gray-900">Detail teknis di bawah</strong>
         </div>
       </section>
 
-      <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
         <div className="rounded-2xl border border-gray-200 bg-white p-4">
-          <p className="ta-label text-brand-600">Database</p>
-          <strong className="mt-2 block text-lg text-gray-900">PostgreSQL aktif</strong>
+          <p className="ta-label text-brand-600">System</p>
+          <strong className="mt-2 block text-lg text-gray-900">Sistem aktif</strong>
         </div>
         <div className="rounded-2xl border border-gray-200 bg-white p-4">
-          <p className="ta-label text-brand-600">Queue</p>
-          <strong className="mt-2 block text-lg text-gray-900">Redis aktif</strong>
+          <p className="ta-label text-brand-600">Database</p>
+          <strong className="mt-2 block text-lg text-gray-900">Database aktif</strong>
+        </div>
+        <div className="rounded-2xl border border-gray-200 bg-white p-4">
+          <p className="ta-label text-brand-600">Antrian</p>
+          <strong className="mt-2 block text-lg text-gray-900">Antrian aktif</strong>
         </div>
         <div className="rounded-2xl border border-gray-200 bg-white p-4">
           <p className="ta-label text-brand-600">Safety</p>
           <strong className="mt-2 block text-lg text-gray-900">Copyright gate aktif</strong>
         </div>
         <div className="rounded-2xl border border-gray-200 bg-white p-4">
-          <p className="ta-label text-brand-600">Advanced</p>
-          <strong className="mt-2 block text-lg text-gray-900">Detail teknis di bawah</strong>
+          <p className="ta-label text-brand-600">Music</p>
+          <strong className="mt-2 block text-lg text-gray-900">Musik berlisensi only</strong>
+        </div>
+        <div className="rounded-2xl border border-gray-200 bg-white p-4">
+          <p className="ta-label text-brand-600">Tone</p>
+          <strong className="mt-2 block text-lg text-gray-900">{tonePlaceholderDisabled ? "Placeholder tone dimatikan" : "Placeholder tone aktif"}</strong>
         </div>
       </section>
 
-      <section className="mt-6 grid gap-4 rounded-2xl border border-gray-200 bg-white p-5 sm:grid-cols-2 xl:grid-cols-3">
-        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
-          <p className="ta-label text-brand-600">PostgreSQL aktif</p>
-          <strong className="mt-2 block text-gray-900">Runtime source of truth</strong>
-          <p className="mt-1 text-gray-600">API dan dashboard membaca data bisnis dari PostgreSQL-backed engine API.</p>
-        </div>
-        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
-          <p className="ta-label text-brand-600">Redis aktif</p>
-          <strong className="mt-2 block text-gray-900">Queue / signal layer</strong>
-          <p className="mt-1 text-gray-600">Redis hanya dipakai untuk antrean dan sinyal runtime, bukan data bisnis utama.</p>
-        </div>
-        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
-          <p className="ta-label text-brand-600">Production gate</p>
-          <strong className="mt-2 block text-gray-900">{registry.upload_approval.enabled ? "Aktif" : "Nonaktif"}</strong>
-          <p className="mt-1 text-gray-600">Gate produksi tetap aktif untuk melindungi rights dan disclosure.</p>
-        </div>
-        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
-          <p className="ta-label text-brand-600">Copyright gate</p>
-          <strong className="mt-2 block text-gray-900">Aktif</strong>
-          <p className="mt-1 text-gray-600">Production diblokir jika rights, visual, musik, atau disclosure belum aman.</p>
-        </div>
-        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
-          <p className="ta-label text-brand-600">Musik berlisensi only</p>
-          <strong className="mt-2 block text-gray-900">{runtimeHealth.audio?.source_audio_allowed ? "Ya" : "Tidak"}</strong>
-          <p className="mt-1 text-gray-600">Source audio harus aman untuk production sebelum upload final.</p>
-        </div>
-        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
-          <p className="ta-label text-brand-600">Placeholder tone</p>
-          <strong className="mt-2 block text-gray-900">{tonePlaceholderDisabled ? "Disabled" : "Enabled"}</strong>
-          <p className="mt-1 text-gray-600">Placeholder tone tidak dipakai di pipeline produksi.</p>
+      <section className="mt-6 rounded-2xl border border-gray-200 bg-white p-5">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
+            <p className="ta-label text-brand-600">Copyright gate aktif</p>
+            <strong className="mt-2 block text-gray-900">Production tetap dibatasi</strong>
+            <p className="mt-1 text-gray-600">Video hanya boleh lanjut jika rights, visual, musik, dan disclosure aman.</p>
+          </div>
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
+            <p className="ta-label text-brand-600">Production gate aktif</p>
+            <strong className="mt-2 block text-gray-900">{registry.upload_approval.enabled ? "Aktif" : "Nonaktif"}</strong>
+            <p className="mt-1 text-gray-600">Upload tetap menunggu review yang jelas sebelum produksi final.</p>
+          </div>
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
+            <p className="ta-label text-brand-600">Musik berlisensi only</p>
+            <strong className="mt-2 block text-gray-900">Ya</strong>
+            <p className="mt-1 text-gray-600">Source audio harus aman untuk production sebelum upload final.</p>
+          </div>
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
+            <p className="ta-label text-brand-600">Volume musik default 15%</p>
+            <strong className="mt-2 block text-gray-900">Tersimpan</strong>
+            <p className="mt-1 text-gray-600">Setelan aman dipakai untuk menjaga voice-over tetap jelas.</p>
+          </div>
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
+            <p className="ta-label text-brand-600">Placeholder tone dimatikan</p>
+            <strong className="mt-2 block text-gray-900">{tonePlaceholderDisabled ? "Ya" : "Tidak"}</strong>
+            <p className="mt-1 text-gray-600">Tone placeholder tidak dipakai di pipeline produksi.</p>
+          </div>
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
+            <p className="ta-label text-brand-600">Data tersimpan</p>
+            <strong className="mt-2 block text-gray-900">Di sistem utama</strong>
+            <p className="mt-1 text-gray-600">Operator tidak perlu melihat detail penyimpanan di tampilan utama.</p>
+          </div>
         </div>
       </section>
 

@@ -48,7 +48,7 @@ export default async function PublishPage() {
           { href: "/", label: "Dashboard" },
           { href: "/publish", label: "Review & Upload" },
         ]}
-        description="Halaman ini adalah pusat keputusan untuk cek preview, caption, hashtag, copyright, label AI, dan mode upload sebelum langkah berikutnya."
+        description="Halaman ini adalah pusat keputusan untuk cek preview, metadata final, copyright, label AI, dan mode upload sebelum langkah berikutnya."
         eyebrow="Review & Upload"
         title="Decision center untuk video siap review."
       />
@@ -90,9 +90,7 @@ export default async function PublishPage() {
           <div className="ta-panel p-5">
             <p className="ta-label text-brand-600">Upload mode</p>
             <h3 className="mt-2 text-lg font-semibold text-gray-900">Mode bisnis yang aman</h3>
-            <p className="mt-2 text-sm text-gray-500">
-              Review dulu, lalu gunakan upload private hanya jika copyright, musik, visual, dan disclosure sudah aman.
-            </p>
+            <p className="mt-2 text-sm text-gray-500">Review dulu, lalu gunakan upload private hanya jika copyright, musik, visual, dan disclosure sudah aman.</p>
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
               <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
                 <strong className="block text-gray-900">Upload Private Test</strong>
@@ -155,7 +153,7 @@ export default async function PublishPage() {
           <div>
             <div id="history" />
             <h3 className="mb-3 text-lg font-semibold text-gray-900">Riwayat publish</h3>
-            <PublishHistoryTable history={youtubeHistory} limitLabel="Riwayat upload YouTube" />
+            <PublishHistoryTable history={youtubeHistory} limitLabel="Riwayat upload terbaru" />
           </div>
           <div>
             <h3 className="mb-3 text-lg font-semibold text-gray-900">Audit persetujuan</h3>

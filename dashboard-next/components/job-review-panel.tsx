@@ -4,7 +4,9 @@ import {
   businessAiDisclosureStatus,
   businessBlockerDetail,
   businessChecklistState,
-  businessRightsStatus,
+  businessRiskStatus,
+  businessUploadStatus,
+  businessUploadModeLabel,
   businessUploadModeOptions,
   summaryText,
 } from "../lib/business-copy";
@@ -50,6 +52,30 @@ function blockerMessage(message: string) {
   );
 }
 
+function checklistStatusLabel(value: boolean | null | undefined, blockedWhenFalse = false) {
+  if (value === true) return businessChecklistState(true);
+  if (value === false && blockedWhenFalse) return { label: "Diblokir", tone: "bg-error-50 text-error-700" };
+  if (value === false) return businessChecklistState(false);
+  return { label: "Perlu Review", tone: "bg-warning-50 text-warning-700" };
+}
+
+function sourceAudioStatus(summary: ReviewSummary) {
+  const normalized = String(summary.source_audio_status || "").toLowerCase();
+  if (summary.source_audio_licensed === true) return { label: "Aman", tone: "bg-success-50 text-success-700" };
+  if (summary.source_audio_licensed === false) return { label: "Diblokir", tone: "bg-error-50 text-error-700" };
+  if (normalized.includes("allow") || normalized.includes("ready") || normalized.includes("licensed")) {
+    return { label: "Aman", tone: "bg-success-50 text-success-700" };
+  }
+  if (normalized.includes("block") || normalized.includes("missing")) {
+    return { label: "Diblokir", tone: "bg-error-50 text-error-700" };
+  }
+  return { label: "Perlu Review", tone: "bg-warning-50 text-warning-700" };
+}
+
+function riskStatus(summary: ReviewSummary) {
+  return businessRiskStatus(summary.reused_content_risk);
+}
+
 export function JobReviewPanel({
   jobId,
   detail,
@@ -77,6 +103,9 @@ export function JobReviewPanel({
   const uploadModes = businessUploadModeOptions(summary.available_upload_modes);
   const blockers = summary.production_blockers.length ? summary.production_blockers : [decision.blockerReason].filter(Boolean) as string[];
   const latestUploads = detail.uploads.slice(0, 3);
+  const scriptStatus = riskStatus(summary);
+  const sourceAudio = sourceAudioStatus(summary);
+  const aiLabel = businessAiDisclosureStatus(summary);
 
   return (
     <div className="ta-panel p-5">
@@ -84,14 +113,14 @@ export function JobReviewPanel({
         <div>
           <p className="ta-label text-brand-600">Review & Upload</p>
           <h3 className="mt-2 text-xl font-semibold text-gray-900">Decision center video</h3>
-          <p className="mt-2 text-sm text-gray-500">Cek preview, caption, hashtag, copyright, dan mode upload sebelum memilih langkah berikutnya.</p>
+          <p className="mt-2 text-sm text-gray-500">Cek status utama, metadata final, copyright, lalu pilih mode upload yang aman.</p>
         </div>
         <span className={`ta-status ${decision.tone === "good" ? "bg-success-50 text-success-700" : decision.tone === "error" ? "bg-error-50 text-error-700" : "bg-warning-50 text-warning-700"}`}>
           {decision.label}
         </span>
       </div>
 
-      <div className="mt-4 rounded-2xl border border-brand-100 bg-brand-25 p-4">
+      <div className="mt-5 rounded-2xl border border-brand-100 bg-brand-25 p-4">
         <p className="ta-label text-brand-600">Langkah Berikutnya</p>
         <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -107,34 +136,31 @@ export function JobReviewPanel({
 
       <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-          <p className="ta-label">Preview</p>
+          <p className="ta-label">Preview Video</p>
           <strong className="mt-2 block text-gray-900">{previewReady ? "Tersedia" : "Belum tersedia"}</strong>
         </div>
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-          <p className="ta-label">Siap Upload Private?</p>
-          <strong className={`mt-2 block ${(summary.private_validation_allowed ?? summary.production_allowed) ? "text-success-700" : "text-warning-700"}`}>
-            {(summary.private_validation_allowed ?? summary.production_allowed) ? "Ya" : "Tidak"}
-          </strong>
+          <p className="ta-label">Status Utama</p>
+          <strong className={`mt-2 block ${decision.tone === "good" ? "text-success-700" : decision.tone === "error" ? "text-error-700" : "text-warning-700"}`}>{decision.label}</strong>
         </div>
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-          <p className="ta-label">Siap Production?</p>
-          <strong className={`mt-2 block ${summary.production_allowed ? "text-success-700" : "text-warning-700"}`}>{summary.production_allowed ? "Ya" : "Tidak"}</strong>
+          <p className="ta-label">Judul Final</p>
+          <strong className="mt-2 block text-gray-900">{summaryText(summary.final_title || summary.recommended_title)}</strong>
         </div>
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-          <p className="ta-label">Label AI</p>
-          <strong className="mt-2 block text-gray-900">{businessAiDisclosureStatus(summary).label}</strong>
+          <p className="ta-label">Status Upload</p>
+          <strong className="mt-2 block text-gray-900">{businessUploadModeLabel(summary.selected_upload_mode)}</strong>
         </div>
       </div>
 
       <div className="mt-5 grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
         <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-          <p className="ta-label text-brand-600">Preview Konten</p>
+          <p className="ta-label text-brand-600">Metadata Final</p>
           <div className="mt-3 space-y-2">
-            <SummaryRow label="Judul" value={summaryText(summary.final_title || summary.recommended_title)} />
-            <SummaryRow label="Caption" value={summaryText(summary.final_caption || summary.recommended_caption)} />
-            <SummaryRow label="Hashtag" value={(summary.final_hashtags || summary.recommended_hashtags).join(" ") || "Belum diisi"} />
+            <SummaryRow label="Judul Final" value={summaryText(summary.final_title || summary.recommended_title)} />
+            <SummaryRow label="Caption Final" value={summaryText(summary.final_caption || summary.recommended_caption)} />
             <SummaryRow label="Deskripsi Singkat" value={summaryText(summary.final_description || summary.recommended_short_description)} />
-            <SummaryRow label="Alasan Rekomendasi" value={summary.caption_reason || "Belum ada alasan"} />
+            <SummaryRow label="Hashtag Final" value={(summary.final_hashtags || summary.recommended_hashtags).join(" ") || "Belum diisi"} />
             <SummaryRow label="Catatan Operator" value={summary.operator_review_notes || "Belum ada catatan"} />
           </div>
         </div>
@@ -143,12 +169,14 @@ export function JobReviewPanel({
           <div className="rounded-2xl border border-gray-200 bg-white p-4">
             <p className="ta-label text-brand-600">Cek Keamanan Copyright</p>
             <div className="mt-3 space-y-2">
-              <SummaryRow label="Copyright" value={businessRightsStatus(summary).label} />
-              <SummaryRow label="Risiko ulang" value={String(summary.reused_content_risk || "unknown").toUpperCase()} />
-              <SummaryRow label="Musik" value={businessChecklistState(summary.music_rights_ok).label} />
-              <SummaryRow label="Visual" value={businessChecklistState(summary.visual_rights_ok).label} />
-              <SummaryRow label="Voice-over" value={businessChecklistState(summary.voiceover_legal).label} />
-              <SummaryRow label="Copyright acknowledged" value={businessChecklistState(summary.copyright_acknowledged).label} />
+              <SummaryRow label="Script original" value={scriptStatus.label} />
+              <SummaryRow label="Voice-over legal" value={checklistStatusLabel(summary.voiceover_legal).label} />
+              <SummaryRow label="Visual aman" value={checklistStatusLabel(summary.visual_rights_ok).label} />
+              <SummaryRow label="Musik berlisensi" value={checklistStatusLabel(summary.music_rights_ok).label} />
+              <SummaryRow label="Source audio aman untuk production" value={sourceAudio.label} />
+              <SummaryRow label="Risiko konten ulang" value={riskStatus(summary).label} />
+              <SummaryRow label="Label AI" value={aiLabel.label} />
+              <SummaryRow label="Copyright acknowledgement" value={checklistStatusLabel(summary.copyright_acknowledged, true).label} />
             </div>
             {blockers.length ? <div className="mt-4 grid gap-3">{blockers.map((item) => blockerMessage(item))}</div> : null}
           </div>
@@ -156,9 +184,9 @@ export function JobReviewPanel({
             <p className="ta-label text-brand-600">Cek Label AI</p>
             <div className="mt-3 space-y-2">
               <SummaryRow label="AI generated" value={summary.ai_generated ? "Ya" : "Tidak"} />
-              <SummaryRow label="Terlihat realistis" value={summary.realistic_synthetic_content ? "Ya" : "Tidak"} />
+              <SummaryRow label="Realistis" value={summary.realistic_synthetic_content ? "Ya" : "Tidak"} />
               <SummaryRow label="Butuh disclosure" value={summary.needs_ai_disclosure ? "Ya" : "Tidak"} />
-              <SummaryRow label="Status disclosure" value={businessAiDisclosureStatus(summary).label} />
+              <SummaryRow label="Status disclosure" value={aiLabel.label} />
             </div>
             {summary.needs_ai_disclosure && !summary.ai_disclosure_acknowledged && !summary.ai_disclosure_override ? (
               <div className="mt-4 rounded-xl border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-900">
@@ -251,10 +279,10 @@ export function JobReviewPanel({
         <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
           <p className="ta-label text-brand-600">Ringkasan Publikasi</p>
           <div className="mt-3 space-y-2">
-            <SummaryRow label="Latest upload status" value={publishState.latest_upload?.status || "Pending"} />
-            <SummaryRow label="Mode upload" value={summary.selected_upload_mode} />
-            <SummaryRow label="Privacy status" value={publishState.youtube.privacy_status || "private"} />
-            <SummaryRow label="Publish ready" value={publishState.ready_to_push ? "Ya" : "Belum"} />
+            <SummaryRow label="Status Upload Terakhir" value={publishState.latest_upload ? businessUploadStatus(publishState.latest_upload.status) : "Pending"} />
+            <SummaryRow label="Mode Upload" value={businessUploadModeLabel(summary.selected_upload_mode)} />
+            <SummaryRow label="Status Channel" value={publishState.youtube.privacy_status || "private"} />
+            <SummaryRow label="Publish Siap" value={publishState.ready_to_push ? "Ya" : "Belum"} />
           </div>
         </div>
       </div>
@@ -264,7 +292,7 @@ export function JobReviewPanel({
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="ta-label text-brand-600">Detail Teknis</p>
-              <h4 className="mt-2 text-lg font-semibold text-gray-900">Manifest, raw payload, dan event</h4>
+              <h4 className="mt-2 text-lg font-semibold text-gray-900">Payload mentah, manifest, file, dan event</h4>
             </div>
             <span className="ta-status bg-gray-100 text-gray-700">Tutup / buka</span>
           </div>
@@ -285,6 +313,14 @@ export function JobReviewPanel({
           <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
             <p className="ta-label text-brand-600">Upload records</p>
             <pre className="mt-3 max-h-72 overflow-auto rounded-xl bg-gray-900 p-4 text-xs leading-relaxed text-white">{JSON.stringify(detail.uploads || [], null, 2)}</pre>
+          </div>
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+            <p className="ta-label text-brand-600">Rekam jejak manifest</p>
+            <pre className="mt-3 max-h-72 overflow-auto rounded-xl bg-gray-900 p-4 text-xs leading-relaxed text-white">{JSON.stringify(detail.parameters || {}, null, 2)}</pre>
+          </div>
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+            <p className="ta-label text-brand-600">Raw review summary</p>
+            <pre className="mt-3 max-h-72 overflow-auto rounded-xl bg-gray-900 p-4 text-xs leading-relaxed text-white">{JSON.stringify(summary || {}, null, 2)}</pre>
           </div>
         </div>
       </details>

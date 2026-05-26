@@ -39,20 +39,15 @@ export function CoreSettingsForm({ registry }: Readonly<{ registry: RegistryPayl
       </div>
       <div className="mt-5 grid gap-4 md:grid-cols-2">
         <Field label="Zona waktu" name="timezone" defaultValue={registry.timezone} />
-        <Field label="Batas storage GB" name="storage_budget_gb" type="number" defaultValue={registry.storage_budget_gb} />
-        <Field label="Slot publish default" name="default_publish_slots" defaultValue={registry.default_publish_slots.join(",")} />
-        <Field label="Kapasitas worker" name="worker_max_active_jobs" type="number" defaultValue={registry.worker.max_active_jobs} />
-        <Field label="Batas disk kosong GB" name="worker_min_free_disk_gb" type="number" defaultValue={registry.worker.min_free_disk_gb} />
-        <Field
-          label="Jeda publish jam"
-          name="worker_publish_lead_time_hours"
-          type="number"
-          defaultValue={registry.worker.publish_lead_time_hours}
-        />
-        <Field label="Teks validasi upload" name="upload_approval_confirmation_text" defaultValue={registry.upload_approval.confirmation_text} />
-        <Field label="Durasi sesi validasi menit" name="upload_approval_session_minutes" type="number" defaultValue={registry.upload_approval.session_minutes} />
-        <Field label="Simpan job terbaru" name="retention_keep_recent_job_dirs" type="number" defaultValue={registry.retention.keep_recent_job_dirs} />
-        <Field label="Interval cleanup jam" name="retention_cleanup_interval_hours" type="number" defaultValue={registry.retention.cleanup_interval_hours} />
+        <Field label="Target kapasitas harian" name="storage_budget_gb" type="number" defaultValue={registry.storage_budget_gb} />
+        <Field label="Slot kerja default" name="default_publish_slots" defaultValue={registry.default_publish_slots.join(",")} />
+        <Field label="Kapasitas proses" name="worker_max_active_jobs" type="number" defaultValue={registry.worker.max_active_jobs} />
+        <Field label="Batas ruang aman" name="worker_min_free_disk_gb" type="number" defaultValue={registry.worker.min_free_disk_gb} />
+        <Field label="Jeda aman produksi" name="worker_publish_lead_time_hours" type="number" defaultValue={registry.worker.publish_lead_time_hours} />
+        <Field label="Teks persetujuan upload" name="upload_approval_confirmation_text" defaultValue={registry.upload_approval.confirmation_text} />
+        <Field label="Durasi sesi persetujuan menit" name="upload_approval_session_minutes" type="number" defaultValue={registry.upload_approval.session_minutes} />
+        <Field label="Simpan kerja terbaru" name="retention_keep_recent_job_dirs" type="number" defaultValue={registry.retention.keep_recent_job_dirs} />
+        <Field label="Interval bersih-bersih jam" name="retention_cleanup_interval_hours" type="number" defaultValue={registry.retention.cleanup_interval_hours} />
       </div>
       <label className="mt-4 grid gap-2 text-sm font-semibold text-gray-700">
         Alasan validasi upload
@@ -95,7 +90,7 @@ export function CoreSettingsForm({ registry }: Readonly<{ registry: RegistryPayl
       <div className="mt-4 rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
         <p className="ta-label text-brand-600">Copyright & Safety</p>
         <div className="mt-3 grid gap-2 md:grid-cols-2">
-          <div className="rounded-xl bg-white px-4 py-3">Blokir reused-content risk tinggi</div>
+          <div className="rounded-xl bg-white px-4 py-3">Blokir risiko konten ulang tinggi</div>
           <div className="rounded-xl bg-white px-4 py-3">Wajib label AI jika konten realistis</div>
           <div className="rounded-xl bg-white px-4 py-3">Musik hanya dari library berlisensi</div>
           <div className="rounded-xl bg-white px-4 py-3">Volume musik default 15%</div>
@@ -117,7 +112,6 @@ export function ChannelSettingsForms({ registry }: Readonly<{ registry: Registry
               <div>
                 <input name="channel_id" type="hidden" value={channel.id} />
                 <strong className="text-gray-900">{channel.id}</strong>
-                <p className="mt-1 font-mono text-xs text-gray-500">{channel.gcp_project_id}</p>
               </div>
               <ConfirmSubmitButton className="px-4 py-2 text-sm" message={`Save settings for channel ${channel.id}?`}>
                 Simpan channel
@@ -125,38 +119,13 @@ export function ChannelSettingsForms({ registry }: Readonly<{ registry: Registry
             </div>
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <Field label="Nama channel" name="display_name" defaultValue={channel.display_name} />
-              <Field label="Strategi konten" name="niche" defaultValue={channel.niche} />
+              <Field label="Fokus konten" name="niche" defaultValue={channel.niche} />
               <Field label="Bahasa" name="language" defaultValue={channel.language} />
-              <Field label="Project" name="gcp_project_id" defaultValue={channel.gcp_project_id} />
             </div>
             <div className="mt-4 flex flex-wrap gap-4 text-sm font-semibold text-gray-700">
               <label className="flex items-center gap-2">
                 <input className="ta-check" name="enabled" type="checkbox" defaultChecked={channel.enabled} />
                 Channel aktif
-              </label>
-              <label className="flex items-center gap-2">
-                <input className="ta-check" name="require_client_secret" type="checkbox" defaultChecked={channel.upload_preflight.require_client_secret} />
-                Wajib client secret
-              </label>
-              <label className="flex items-center gap-2">
-                <input className="ta-check" name="require_token" type="checkbox" defaultChecked={channel.upload_preflight.require_token} />
-                Wajib token
-              </label>
-              <label className="flex items-center gap-2">
-                <input className="ta-check" name="require_curated_sources" type="checkbox" defaultChecked={channel.upload_preflight.require_curated_sources} />
-                Wajib curated source
-              </label>
-              <label className="flex items-center gap-2">
-                <input className="ta-check" name="require_publish_slots" type="checkbox" defaultChecked={channel.upload_preflight.require_publish_slots} />
-                Wajib slot publish
-              </label>
-              <label className="flex items-center gap-2">
-                <input className="ta-check" name="validate_oauth_credentials" type="checkbox" defaultChecked={channel.upload_preflight.validate_oauth_credentials} />
-                Cek login YouTube
-              </label>
-              <label className="flex items-center gap-2">
-                <input className="ta-check" name="auto_bootstrap_allowed" type="checkbox" defaultChecked={channel.upload_preflight.auto_bootstrap_allowed} />
-                Auto bootstrap diperbolehkan
               </label>
             </div>
             <details className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
@@ -171,19 +140,33 @@ export function ChannelSettingsForms({ registry }: Readonly<{ registry: Registry
                 <Field id={`settings-${channel.id}-token-path`} label="Token path" name="token_path" defaultValue={channel.token_path} />
                 <Field label="Publish slots CSV" name="publish_slots" defaultValue={channel.publish_slots.join(",")} />
                 <Field label="Curated sources path" name="curated_sources_path" defaultValue={channel.curated_sources_path} />
-                <Field id={`settings-${channel.id}-tiktok-access-token-path`} label="TikTok access token path" name="tiktok_access_token_path" defaultValue={channel.tiktok_publish.access_token_path} />
-                <Field label="TikTok access token env" name="tiktok_access_token_env" defaultValue={channel.tiktok_publish.access_token_env} />
-                <Field label="TikTok transfer method" name="tiktok_transfer_method" defaultValue={channel.tiktok_publish.transfer_method} />
-                <Field label="TikTok verified URL" name="tiktok_verified_url" defaultValue={channel.tiktok_publish.verified_url} />
-                <Field label="TikTok publish mode" name="tiktok_publish_mode" defaultValue={channel.tiktok_publish.publish_mode} />
-                <Field label="TikTok poll attempts" name="tiktok_status_poll_attempts" type="number" defaultValue={channel.tiktok_publish.status_poll_attempts} />
-                <Field label="TikTok poll delay seconds" name="tiktok_status_poll_delay_seconds" type="number" step="0.1" defaultValue={channel.tiktok_publish.status_poll_delay_seconds} />
-                <Field label="TikTok chunk size MB" name="tiktok_chunk_size_mb" type="number" defaultValue={channel.tiktok_publish.chunk_size_mb} />
               </div>
-              <label className="mt-4 flex items-center gap-2 text-sm font-semibold text-gray-700">
-                <input className="ta-check" name="tiktok_enabled" type="checkbox" defaultChecked={channel.tiktok_publish.enabled} />
-                TikTok enabled
-              </label>
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <input className="ta-check" name="require_client_secret" type="checkbox" defaultChecked={channel.upload_preflight.require_client_secret} />
+                  Wajib client secret
+                </label>
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <input className="ta-check" name="require_token" type="checkbox" defaultChecked={channel.upload_preflight.require_token} />
+                  Wajib token
+                </label>
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <input className="ta-check" name="require_curated_sources" type="checkbox" defaultChecked={channel.upload_preflight.require_curated_sources} />
+                  Wajib curated source
+                </label>
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <input className="ta-check" name="require_publish_slots" type="checkbox" defaultChecked={channel.upload_preflight.require_publish_slots} />
+                  Wajib slot kerja
+                </label>
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <input className="ta-check" name="validate_oauth_credentials" type="checkbox" defaultChecked={channel.upload_preflight.validate_oauth_credentials} />
+                  Cek login YouTube
+                </label>
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <input className="ta-check" name="auto_bootstrap_allowed" type="checkbox" defaultChecked={channel.upload_preflight.auto_bootstrap_allowed} />
+                  Auto bootstrap diperbolehkan
+                </label>
+              </div>
             </details>
           </form>
         ))}

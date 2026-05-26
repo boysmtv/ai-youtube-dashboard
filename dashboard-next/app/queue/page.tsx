@@ -18,7 +18,8 @@ function statusGroupForJob(status: string) {
   if (["queued", "searching"].includes(normalized)) return "menunggu";
   if (["downloaded", "transcribed", "planned", "voiceover", "rendering", "uploading", "processing"].includes(normalized)) return "sedang-diproses";
   if (normalized === "rendered") return "siap-review";
-  if (["failed", "cancelled", "canceled", "blocked"].includes(normalized)) return "perlu-diperbaiki";
+  if (["failed", "cancelled", "canceled"].includes(normalized)) return "gagal";
+  if (normalized === "blocked") return "diblokir";
   if (["uploaded", "published", "draft_ready"].includes(normalized)) return "sudah-upload-private";
   return "semua";
 }
@@ -64,7 +65,7 @@ export default async function QueuePage({
           { href: "/", label: "Dashboard" },
           { href: "/queue", label: "Produksi Video" },
         ]}
-        description="Halaman ini dipakai untuk membuat video baru, memantau video yang sedang diproses, dan mengarahkan item siap review ke langkah berikutnya."
+        description="Halaman ini dipakai untuk membuat video baru, memantau proses, dan mengarahkan item yang siap review ke langkah berikutnya."
         eyebrow="Produksi Video"
         title="Buat video baru dan pantau proses."
       />
@@ -154,8 +155,11 @@ export default async function QueuePage({
           <Link className={`rounded-full border px-3 py-2 text-sm font-semibold ${selectedGroup === "siap-review" ? "border-brand-100 bg-brand-25 text-brand-700" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`} href={filterHref("siap-review")}>
             Siap Review
           </Link>
-          <Link className={`rounded-full border px-3 py-2 text-sm font-semibold ${selectedGroup === "perlu-diperbaiki" ? "border-brand-100 bg-brand-25 text-brand-700" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`} href={filterHref("perlu-diperbaiki")}>
-            Perlu Diperbaiki
+          <Link className={`rounded-full border px-3 py-2 text-sm font-semibold ${selectedGroup === "gagal" ? "border-brand-100 bg-brand-25 text-brand-700" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`} href={filterHref("gagal")}>
+            Gagal
+          </Link>
+          <Link className={`rounded-full border px-3 py-2 text-sm font-semibold ${selectedGroup === "diblokir" ? "border-brand-100 bg-brand-25 text-brand-700" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`} href={filterHref("diblokir")}>
+            Diblokir
           </Link>
           <Link className={`rounded-full border px-3 py-2 text-sm font-semibold ${selectedGroup === "sudah-upload-private" ? "border-brand-100 bg-brand-25 text-brand-700" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`} href={filterHref("sudah-upload-private")}>
             Sudah Upload Private

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { JobRecord } from "../lib/engine-types";
-import { friendlyErrorMessage } from "../lib/business-copy";
+import { businessJobStatus, friendlyErrorMessage } from "../lib/business-copy";
 import { StatusBadge } from "./status-badge";
 
 function lower(value: string) {
@@ -70,9 +70,10 @@ export function JobTable({ jobs, canOperate = true }: Readonly<{ jobs: JobRecord
                 <tr key={job.id} className="border-b border-gray-100 text-gray-700 last:border-b-0 hover:bg-gray-50">
                   <td className="px-4 py-3 font-mono">
                     <Link className="font-semibold text-brand-600 underline-offset-4 hover:underline" href={`/jobs/${job.id}`}>
-                      ID Video #{job.id}
+                      Video
                     </Link>
                     <div className="mt-2 space-y-1">
+                      <p className="text-xs text-gray-500">ID #{job.id}</p>
                       <p className="max-w-sm truncate text-xs text-gray-500">{job.selected_title || job.niche || "Topik belum dipilih"}</p>
                       <p className="text-xs text-gray-500">
                         {job.viral_score !== null && job.viral_score !== undefined ? `Skor potensi viral ${job.viral_score}` : "Skor potensi viral belum tersedia"}
@@ -84,7 +85,7 @@ export function JobTable({ jobs, canOperate = true }: Readonly<{ jobs: JobRecord
                   <td className="px-4 py-3">
                     <StatusBadge status={job.status} />
                     <p className="mt-2 text-xs text-gray-500">
-                      {job.current_stage ? `Tahap saat ini: ${job.current_stage}` : "Tahap belum tersedia"}
+                      {job.current_stage ? `Tahap saat ini: ${businessJobStatus(job.current_stage)}` : "Tahap belum tersedia"}
                       {job.progress_percent !== null && job.progress_percent !== undefined ? ` / ${job.progress_percent.toFixed(0)}%` : ""}
                     </p>
                   </td>

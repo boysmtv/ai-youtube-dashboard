@@ -30,7 +30,7 @@ export default async function AnalyticsPage() {
   const latestUploads = youtubeHistory.items.slice(0, 10);
   const nextAction =
     uploadedPrivate > 0
-      ? { title: "Lihat riwayat upload", description: "Ada upload YouTube yang sudah sukses tercatat.", href: "/publish#history" }
+      ? { title: "Lihat riwayat upload", description: "Ada upload yang sudah sukses tercatat.", href: "/publish#history" }
       : blockedVideos.length > 0
         ? { title: "Review video diblokir", description: "Ada video yang masih butuh perbaikan.", href: `/jobs/${blockedVideos[0].id}` }
         : problemChannels > 0
@@ -50,9 +50,9 @@ export default async function AnalyticsPage() {
           { href: "/", label: "Dashboard" },
           { href: "/analytics", label: "Laporan" },
         ]}
-        description="Halaman ini merangkum throughput, hasil publish, dan performa channel supaya bisnis bisa melihat apa yang berjalan dan apa yang tertahan."
+        description="Halaman ini merangkum hasil operasional supaya bisnis bisa melihat apa yang berjalan dan apa yang tertahan."
         eyebrow="Laporan"
-        title="Laporan operasional YouTube."
+        title="Laporan operasional."
       />
 
       <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -65,7 +65,7 @@ export default async function AnalyticsPage() {
       <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard href="/publish#queue" label="Diblokir Copyright" value={copyrightBlocked} tone={copyrightBlocked > 0 ? "warn" : "neutral"} />
         <MetricCard href="/channels" label="Channel Bermasalah" value={problemChannels} tone={problemChannels > 0 ? "warn" : "neutral"} />
-        <MetricCard href="/queue" label="Queue Aktif" value={overview.job_counts.queued || 0} />
+        <MetricCard href="/queue" label="Antrian Aktif" value={overview.job_counts.queued || 0} />
         <MetricCard href="/channels" label="Channel Aktif" value={readiness.items.filter((item) => item.enabled).length} tone="good" />
       </section>
 
@@ -92,25 +92,25 @@ export default async function AnalyticsPage() {
       <section className="mt-6 grid gap-4 rounded-2xl border border-gray-200 bg-white p-5 lg:grid-cols-3">
         <div className="rounded-2xl border border-brand-100 bg-brand-25 p-4 text-sm">
           <strong className="block text-gray-900">Total video dibuat</strong>
-          <p className="mt-1 text-gray-600">{totalCreated} job tercatat dari PostgreSQL-backed API.</p>
+          <p className="mt-1 text-gray-600">{totalCreated} video tercatat dari sistem utama.</p>
         </div>
         <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
           <strong className="block text-gray-900">Upload private sukses</strong>
-          <p className="mt-1 text-gray-600">{uploadedPrivate} upload YouTube tercatat sukses.</p>
+          <p className="mt-1 text-gray-600">{uploadedPrivate} upload private tercatat sukses.</p>
         </div>
         <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
           <strong className="block text-gray-900">Data source</strong>
-          <p className="mt-1 text-gray-600">Semua angka dibaca dari Engine API dan PostgreSQL runtime.</p>
+          <p className="mt-1 text-gray-600">Semua angka dibaca dari data operasional terbaru.</p>
         </div>
       </section>
 
       <section className="mt-6 grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
         <div className="ta-panel p-5">
-          <p className="ta-label text-brand-600">Platform mix</p>
+          <p className="ta-label text-brand-600">Ringkasan hasil</p>
           <h3 className="mt-2 text-lg font-semibold text-gray-900">Hasil publish terbaru</h3>
           <div className="mt-4 grid gap-3 text-sm">
             <div className="flex justify-between gap-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
-              <span>YouTube history</span>
+              <span>Riwayat upload</span>
               <strong>{youtubeHistory.items.length}</strong>
             </div>
             <div className="flex justify-between gap-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
@@ -118,7 +118,7 @@ export default async function AnalyticsPage() {
               <strong>{readyReview}</strong>
             </div>
             <div className="flex justify-between gap-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
-              <span>Copyright blocked</span>
+              <span>Diblokir copyright</span>
               <strong>{copyrightBlocked}</strong>
             </div>
             <div className="flex justify-between gap-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
@@ -127,9 +127,9 @@ export default async function AnalyticsPage() {
             </div>
           </div>
           <div className="mt-5 rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-700">
-            <p className="ta-label text-brand-600">Output cadence</p>
-            <p className="mt-2">Ready items: {readyReview}. Uploaded: {uploadedPrivate}. Failed: {failed}. Recent publish history items: {youtubeHistory.total}.</p>
-            <p className="mt-2 text-xs text-gray-500">Latest history snapshot: {publishHistory.generated_at}</p>
+            <p className="ta-label text-brand-600">Ringkasan output</p>
+            <p className="mt-2">Siap review: {readyReview}. Upload sukses: {uploadedPrivate}. Gagal: {failed}. Riwayat upload: {youtubeHistory.total}.</p>
+            <p className="mt-2 text-xs text-gray-500">Snapshot terbaru: {publishHistory.generated_at}</p>
           </div>
         </div>
 
@@ -137,7 +137,7 @@ export default async function AnalyticsPage() {
           <p className="ta-label text-brand-600">Riwayat publish</p>
           <h3 className="mt-2 text-lg font-semibold text-gray-900">Item terbaru</h3>
           <div className="mt-4">
-            <PublishHistoryTable history={youtubeHistory} limitLabel="Riwayat publish YouTube terbaru" />
+            <PublishHistoryTable history={youtubeHistory} limitLabel="Riwayat upload terbaru" />
           </div>
           <div className="mt-5">
             <h4 className="text-sm font-semibold text-gray-900">Upload terakhir</h4>
@@ -147,7 +147,7 @@ export default async function AnalyticsPage() {
                   <div key={`${item.platform}-${item.record_id}`} className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <Link className="font-mono font-semibold text-brand-600 underline-offset-4 hover:underline" href={`/jobs/${item.job_id}`}>
-                        Job #{item.job_id}
+                        Video #{item.job_id}
                       </Link>
                       <span className="ta-status bg-success-50 text-success-700">{item.status}</span>
                     </div>
@@ -168,7 +168,7 @@ export default async function AnalyticsPage() {
                   <div key={job.id} className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <Link className="font-mono font-semibold text-brand-600 underline-offset-4 hover:underline" href={`/jobs/${job.id}`}>
-                        Job #{job.id}
+                        Video #{job.id}
                       </Link>
                       <span className="ta-status bg-error-50 text-error-700">{job.status}</span>
                     </div>

@@ -1,15 +1,31 @@
 import type { JobRecord } from "../lib/engine-types";
 import Link from "next/link";
-import { ConfirmSubmitButton } from "./confirm-submit-button";
 import { StatusBadge } from "./status-badge";
 import { friendlyErrorMessage } from "../lib/business-copy";
-import {
-  cancelDashboardJob,
-  pauseDashboardJob,
-  requeueDashboardJob,
-  resumeDashboardJob,
-  runDashboardJob,
-} from "../app/jobs/actions";
+
+function lower(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function jobPrimaryAction(job: JobRecord) {
+  const status = lower(job.status);
+  if (["queued", "searching", "downloaded", "transcribed", "planned", "voiceover", "rendering", "uploading", "processing"].includes(status)) {
+    return { label: "Lihat Detail", href: `/jobs/${job.id}` };
+  }
+  if (status === "rendered") {
+    return { label: "Review Video", href: `/jobs/${job.id}#review` };
+  }
+  if (["failed", "cancelled", "canceled", "blocked"].includes(status)) {
+    return { label: "Cek Masalah", href: `/jobs/${job.id}#detail-teknis` };
+  }
+  if (["uploaded", "published", "draft_ready", "completed"].includes(status)) {
+    return { label: "Lihat Riwayat Upload", href: "/publish#history" };
+  }
+  if (status === "paused") {
+    return { label: "Lanjutkan", href: `/jobs/${job.id}` };
+  }
+  return { label: "Lihat Detail", href: `/jobs/${job.id}` };
+}
 
 export function JobTable({ jobs, canOperate = true }: Readonly<{ jobs: JobRecord[]; canOperate?: boolean }>) {
   if (!jobs.length) {
@@ -42,8 +58,7 @@ export function JobTable({ jobs, canOperate = true }: Readonly<{ jobs: JobRecord
               <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">Status</th>
               <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">Percobaan</th>
               <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">Alasan</th>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">Akses</th>
-              {canOperate ? <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">Aksi</th> : null}
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">Aksi Utama</th>
             </tr>
           </thead>
           <tbody>
@@ -76,54 +91,20 @@ export function JobTable({ jobs, canOperate = true }: Readonly<{ jobs: JobRecord
                     Lihat Preview
                   </Link>
                 </td>
-                {canOperate ? (
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-2">
-                      {job.status === "queued" ? (
-                        <form action={runDashboardJob}>
-                          <input name="job_id" type="hidden" value={job.id} />
-                          <input name="max_retries" type="hidden" value="3" />
-                          <ConfirmSubmitButton message={`Jalankan video #${job.id}? Upload tetap nonaktif kecuali jalur review mengizinkan.`} pendingText="Running...">
-                            Proses
-                          </ConfirmSubmitButton>
-                        </form>
-                      ) : null}
-                      {["queued", "rendered"].includes(job.status) ? (
-                        <form action={pauseDashboardJob}>
-                          <input name="job_id" type="hidden" value={job.id} />
-                          <ConfirmSubmitButton message={`Pause job #${job.id}?`} tone="warning" pendingText="Pausing...">
-                            Jeda
-                          </ConfirmSubmitButton>
-                        </form>
-                      ) : null}
-                      {job.status === "paused" ? (
-                        <form action={resumeDashboardJob}>
-                          <input name="job_id" type="hidden" value={job.id} />
-                          <ConfirmSubmitButton message={`Resume job #${job.id}?`} tone="success" pendingText="Resuming...">
-                            Lanjut
-                          </ConfirmSubmitButton>
-                        </form>
-                      ) : null}
-                      {["failed", "rendered"].includes(job.status) ? (
-                        <form action={requeueDashboardJob}>
-                          <input name="job_id" type="hidden" value={job.id} />
-                          <ConfirmSubmitButton message={`Requeue job #${job.id}? This may create another processing attempt.`} tone="muted" pendingText="Requeueing...">
-                            Coba lagi
-                          </ConfirmSubmitButton>
-                        </form>
-                      ) : null}
-                      {["queued", "paused", "failed", "rendered"].includes(job.status) ? (
-                        <form action={cancelDashboardJob}>
-                          <input name="job_id" type="hidden" value={job.id} />
-                          <ConfirmSubmitButton message={`Cancel job #${job.id}?`} tone="danger" pendingText="Cancelling...">
-                            Batalkan
-                          </ConfirmSubmitButton>
-                        </form>
-                      ) : null}
-                    </div>
-                  </td>
-                ) : null}
-              </tr>
+                <td className="px-4 py-3">
+                  {(() => {
+                    const action = jobPrimaryAction(job);
+                    return (
+                      <div className="flex flex-col gap-2">
+                        <Link className="inline-flex rounded-lg border border-brand-100 bg-brand-25 px-3 py-2 text-sm font-semibold text-brand-700 hover:border-brand-200" href={action.href}>
+                          {action.label}
+                        </Link>
+                        <span className="text-xs text-gray-500">{canOperate ? "Aksi utama operator" : "Lihat detail untuk tindak lanjut."}</span>
+                      </div>
+                    );
+                  })()}
+                </td>
+            </tr>
             ))}
           </tbody>
         </table>

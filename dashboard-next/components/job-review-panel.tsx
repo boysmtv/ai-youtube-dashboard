@@ -8,6 +8,7 @@ import {
   businessUploadModeOptions,
   summaryText,
 } from "../lib/business-copy";
+import { operatorDecisionForJob } from "../lib/operator-workflow";
 
 function readBool(value: unknown) {
   if (typeof value === "boolean") return value;
@@ -79,7 +80,7 @@ export function JobReviewPanel({
   publishState: PublishStatePayload;
   canOperate: boolean;
   previewReady: boolean;
-}>) {
+  }>) {
   const summary = detail.review_summary || publishState.review_summary;
   if (!summary) {
     return (
@@ -93,6 +94,7 @@ export function JobReviewPanel({
   const status = mainStatus(summary);
   const rights = detail.rights_assessment || {};
   const uploadModes = businessUploadModeOptions(summary.available_upload_modes);
+  const decision = operatorDecisionForJob(detail.job, detail.review_summary || publishState.review_summary, publishState);
 
   return (
     <div className="ta-panel p-5">
@@ -103,6 +105,20 @@ export function JobReviewPanel({
           <p className="mt-2 text-sm text-gray-500">{status.reason}</p>
         </div>
         <span className={`ta-status ${status.tone}`}>{status.label}</span>
+      </div>
+
+      <div className="mt-4 rounded-2xl border border-brand-100 bg-brand-25 p-4">
+        <p className="ta-label text-brand-600">Langkah Berikutnya</p>
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <strong className="block text-gray-900">{decision.nextAction}</strong>
+            <p className="mt-1 text-sm text-gray-600">{decision.explanation}</p>
+          </div>
+          <Link className="ta-button" href={decision.targetLink}>
+            Lanjut
+          </Link>
+        </div>
+        {decision.blockerReason ? <p className="mt-3 rounded-xl border border-warning-200 bg-warning-50 px-3 py-2 text-sm text-warning-900">{decision.blockerReason}</p> : null}
       </div>
 
       <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -130,9 +146,15 @@ export function JobReviewPanel({
         <div className="mt-4 rounded-2xl border border-warning-200 bg-warning-50 p-4 text-sm text-warning-900">
           <strong className="block">Belum siap production</strong>
           <p className="mt-2">Alasan: {status.reason}</p>
-          <p className="mt-2">Yang perlu dilakukan: perbaiki blocker di bawah lalu simpan metadata lagi.</p>
+          <p className="mt-2">Yang perlu dilakukan: perbaiki blocker di bawah, lalu simpan metadata lagi.</p>
         </div>
       ) : null}
+
+      <div className="mt-5 rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
+        <p className="ta-label text-brand-600">Panduan singkat</p>
+        <p className="mt-2">Private Test hanya untuk validasi teknis.</p>
+        <p className="mt-1">Production hanya boleh jika copyright, musik, visual, dan disclosure sudah aman.</p>
+      </div>
 
       <div className="mt-5 grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
         <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
@@ -151,15 +173,15 @@ export function JobReviewPanel({
           <p className="ta-label text-brand-600">Status copy</p>
           <div className="mt-3 grid gap-3">
             <div id="copyright-detail" className="rounded-xl border border-gray-200 bg-white p-4">
-            <p className="ta-label text-brand-600">Status copyright</p>
-            <SummaryRow label="Copyright" value={businessRightsStatus(summary).label} />
-            <SummaryRow label="Risiko Konten Ulang" value={String(summary.reused_content_risk || "unknown").toUpperCase()} />
-            <SummaryRow label="Production blockers" value={summary.production_blockers.join("; ") || "Tidak ada"} />
-          </div>
-          <div className="rounded-xl border border-gray-200 bg-white p-4">
-            <SummaryRow label="Konten AI" value={summary.ai_generated ? "Ya" : "Tidak"} />
-            <SummaryRow label="Terlihat realistis" value={summary.realistic_synthetic_content ? "Ya" : "Tidak"} />
-            <SummaryRow label="Butuh disclosure" value={summary.needs_ai_disclosure ? "Ya" : "Tidak"} />
+              <p className="ta-label text-brand-600">Status copyright</p>
+              <SummaryRow label="Copyright" value={businessRightsStatus(summary).label} />
+              <SummaryRow label="Risiko Konten Ulang" value={String(summary.reused_content_risk || "unknown").toUpperCase()} />
+              <SummaryRow label="Production blockers" value={summary.production_blockers.join("; ") || "Tidak ada"} />
+            </div>
+            <div className="rounded-xl border border-gray-200 bg-white p-4">
+              <SummaryRow label="Konten AI" value={summary.ai_generated ? "Ya" : "Tidak"} />
+              <SummaryRow label="Terlihat realistis" value={summary.realistic_synthetic_content ? "Ya" : "Tidak"} />
+              <SummaryRow label="Butuh disclosure" value={summary.needs_ai_disclosure ? "Ya" : "Tidak"} />
               <SummaryRow label="Status disclosure" value={businessAiDisclosureStatus(summary).label} />
               {summary.needs_ai_disclosure ? (
                 <p className="mt-3 rounded-xl border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-900">
@@ -260,6 +282,10 @@ export function JobReviewPanel({
               value: option.allowed ? "Siap" : option.reason || "Diblokir",
               tone: option.allowed ? "bg-success-50 text-success-700" : "bg-warning-50 text-warning-700",
             })))}
+          </div>
+          <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-4 text-sm text-gray-700">
+            <p className="ta-label text-brand-600">Penjelasan mode</p>
+            <p className="mt-2">Upload Private Test dipakai untuk validasi teknis. Production hanya muncul bila gate rights mengizinkan.</p>
           </div>
           <div className="flex flex-wrap gap-3">
             <button className="inline-flex items-center justify-center rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white" type="submit">

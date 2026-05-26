@@ -6,24 +6,27 @@ function lower(value: string) {
 
 export function businessJobStatus(status: string) {
   const normalized = lower(status);
-  if (["queued", "searching"].includes(normalized)) return "Menunggu";
-  if (["downloaded", "transcribed", "planned", "voiceover", "rendering", "uploading"].includes(normalized)) return "Sedang Diproses";
+  if (["queued", "searching", "pending"].includes(normalized)) return "Menunggu Diproses";
+  if (["downloaded", "transcribed", "planned", "voiceover", "rendering", "uploading", "processing"].includes(normalized)) return "Sedang Diproses";
   if (normalized === "rendered") return "Siap Review";
-  if (["uploaded", "completed"].includes(normalized)) return "Selesai";
+  if (["uploaded", "published", "draft_ready"].includes(normalized)) return "Sudah Upload Private";
+  if (normalized === "completed") return "Selesai";
   if (normalized === "paused") return "Dijeda";
-  if (["failed", "cancelled", "canceled"].includes(normalized)) return "Diblokir";
+  if (normalized === "blocked") return "Diblokir";
+  if (["failed", "cancelled", "canceled"].includes(normalized)) return "Perlu Diperbaiki";
   return status;
 }
 
 export function businessJobStatusTone(status: string) {
   const normalized = lower(status);
-  if (["uploaded", "completed"].includes(normalized)) return "bg-success-50 text-success-700";
+  if (["uploaded", "published", "draft_ready", "completed"].includes(normalized)) return "bg-success-50 text-success-700";
   if (normalized === "rendered") return "bg-warning-50 text-warning-700";
-  if (["queued", "searching", "downloaded", "transcribed", "planned", "voiceover", "rendering", "uploading"].includes(normalized)) {
+  if (["queued", "searching", "pending", "downloaded", "transcribed", "planned", "voiceover", "rendering", "uploading", "processing"].includes(normalized)) {
     return "bg-brand-50 text-brand-700";
   }
   if (normalized === "paused") return "bg-gray-100 text-gray-700";
-  if (["failed", "cancelled", "canceled"].includes(normalized)) return "bg-error-50 text-error-700";
+  if (normalized === "blocked") return "bg-error-50 text-error-700";
+  if (["failed", "cancelled", "canceled"].includes(normalized)) return "bg-warning-50 text-warning-700";
   return "bg-gray-100 text-gray-700";
 }
 

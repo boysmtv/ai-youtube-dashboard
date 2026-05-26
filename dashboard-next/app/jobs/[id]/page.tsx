@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppShell } from "../../../components/app-shell";
+import { GuidedWorkflow } from "../../../components/guided-workflow";
 import { JobControlPanel } from "../../../components/job-control-panel";
 import { JobRealtimePanel } from "../../../components/job-realtime-panel";
 import { JobReviewPanel } from "../../../components/job-review-panel";
@@ -18,6 +19,7 @@ import {
 } from "../../../lib/engine-api";
 import type { JobFilePayload, JobResultPayload, JobTimelinePayload, PublishStatePayload } from "../../../lib/engine-types";
 import { parseEngineSyncSettings } from "../../../lib/sync-settings";
+import { buildJobWorkflowSteps, operatorDecisionForJob } from "../../../lib/operator-workflow";
 
 function formatBytes(value?: number | null) {
   if (!value || value <= 0) return "Belum ada";
@@ -150,18 +152,8 @@ export default async function JobDetailPage({
   const downloadUrl = finalResult?.download_url || null;
   const reviewSummary = detail.review_summary || publishState.review_summary;
   const previewReady = Boolean(finalResult?.available && previewUrl && previewArtifact);
-  const mainStatus = reviewSummary?.production_allowed
-    ? reviewSummary.selected_upload_mode === "production_private"
-      ? "Siap Production"
-      : "Siap Upload Private"
-    : reviewSummary?.production_blockers?.length
-      ? "Belum Boleh Upload"
-      : "Perlu Review";
-  const mainReason = reviewSummary?.production_allowed
-    ? reviewSummary.selected_upload_mode === "production_private"
-      ? "Semua syarat produksi lolos."
-      : "Video aman untuk pengecekan private terlebih dulu."
-    : reviewSummary?.production_blockers?.[0] || "Masih ada data review yang perlu dilengkapi.";
+  const decision = operatorDecisionForJob(detail.job, reviewSummary, publishState);
+  const workflowSteps = buildJobWorkflowSteps(detail.job, reviewSummary, publishState);
 
   const renderArtifacts = Array.isArray(detail.manifest?.renders) ? detail.manifest?.renders : [];
 
@@ -182,12 +174,22 @@ export default async function JobDetailPage({
         title={`Review video #${detail.job.id}`}
       />
 
+      <GuidedWorkflow
+        eyebrow="Step 3-6 of 6"
+        title="Review & Upload"
+        description="Ikuti urutan aman: review hasil, cek copyright, lakukan private test, lalu pastikan hanya konten yang lolos rights gate yang menuju production."
+        steps={workflowSteps}
+        summaryLabel="Status utama"
+        summaryAction={decision.label}
+        summaryLink={decision.targetLink}
+      />
+
       <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-2xl border border-gray-200 bg-white p-4">
           <p className="ta-label text-brand-600">Status produksi</p>
           <div className="mt-2 flex flex-wrap gap-2">
             <StatusBadge status={detail.job.status} />
-            <span className={`ta-status ${reviewSummary?.production_allowed ? "bg-success-50 text-success-700" : "bg-warning-50 text-warning-700"}`}>{mainStatus}</span>
+            <span className={`ta-status ${decision.tone === "good" ? "bg-success-50 text-success-700" : decision.tone === "error" ? "bg-error-50 text-error-700" : "bg-warning-50 text-warning-700"}`}>{decision.label}</span>
           </div>
         </div>
         <div className="rounded-2xl border border-gray-200 bg-white p-4">
@@ -207,7 +209,8 @@ export default async function JobDetailPage({
       </section>
       <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-4 text-sm text-gray-700">
         <p className="ta-label text-brand-600">Alasan / Next action</p>
-        <p className="mt-2">{mainReason}</p>
+        <p className="mt-2">{decision.explanation}</p>
+        {decision.blockerReason ? <p className="mt-3 rounded-xl border border-warning-200 bg-warning-50 px-3 py-2 text-sm text-warning-900">{decision.blockerReason}</p> : null}
         <div className="mt-4 flex flex-wrap gap-2">
           <Link className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100" href="#copyright-detail">
             Cek Detail Copyright
@@ -215,8 +218,8 @@ export default async function JobDetailPage({
           <Link className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50" href="#detail-teknis">
             Lihat Detail Teknis
           </Link>
-          <Link className="rounded-lg border border-brand-100 bg-brand-25 px-3 py-2 text-sm font-semibold text-brand-700 hover:border-brand-200" href="/publish">
-            Lihat Video Siap Review
+          <Link className="rounded-lg border border-brand-100 bg-brand-25 px-3 py-2 text-sm font-semibold text-brand-700 hover:border-brand-200" href={decision.targetLink}>
+            {decision.nextAction}
           </Link>
         </div>
       </div>
@@ -239,7 +242,9 @@ export default async function JobDetailPage({
             </div>
           </div>
 
-          <JobReviewPanel jobId={detail.job.id} detail={detail} publishState={publishState} canOperate={canOperate} previewReady={previewReady} />
+          <div id="review">
+            <JobReviewPanel jobId={detail.job.id} detail={detail} publishState={publishState} canOperate={canOperate} previewReady={previewReady} />
+          </div>
         </div>
 
         <div className="space-y-6">

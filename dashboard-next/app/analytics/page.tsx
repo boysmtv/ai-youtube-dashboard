@@ -28,6 +28,16 @@ export default async function AnalyticsPage() {
   const problemChannels = readiness.items.filter((item) => !item.upload_ready || item.issues.length > 0).length;
   const blockedVideos = overview.jobs.filter((job) => ["failed", "cancelled", "canceled"].includes(job.status.toLowerCase()) || Boolean(job.last_error)).slice(0, 10);
   const latestUploads = youtubeHistory.items.slice(0, 10);
+  const nextAction =
+    uploadedPrivate > 0
+      ? { title: "Lihat riwayat upload", description: "Ada upload YouTube yang sudah sukses tercatat.", href: "/publish#history" }
+      : blockedVideos.length > 0
+        ? { title: "Review video diblokir", description: "Ada video yang masih butuh perbaikan.", href: `/jobs/${blockedVideos[0].id}` }
+        : problemChannels > 0
+          ? { title: "Cek channel", description: "Ada channel yang perlu login atau review.", href: "/channels" }
+          : readyReview > 0
+            ? { title: "Review sekarang", description: "Ada video yang siap ditinjau.", href: "/publish" }
+            : { title: "Lihat antrian", description: "Belum ada item yang perlu tindak lanjut.", href: "/queue" };
 
   return (
     <AppShell>
@@ -57,6 +67,26 @@ export default async function AnalyticsPage() {
         <MetricCard href="/channels" label="Channel Bermasalah" value={problemChannels} tone={problemChannels > 0 ? "warn" : "neutral"} />
         <MetricCard href="/queue" label="Queue Aktif" value={overview.job_counts.queued || 0} />
         <MetricCard href="/channels" label="Channel Aktif" value={readiness.items.filter((item) => item.enabled).length} tone="good" />
+      </section>
+
+      <section className="mt-6 grid gap-4 rounded-2xl border border-gray-200 bg-white p-5 lg:grid-cols-3">
+        <div className="rounded-2xl border border-brand-100 bg-brand-25 p-4 text-sm">
+          <strong className="block text-gray-900">{nextAction.title}</strong>
+          <p className="mt-1 text-gray-600">{nextAction.description}</p>
+        </div>
+        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
+          <strong className="block text-gray-900">Video siap review</strong>
+          <p className="mt-1 text-gray-600">{readyReview} item menunggu review sebelum private test.</p>
+        </div>
+        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
+          <strong className="block text-gray-900">Channel bermasalah</strong>
+          <p className="mt-1 text-gray-600">{problemChannels} channel butuh login, review, atau perbaikan setup.</p>
+        </div>
+        <div className="lg:col-span-3">
+          <Link className="ta-button" href={nextAction.href}>
+            {nextAction.title}
+          </Link>
+        </div>
       </section>
 
       <section className="mt-6 grid gap-4 rounded-2xl border border-gray-200 bg-white p-5 lg:grid-cols-3">

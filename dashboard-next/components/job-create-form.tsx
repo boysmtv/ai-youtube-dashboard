@@ -37,9 +37,9 @@ export function JobCreateForm({
     <form id="create-video" action={createDashboardJob} className="ta-panel p-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="ta-label text-brand-600">Buat Video</p>
+          <p className="ta-label text-brand-600">Step 1 of 6</p>
           <h3 className="mt-2 text-lg font-semibold text-gray-900">Simpan rencana video ke antrian</h3>
-          <p className="mt-1 text-sm text-gray-500">Form ini menyimpan rencana video terlebih dulu. Upload private hanya diproses dari halaman Review & Upload.</p>
+          <p className="mt-1 text-sm text-gray-500">Pilih channel dan masukkan ide. Upload tidak dilakukan otomatis; video akan masuk review dulu.</p>
         </div>
         <ConfirmSubmitButton className="px-5 py-3 text-sm" message="Simpan video baru ke antrian?" pendingText="Saving...">
           Simpan Video

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { assertDashboardRole, engineAuditHeaders } from "../../lib/dashboard-auth";
 import {
   cancelJob,
@@ -58,7 +59,7 @@ function revalidateBusinessViews(jobId?: number) {
 
 export async function createDashboardJob(formData: FormData) {
   const session = assertDashboardRole("operator");
-  await createJob({
+  const result = await createJob({
     channel_id: String(formData.get("channel_id") || ""),
     publish_at: String(formData.get("publish_at") || ""),
     niche: String(formData.get("niche") || "") || undefined,
@@ -72,7 +73,9 @@ export async function createDashboardJob(formData: FormData) {
     keep_downloads: checked(formData.get("keep_downloads")),
     max_retries: optionalNumber(formData.get("max_retries")),
   }, engineAuditHeaders(session));
-  revalidateBusinessViews();
+  const createdJobId = result.job?.id || result.job_id;
+  revalidateBusinessViews(createdJobId || undefined);
+  redirect(`/queue?created=${createdJobId || "1"}#antrian`);
 }
 
 export async function runDashboardJob(formData: FormData) {

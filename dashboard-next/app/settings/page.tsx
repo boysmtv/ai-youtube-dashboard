@@ -3,7 +3,7 @@ import { ConfirmSubmitButton } from "../../components/confirm-submit-button";
 import { ChannelSettingsForms, CoreSettingsForm } from "../../components/settings-forms";
 import { PageHeader } from "../../components/page-header";
 import { dashboardAuthReadiness, requireDashboardRole } from "../../lib/dashboard-auth";
-import { engineBrowserBaseUrl, getAdminBackups, getRegistry } from "../../lib/engine-api";
+import { engineBrowserBaseUrl, getAdminBackups, getRegistry, getRuntimeHealth } from "../../lib/engine-api";
 import { createBackupSnapshot, restoreBackupSnapshot, runRetentionSnapshot, saveRegistrySettings } from "./actions";
 
 function JsonPreview({ value }: Readonly<{ value: unknown }>) {
@@ -16,12 +16,13 @@ function JsonPreview({ value }: Readonly<{ value: unknown }>) {
 
 export default async function SettingsPage() {
   requireDashboardRole("admin", "/settings");
-  const [registry, backups] = await Promise.all([getRegistry(), getAdminBackups()]);
+  const [registry, backups, runtimeHealth] = await Promise.all([getRegistry(), getAdminBackups(), getRuntimeHealth()]);
   const registryJson = JSON.stringify(registry, null, 2);
   const registryBackups = backups.items.filter((item) => item.target === "registry");
   const databaseBackups = backups.items.filter((item) => item.target === "database");
   const authReadiness = dashboardAuthReadiness();
   const engineBase = engineBrowserBaseUrl();
+  const tonePlaceholderDisabled = runtimeHealth.audio?.tone_placeholder_enabled === false;
 
   return (
     <AppShell>
@@ -74,6 +75,50 @@ export default async function SettingsPage() {
         <div className="rounded-2xl border border-gray-200 bg-white p-4">
           <p className="ta-label text-brand-600">Advanced</p>
           <strong className="mt-2 block text-lg text-gray-900">Detail teknis di bawah</strong>
+        </div>
+      </section>
+
+      <section className="mt-6 grid gap-4 rounded-2xl border border-gray-200 bg-white p-5 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
+          <p className="ta-label text-brand-600">PostgreSQL aktif</p>
+          <strong className="mt-2 block text-gray-900">Runtime source of truth</strong>
+          <p className="mt-1 text-gray-600">API dan dashboard membaca data bisnis dari PostgreSQL-backed engine API.</p>
+        </div>
+        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
+          <p className="ta-label text-brand-600">Redis aktif</p>
+          <strong className="mt-2 block text-gray-900">Queue / signal layer</strong>
+          <p className="mt-1 text-gray-600">Redis hanya dipakai untuk antrean dan sinyal runtime, bukan data bisnis utama.</p>
+        </div>
+        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
+          <p className="ta-label text-brand-600">Production gate</p>
+          <strong className="mt-2 block text-gray-900">{registry.upload_approval.enabled ? "Aktif" : "Nonaktif"}</strong>
+          <p className="mt-1 text-gray-600">Gate produksi tetap aktif untuk melindungi rights dan disclosure.</p>
+        </div>
+        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
+          <p className="ta-label text-brand-600">Copyright gate</p>
+          <strong className="mt-2 block text-gray-900">Aktif</strong>
+          <p className="mt-1 text-gray-600">Production diblokir jika rights, visual, musik, atau disclosure belum aman.</p>
+        </div>
+        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
+          <p className="ta-label text-brand-600">Musik berlisensi only</p>
+          <strong className="mt-2 block text-gray-900">{runtimeHealth.audio?.source_audio_allowed ? "Ya" : "Tidak"}</strong>
+          <p className="mt-1 text-gray-600">Source audio harus aman untuk production sebelum upload final.</p>
+        </div>
+        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
+          <p className="ta-label text-brand-600">Placeholder tone</p>
+          <strong className="mt-2 block text-gray-900">{tonePlaceholderDisabled ? "Disabled" : "Enabled"}</strong>
+          <p className="mt-1 text-gray-600">Placeholder tone tidak dipakai di pipeline produksi.</p>
+        </div>
+      </section>
+
+      <section className="mt-6 rounded-2xl border border-brand-100 bg-brand-25 p-5">
+        <p className="ta-label text-brand-600">Panduan singkat</p>
+        <div className="mt-3 grid gap-2 text-sm text-gray-700">
+          <p>1. Buat video</p>
+          <p>2. Tunggu siap review</p>
+          <p>3. Cek preview + metadata</p>
+          <p>4. Cek copyright</p>
+          <p>5. Upload private test</p>
         </div>
       </section>
 

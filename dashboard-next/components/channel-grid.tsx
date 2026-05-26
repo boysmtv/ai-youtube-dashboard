@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ChannelReadinessPayload, OverviewPayload, RegistryPayload } from "../lib/engine-types";
 import { channelProfileLabel, channelReadinessLabel } from "../lib/business-copy";
+import { buildChannelNextAction } from "../lib/operator-workflow";
 
 function lastUploadLabel(value: Record<string, unknown> | null | undefined) {
   if (!value) return "Belum ada";
@@ -42,6 +43,7 @@ export function ChannelGrid({
               const item = readinessByChannel.get(channel.id);
               const health = channelReadinessLabel(item, channel.enabled);
               const issues = item?.issues || [];
+              const nextAction = buildChannelNextAction(item, channel.enabled);
               return (
                 <>
                   <div className="flex flex-wrap items-center justify-between gap-3">
@@ -79,7 +81,7 @@ export function ChannelGrid({
                     </div>
                     <div className="flex justify-between gap-4">
                       <span className="text-gray-500">Rekomendasi berikutnya</span>
-                      <strong className="text-gray-900">{item?.upload_ready ? "Lanjut review" : issues.includes("missing_token") ? "Login ulang YouTube" : "Cek detail channel"}</strong>
+                      <strong className="text-gray-900">{nextAction.nextAction}</strong>
                     </div>
                   </div>
 
@@ -92,10 +94,20 @@ export function ChannelGrid({
                     </Link>
                     <Link
                       className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-                      href={item?.latest_job?.id ? `/jobs/${item.latest_job.id}` : "/publish"}
+                      href={item?.latest_job?.id ? `/jobs/${item.latest_job.id}` : nextAction.targetLink}
                     >
-                      Cek Upload Terakhir
+                      {item?.latest_job?.id ? "Cek Upload Terakhir" : nextAction.nextAction}
                     </Link>
+                  </div>
+
+                  <div className="mt-4 rounded-xl border border-brand-100 bg-brand-25 p-3 text-sm text-gray-700">
+                    <p className="ta-label text-brand-600">Langkah berikutnya</p>
+                    <p className="mt-2">{nextAction.reason}</p>
+                    <div className="mt-3">
+                      <Link className="ta-button" href={nextAction.targetLink}>
+                        {nextAction.nextAction}
+                      </Link>
+                    </div>
                   </div>
 
                   <details className="mt-4 rounded-xl border border-gray-200 bg-white p-3">

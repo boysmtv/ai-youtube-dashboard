@@ -12,6 +12,24 @@ import {
 } from "../app/jobs/actions";
 
 export function JobTable({ jobs, canOperate = true }: Readonly<{ jobs: JobRecord[]; canOperate?: boolean }>) {
+  if (!jobs.length) {
+    return (
+      <div className="ta-panel p-5">
+        <p className="ta-label text-brand-600">Antrian kosong</p>
+        <h3 className="mt-2 text-lg font-semibold text-gray-900">Tidak ada video dalam antrian.</h3>
+        <p className="mt-2 text-sm text-gray-500">Mulai dari Buat Video untuk menaruh pekerjaan pertama, atau buka Review & Upload jika ada video yang sudah siap.</p>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Link className="ta-button" href="/queue#create-video">
+            Buat Video Baru
+          </Link>
+          <Link className="ta-button-muted" href="/publish">
+            Lihat Review & Upload
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-panel">
       <div className="overflow-x-auto">

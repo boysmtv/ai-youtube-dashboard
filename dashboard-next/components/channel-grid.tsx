@@ -9,6 +9,10 @@ function lastUploadLabel(value: Record<string, unknown> | null | undefined) {
   return `${status} / ${createdAt}`;
 }
 
+function channelQueueHref(channelId: string, anchor: string) {
+  return `/queue?channel_id=${encodeURIComponent(channelId)}${anchor}`;
+}
+
 export function ChannelGrid({
   registry,
   overview,
@@ -77,6 +81,21 @@ export function ChannelGrid({
                       <span className="text-gray-500">Rekomendasi berikutnya</span>
                       <strong className="text-gray-900">{item?.upload_ready ? "Lanjut review" : issues.includes("missing_token") ? "Login ulang YouTube" : "Cek detail channel"}</strong>
                     </div>
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Link className="rounded-lg border border-brand-100 bg-brand-25 px-3 py-2 text-sm font-semibold text-brand-700 hover:border-brand-200" href={channelQueueHref(channel.id, "#create-video")}>
+                      Buat Video untuk Channel Ini
+                    </Link>
+                    <Link className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50" href={channelQueueHref(channel.id, "#antrian")}>
+                      Lihat Video Channel Ini
+                    </Link>
+                    <Link
+                      className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                      href={item?.latest_job?.id ? `/jobs/${item.latest_job.id}` : "/publish"}
+                    >
+                      Cek Upload Terakhir
+                    </Link>
                   </div>
 
                   <details className="mt-4 rounded-xl border border-gray-200 bg-white p-3">

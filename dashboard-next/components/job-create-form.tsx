@@ -11,12 +11,17 @@ export function JobCreateForm({
   registry,
   uploadGuard,
   canOperate,
+  defaultChannelId,
 }: Readonly<{
   registry: RegistryPayload;
   uploadGuard: { confirmation_text: string; reason: string };
   canOperate: boolean;
+  defaultChannelId?: string;
 }>) {
-  const firstChannel = registry.channels.find((channel) => channel.enabled) || registry.channels[0];
+  const selectedChannel =
+    registry.channels.find((channel) => channel.id === defaultChannelId) ||
+    registry.channels.find((channel) => channel.enabled) ||
+    registry.channels[0];
 
   if (!canOperate) {
     return (
@@ -44,7 +49,7 @@ export function JobCreateForm({
       <div className="mt-5 grid gap-4 md:grid-cols-2">
         <label className="grid gap-2 text-sm font-semibold">
           Pilih Channel
-          <select name="channel_id" required defaultValue={firstChannel?.id}>
+          <select name="channel_id" required defaultValue={selectedChannel?.id}>
             {registry.channels.map((channel) => (
               <option key={channel.id} value={channel.id}>
                 {channel.display_name || channel.id}
@@ -59,11 +64,11 @@ export function JobCreateForm({
         </label>
         <label className="grid gap-2 text-sm font-semibold">
           Topik / Ide Video
-          <input name="niche" defaultValue={firstChannel?.niche} placeholder="football, gaming, viral story" />
+          <input name="niche" defaultValue={selectedChannel?.niche} placeholder="football, gaming, viral story" />
         </label>
         <label className="grid gap-2 text-sm font-semibold">
           Bahasa / Gaya Caption
-          <input name="language" defaultValue={firstChannel?.language} placeholder="id" />
+          <input name="language" defaultValue={selectedChannel?.language} placeholder="id" />
         </label>
       </div>
 

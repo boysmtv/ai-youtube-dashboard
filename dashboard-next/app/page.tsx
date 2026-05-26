@@ -3,6 +3,7 @@ import { AppShell } from "../components/app-shell";
 import { ChannelGrid } from "../components/channel-grid";
 import { JobTable } from "../components/job-table";
 import { MetricCard } from "../components/metric-card";
+import { PageHeader } from "../components/page-header";
 import { PublishHistoryTable } from "../components/publish-history";
 import { hasDashboardRole, requireDashboardSession } from "../lib/dashboard-auth";
 import { getChannelReadiness, getOverview, getPublishHistory, getPublishQueue, getRecentApprovals, getRegistry, getRuntimeHealth } from "../lib/engine-api";
@@ -49,47 +50,64 @@ export default async function DashboardPage() {
 
   return (
     <AppShell>
-      <header className="ta-panel p-6">
-        <p className="ta-label text-brand-600">Dashboard</p>
-        <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h2 className="max-w-4xl text-4xl font-bold leading-none text-gray-900 lg:text-5xl">Kontrol video produksi untuk operator bisnis.</h2>
-            <p className="mt-4 max-w-2xl text-gray-500">
-              Lihat video yang sedang diproses, siap review, butuh perhatian, serta channel yang siap dipakai. Detail teknis tetap tersedia di area lanjutan.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Link className="ta-button" href="/queue#create-video">
-              Buat Video
-            </Link>
-            <Link className="ta-button-muted" href="/publish">
-              Review & Upload
-            </Link>
+      <PageHeader
+        actions={[
+          { href: "/queue#create-video", label: "Buat Video Baru", tone: "primary" },
+          { href: "/publish", label: "Review Video Siap Upload", tone: "secondary" },
+        ]}
+        breadcrumbs={[{ href: "/", label: "Dashboard" }]}
+        description="Lihat video yang sedang diproses, siap review, butuh perhatian, serta channel yang siap dipakai. Detail teknis tetap tersedia di area lanjutan."
+        eyebrow="Dashboard"
+        title="Kontrol video produksi untuk operator bisnis."
+      />
+
+      <section className="mt-6 grid gap-3 rounded-2xl border border-gray-200 bg-white p-5 sm:grid-cols-2 xl:grid-cols-5">
+        <Link className="rounded-2xl border border-brand-100 bg-brand-25 p-4 text-sm transition hover:border-brand-200" href="/queue#create-video">
+          <strong className="block text-gray-900">Buat Video Baru</strong>
+          <p className="mt-1 text-gray-600">Mulai alur kerja video baru.</p>
+        </Link>
+        <Link className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm transition hover:border-brand-200" href="/publish">
+          <strong className="block text-gray-900">Review Video Siap Upload</strong>
+          <p className="mt-1 text-gray-600">Cek metadata, copyright, dan label AI.</p>
+        </Link>
+        <Link className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm transition hover:border-brand-200" href="/queue#antrian">
+          <strong className="block text-gray-900">Lihat Antrian</strong>
+          <p className="mt-1 text-gray-600">Pantau proses yang sedang berjalan.</p>
+        </Link>
+        <Link className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm transition hover:border-brand-200" href="/channels">
+          <strong className="block text-gray-900">Cek Channel</strong>
+          <p className="mt-1 text-gray-600">Cari channel yang siap atau bermasalah.</p>
+        </Link>
+        <Link className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm transition hover:border-brand-200" href="/analytics">
+          <strong className="block text-gray-900">Cek Laporan</strong>
+          <p className="mt-1 text-gray-600">Lihat ringkasan operasional terbaru.</p>
+        </Link>
+      </section>
+
+      <section className="mt-6 rounded-2xl border border-brand-100 bg-brand-25 p-5">
+        <p className="ta-label text-brand-600">Yang Perlu Dilakukan</p>
+        <div className="mt-3 grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
+          <NextActionItem href={recommendedAction.href} title={recommendedAction.title} description={recommendedAction.description} />
+          <NextActionItem href="/publish" title="Review video siap upload" description="Buka queue review dan cek blocker produksi." />
+          <NextActionItem href="/queue" title="Periksa video yang gagal" description="Lihat job yang perlu dipulihkan atau diulang." />
+          <NextActionItem href="/publish" title="Lengkapi data copyright" description="Periksa metadata, rights, dan disclosure sebelum upload." />
+          <NextActionItem href="/publish" title="Cek caption dan hashtag" description="Pastikan title, caption, dan hashtag final sudah sesuai." />
+          <NextActionItem href="/channels" title="Cek channel perlu login" description="Cari channel yang butuh token atau perbaikan setup." />
+          <NextActionItem href="/analytics" title="Lihat laporan upload" description="Ringkasan operasional upload YouTube terbaru." />
+          <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-4">
+            <p className="ta-label text-brand-600">Error penting</p>
+            <p className="mt-2 text-sm text-gray-700">{latestError}</p>
           </div>
         </div>
-        <div className="mt-5 rounded-2xl border border-brand-100 bg-brand-25 p-4">
-          <p className="ta-label text-brand-600">Yang Perlu Dilakukan</p>
-          <div className="mt-3 grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
-            <NextActionItem href={recommendedAction.href} title={recommendedAction.title} description={recommendedAction.description} />
-            <NextActionItem href="/queue" title="Lihat antrian video" description="Cek video yang sedang berjalan atau gagal." />
-            <NextActionItem href="/channels" title="Cek channel siap pakai" description="Pastikan setiap channel sudah siap upload." />
-            <NextActionItem href="/publish" title="Review caption dan hashtag" description="Tinjau title, caption, hashtag, copyright, dan label AI." />
-            <NextActionItem href="/settings" title="Buka pengaturan" description="Atur channel, safety, dan detail admin." />
-            <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-4">
-              <p className="ta-label text-brand-600">Error penting</p>
-              <p className="mt-2 text-sm text-gray-700">{latestError}</p>
-            </div>
-          </div>
-        </div>
-      </header>
+      </section>
 
       <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
-        <MetricCard label="Video Diproses" value={activeCount} />
-        <MetricCard label="Siap Review" value={readyToReview} tone={readyToReview > 0 ? "warn" : "neutral"} />
-        <MetricCard label="Perlu Perhatian" value={needsAttention} tone={needsAttention > 0 ? "warn" : "neutral"} />
-        <MetricCard label="Upload Private Sukses" value={uploadPrivateSuccess} tone="good" />
-        <MetricCard label="Diblokir Copyright" value={copyrightBlocked} tone={copyrightBlocked > 0 ? "warn" : "neutral"} />
-        <MetricCard label="Channel Aktif" value={activeChannels} tone={activeChannels > 0 ? "good" : "neutral"} />
+        <MetricCard href="/queue#antrian" label="Video Diproses" value={activeCount} />
+        <MetricCard href="/publish" label="Siap Review" value={readyToReview} tone={readyToReview > 0 ? "warn" : "neutral"} />
+        <MetricCard href="/queue" label="Perlu Perhatian" value={needsAttention} tone={needsAttention > 0 ? "warn" : "neutral"} />
+        <MetricCard href="/publish" label="Upload Private Sukses" value={uploadPrivateSuccess} tone="good" />
+        <MetricCard href="/publish" label="Diblokir Copyright" value={copyrightBlocked} tone={copyrightBlocked > 0 ? "warn" : "neutral"} />
+        <MetricCard href="/channels" label="Channel Aktif" value={activeChannels} tone={activeChannels > 0 ? "good" : "neutral"} />
       </section>
 
       <section className="mt-6">

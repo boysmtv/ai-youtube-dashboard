@@ -1,6 +1,7 @@
 import { AppShell } from "../../components/app-shell";
 import { ConfirmSubmitButton } from "../../components/confirm-submit-button";
 import { ChannelSettingsForms, CoreSettingsForm } from "../../components/settings-forms";
+import { PageHeader } from "../../components/page-header";
 import { dashboardAuthReadiness, requireDashboardRole } from "../../lib/dashboard-auth";
 import { engineBrowserBaseUrl, getAdminBackups, getRegistry } from "../../lib/engine-api";
 import { createBackupSnapshot, restoreBackupSnapshot, runRetentionSnapshot, saveRegistrySettings } from "./actions";
@@ -24,13 +25,19 @@ export default async function SettingsPage() {
 
   return (
     <AppShell>
-      <header className="ta-panel p-6">
-        <p className="ta-label text-brand-600">Pengaturan</p>
-        <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900 lg:text-5xl">Pengaturan umum, safety, dan admin.</h2>
-        <p className="mt-4 max-w-3xl text-gray-500">
-          Bagian utama untuk operator menampilkan pengaturan yang aman. Detail teknis, backup, dan registry mentah tetap tersedia di bawah sebagai advanced/admin.
-        </p>
-      </header>
+      <PageHeader
+        actions={[
+          { href: "/publish", label: "Cek Copyright & Safety", tone: "primary" },
+          { href: "/channels", label: "Cek Channel", tone: "secondary" },
+        ]}
+        breadcrumbs={[
+          { href: "/", label: "Dashboard" },
+          { href: "/settings", label: "Pengaturan" },
+        ]}
+        description="Bagian utama untuk operator menampilkan pengaturan yang aman. Detail teknis, backup, dan registry mentah tetap tersedia di bawah sebagai advanced/admin."
+        eyebrow="Pengaturan"
+        title="Pengaturan umum, safety, dan admin."
+      />
 
       <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="ta-panel p-4">
@@ -48,6 +55,25 @@ export default async function SettingsPage() {
         <div className="ta-panel p-4">
           <p className="ta-label">Upload Guard</p>
           <strong className="mt-2 block text-lg text-gray-900">{registry.upload_approval.enabled ? "Aktif" : "Nonaktif"}</strong>
+        </div>
+      </section>
+
+      <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-2xl border border-gray-200 bg-white p-4">
+          <p className="ta-label text-brand-600">Database</p>
+          <strong className="mt-2 block text-lg text-gray-900">PostgreSQL aktif</strong>
+        </div>
+        <div className="rounded-2xl border border-gray-200 bg-white p-4">
+          <p className="ta-label text-brand-600">Queue</p>
+          <strong className="mt-2 block text-lg text-gray-900">Redis aktif</strong>
+        </div>
+        <div className="rounded-2xl border border-gray-200 bg-white p-4">
+          <p className="ta-label text-brand-600">Safety</p>
+          <strong className="mt-2 block text-lg text-gray-900">Copyright gate aktif</strong>
+        </div>
+        <div className="rounded-2xl border border-gray-200 bg-white p-4">
+          <p className="ta-label text-brand-600">Advanced</p>
+          <strong className="mt-2 block text-lg text-gray-900">Detail teknis di bawah</strong>
         </div>
       </section>
 

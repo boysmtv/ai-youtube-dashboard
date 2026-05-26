@@ -1,11 +1,12 @@
+import Link from "next/link";
 import { AppShell } from "../../../components/app-shell";
 import { JobControlPanel } from "../../../components/job-control-panel";
 import { JobRealtimePanel } from "../../../components/job-realtime-panel";
 import { JobReviewPanel } from "../../../components/job-review-panel";
+import { PageHeader } from "../../../components/page-header";
 import { StatusBadge } from "../../../components/status-badge";
 import { hasDashboardRole, requireDashboardSession } from "../../../lib/dashboard-auth";
 import {
-  engineArtifactDownloadUrl,
   engineJobFileDownloadUrl,
   getJobDetail,
   getJobFile,
@@ -148,6 +149,7 @@ export default async function JobDetailPage({
   const previewUrl = finalResult?.preview_url || null;
   const downloadUrl = finalResult?.download_url || null;
   const reviewSummary = detail.review_summary || publishState.review_summary;
+  const previewReady = Boolean(finalResult?.available && previewUrl && previewArtifact);
   const mainStatus = reviewSummary?.production_allowed
     ? reviewSummary.selected_upload_mode === "production_private"
       ? "Siap Production"
@@ -165,18 +167,59 @@ export default async function JobDetailPage({
 
   return (
     <AppShell>
-      <header className="ta-panel p-6">
-        <p className="ta-label text-brand-600">Video Detail</p>
-        <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900">Review video #{detail.job.id}</h2>
-        <p className="mt-4 max-w-3xl text-gray-500">
-          Halaman ini menempatkan preview, status utama, title/caption/hashtag, copyright, dan label AI di depan. Detail teknis tetap tersedia di bagian lanjutan.
-        </p>
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <StatusBadge status={detail.job.status} />
-          <span className="ta-status bg-brand-50 text-brand-700">{mainStatus}</span>
-          <span className="text-sm text-gray-500">{mainReason}</span>
+      <PageHeader
+        actions={[
+          { href: "/queue", label: "Kembali ke Antrian", tone: "primary" },
+          { href: "/publish", label: "Review & Upload", tone: "secondary" },
+        ]}
+        breadcrumbs={[
+          { href: "/", label: "Dashboard" },
+          { href: "/queue", label: "Antrian Video" },
+          { href: `/jobs/${detail.job.id}`, label: "Detail Video" },
+        ]}
+        description="Halaman ini menempatkan preview, status utama, title/caption/hashtag, copyright, dan label AI di depan. Detail teknis tetap tersedia di bagian lanjutan."
+        eyebrow="Video Detail"
+        title={`Review video #${detail.job.id}`}
+      />
+
+      <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-2xl border border-gray-200 bg-white p-4">
+          <p className="ta-label text-brand-600">Status produksi</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <StatusBadge status={detail.job.status} />
+            <span className={`ta-status ${reviewSummary?.production_allowed ? "bg-success-50 text-success-700" : "bg-warning-50 text-warning-700"}`}>{mainStatus}</span>
+          </div>
         </div>
-      </header>
+        <div className="rounded-2xl border border-gray-200 bg-white p-4">
+          <p className="ta-label text-brand-600">Preview Video</p>
+          <strong className="mt-2 block text-gray-900">{previewReady ? "Tersedia" : "Belum tersedia"}</strong>
+        </div>
+        <div className="rounded-2xl border border-gray-200 bg-white p-4">
+          <p className="ta-label text-brand-600">Siap Upload Private?</p>
+          <strong className={`mt-2 block ${(reviewSummary?.private_validation_allowed ?? reviewSummary?.production_allowed) ? "text-success-700" : "text-warning-700"}`}>
+            {(reviewSummary?.private_validation_allowed ?? reviewSummary?.production_allowed) ? "Ya" : "Tidak"}
+          </strong>
+        </div>
+        <div className="rounded-2xl border border-gray-200 bg-white p-4">
+          <p className="ta-label text-brand-600">Siap Production?</p>
+          <strong className={`mt-2 block ${reviewSummary?.production_allowed ? "text-success-700" : "text-warning-700"}`}>{reviewSummary?.production_allowed ? "Ya" : "Tidak"}</strong>
+        </div>
+      </section>
+      <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-4 text-sm text-gray-700">
+        <p className="ta-label text-brand-600">Alasan / Next action</p>
+        <p className="mt-2">{mainReason}</p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Link className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100" href="#copyright-detail">
+            Cek Detail Copyright
+          </Link>
+          <Link className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50" href="#detail-teknis">
+            Lihat Detail Teknis
+          </Link>
+          <Link className="rounded-lg border border-brand-100 bg-brand-25 px-3 py-2 text-sm font-semibold text-brand-700 hover:border-brand-200" href="/publish">
+            Lihat Video Siap Review
+          </Link>
+        </div>
+      </div>
 
       <section className="mt-6 grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <div className="space-y-6">
@@ -196,7 +239,7 @@ export default async function JobDetailPage({
             </div>
           </div>
 
-          <JobReviewPanel jobId={detail.job.id} detail={detail} publishState={publishState} canOperate={canOperate} />
+          <JobReviewPanel jobId={detail.job.id} detail={detail} publishState={publishState} canOperate={canOperate} previewReady={previewReady} />
         </div>
 
         <div className="space-y-6">
@@ -214,7 +257,7 @@ export default async function JobDetailPage({
             </div>
           </div>
 
-          <details className="ta-panel p-5">
+          <details className="ta-panel p-5" id="detail-teknis">
             <summary className="cursor-pointer list-none">
               <div className="flex items-start justify-between gap-4">
                 <div>

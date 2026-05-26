@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AppShell } from "../../../components/app-shell";
 import { ConfirmSubmitButton } from "../../../components/confirm-submit-button";
 import { JobControlPanel } from "../../../components/job-control-panel";
+import { JobReviewPanel } from "../../../components/job-review-panel";
 import { JobRealtimePanel } from "../../../components/job-realtime-panel";
 import { StatusBadge } from "../../../components/status-badge";
 import { UploadApprovalPanel } from "../../../components/upload-approval-panel";
@@ -253,10 +254,12 @@ function PublishButtonGroup({
   jobId,
   uploadGuard,
   publishState,
+  reviewSummary,
 }: Readonly<{
   jobId: number;
   uploadGuard: { confirmation_text: string; reason: string };
   publishState: PublishStatePayload;
+  reviewSummary: PublishStatePayload["review_summary"];
 }>) {
   const youtubeReady = publishState.youtube.manual_push_available;
   const tiktokReady = publishState.tiktok.manual_push_available;
@@ -287,6 +290,7 @@ function PublishButtonGroup({
             <DetailRow label="Ready to push" value={youtubeReady ? "Yes" : "No"} />
             <DetailRow label="Approval" value={publishState.youtube.approval?.is_active ? "Siap upload" : "Butuh persetujuan"} />
             <DetailRow label="Publish mode" value={publishState.youtube.publish_mode || "private_immediate"} />
+            <DetailRow label="Upload mode" value={reviewSummary?.selected_upload_mode || "private_validation"} />
             <DetailRow label="Publish at" value={publishState.youtube.publish_at || "Not set"} />
             <DetailRow label="Video ID" value={publishState.youtube.youtube_video_id || "Pending"} />
             <DetailRow label="URL" value={publishState.youtube.youtube_url || "Pending"} />
@@ -301,6 +305,7 @@ function PublishButtonGroup({
             <form action={pushYoutubeDashboardJob} className="mt-4 grid gap-3">
               <input name="job_id" type="hidden" value={jobId} />
               <input name="upload_approval" type="hidden" value={uploadGuard.confirmation_text} />
+              <input name="upload_mode" type="hidden" value={reviewSummary?.selected_upload_mode || "private_validation"} />
               <label className="grid gap-2 text-sm font-semibold">
                 Operator name
                 <input name="approval_operator_name" placeholder="operator name" />
@@ -360,6 +365,7 @@ function PublishButtonGroup({
             <form action={pushTiktokDashboardJob} className="mt-4 grid gap-3">
               <input name="job_id" type="hidden" value={jobId} />
               <input name="upload_approval" type="hidden" value={uploadGuard.confirmation_text} />
+              <input name="upload_mode" type="hidden" value={reviewSummary?.selected_upload_mode || "private_validation"} />
               <label className="grid gap-2 text-sm font-semibold">
                 Operator name
                 <input name="approval_operator_name" placeholder="operator name" />
@@ -437,6 +443,7 @@ export default async function JobDetailPage({
   const titleVariants = detail.title_variants || [];
   const viralAnalysis = detail.viral_analysis;
   const viralScore = viralAnalysis?.score ?? job.viral_score ?? metrics.viral_fit_score;
+  const reviewSummary = detail.review_summary || publishState.review_summary;
   const tiktokSurfaceState = deriveTikTokSurfaceState(publishState.tiktok);
   const finalResult = result as JobResultPayload | null;
   const finalResultMessage = finalResult?.message || "Video belum selesai";
@@ -691,7 +698,11 @@ export default async function JobDetailPage({
           </div>
         </div>
 
-        <PublishButtonGroup jobId={job.id} uploadGuard={overview.upload_guard} publishState={publishState} />
+        <PublishButtonGroup jobId={job.id} uploadGuard={overview.upload_guard} publishState={publishState} reviewSummary={reviewSummary} />
+      </section>
+
+      <section className="mt-6">
+        <JobReviewPanel jobId={job.id} detail={detail} publishState={publishState} canOperate={canOperate} />
       </section>
 
       <section className="mt-6">

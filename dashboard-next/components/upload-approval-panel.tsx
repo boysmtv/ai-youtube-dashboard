@@ -119,8 +119,35 @@ export function UploadApprovalPanel({
                 <div className="flex flex-wrap gap-2">
                   <span className="ta-status bg-white text-gray-700">{item.selected_title || "Judul belum dipilih"}</span>
                   <span className="ta-status bg-gray-900 text-white">Skor potensi viral {item.viral_score ?? "Not set"}</span>
+                  <span className={`ta-status ${(item.review_summary?.production_allowed ?? item.publish_state.review_summary?.production_allowed) ? "bg-success-50 text-success-700" : "bg-warning-50 text-warning-700"}`}>
+                    {item.review_summary?.selected_upload_mode || item.publish_state.review_summary?.selected_upload_mode || "private_validation"}
+                  </span>
                 </div>
               </div>
+
+              {item.review_summary ? (
+                <div className="mt-4 grid gap-3 rounded-2xl border border-gray-200 bg-white p-4 text-sm text-gray-700 md:grid-cols-2">
+                  <div>
+                    <p className="ta-label text-brand-600">Caption final</p>
+                    <p className="mt-1 whitespace-pre-wrap">{item.review_summary.final_caption || item.review_summary.recommended_caption || "Belum diisi"}</p>
+                  </div>
+                  <div>
+                    <p className="ta-label text-brand-600">Deskripsi</p>
+                    <p className="mt-1 whitespace-pre-wrap">{item.review_summary.final_description || item.review_summary.recommended_short_description || "Belum diisi"}</p>
+                  </div>
+                  <div>
+                    <p className="ta-label text-brand-600">Hashtag</p>
+                    <p className="mt-1">{(item.review_summary.final_hashtags || item.review_summary.recommended_hashtags).join(" ") || "Belum diisi"}</p>
+                  </div>
+                  <div>
+                    <p className="ta-label text-brand-600">Rights</p>
+                    <p className="mt-1">
+                      {item.review_summary.production_allowed ? "Production allowed" : "Production blocked"} | reused {item.review_summary.reused_content_risk}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-500">{item.review_summary.production_blockers.join("; ") || item.review_summary.reused_content_reasons.join("; ") || "Tidak ada blocker."}</p>
+                  </div>
+                </div>
+              ) : null}
 
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 {(["youtube", "tiktok"] as const).map((platform) => {

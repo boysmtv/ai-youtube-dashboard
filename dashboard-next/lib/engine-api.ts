@@ -20,6 +20,8 @@ import type {
   PublishQueuePayload,
   PublishHistoryPayload,
   PublishStatePayload,
+  ReviewMetadataUpdatePayload,
+  ReviewMetadataUpdateResult,
   RegistryPayload,
   RuntimeHealthPayload,
   UploadApprovalPayload,
@@ -161,6 +163,14 @@ export async function getJobMetrics(jobId: number, stateView: EngineStateView = 
 
 export async function getJobPublishState(jobId: number, stateView: EngineStateView = "default") {
   return fetchEngine<PublishStatePayload>(withStateView(`/api/jobs/${jobId}/publish-state`, stateView));
+}
+
+export async function updateJobReviewMetadata(jobId: number, payload: ReviewMetadataUpdatePayload, headers: EngineMutationHeaders = {}) {
+  return fetchEngine<ReviewMetadataUpdateResult>(`/api/jobs/${jobId}/review-metadata`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function getJobResult(jobId: number, stateView: EngineStateView = "default") {

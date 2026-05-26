@@ -149,6 +149,63 @@ export type UploadApprovalRecord = {
   is_active?: boolean;
 };
 
+export type UploadMode = "private_validation" | "production_private" | "production_public_or_scheduled";
+
+export type ReviewModeOption = {
+  mode: UploadMode;
+  label: string;
+  allowed: boolean;
+  reason?: string | null;
+};
+
+export type ReviewSummary = {
+  recommended_title?: string | null;
+  recommended_caption?: string | null;
+  recommended_short_description?: string | null;
+  recommended_hashtags: string[];
+  caption_reason?: string | null;
+  source_context_used: string[];
+  safety_notes: string[];
+  caption_editable: boolean;
+  final_title?: string | null;
+  final_caption?: string | null;
+  final_description?: string | null;
+  final_hashtags: string[];
+  operator_review_notes?: string | null;
+  selected_upload_mode: UploadMode;
+  available_upload_modes: ReviewModeOption[];
+  production_allowed: boolean;
+  production_private_allowed?: boolean;
+  production_public_or_scheduled_allowed?: boolean;
+  private_validation_allowed?: boolean;
+  production_blockers: string[];
+  reused_content_risk: string;
+  reused_content_reasons: string[];
+  asset_provenance_summary: string;
+  voiceover_legal?: boolean | null;
+  visual_rights_ok?: boolean | null;
+  music_rights_ok?: boolean | null;
+  source_audio_status: string;
+  source_audio_used?: boolean;
+  source_audio_licensed?: boolean;
+  ai_generated: boolean;
+  realistic_synthetic_content: boolean;
+  needs_ai_disclosure: boolean;
+  ai_disclosure_required_reason?: string | null;
+  ai_disclosure_acknowledged: boolean;
+  ai_disclosure_override: boolean;
+  copyright_acknowledged: boolean;
+  copyright_acknowledgement_required?: boolean;
+  approval_status: Record<string, unknown>;
+  latest_upload?: UploadRecord | null;
+  latest_uploads?: UploadRecord[];
+  background_music_used: boolean;
+  background_music_source?: string | null;
+  background_music_license_ok?: boolean | null;
+  background_music_volume?: number | null;
+  rights_assessment: Record<string, unknown>;
+};
+
 export type JobParameters = {
   job_id: number;
   enable_upload: boolean;
@@ -410,6 +467,49 @@ export type JobDetailPayload = {
   manifest: Record<string, unknown> | null;
   manifest_status: string;
   manifest_error: string;
+  recommended_caption?: string | null;
+  recommended_short_description?: string | null;
+  recommended_hashtags?: string[];
+  caption_reason?: string | null;
+  source_context_used?: string[];
+  safety_notes?: string[];
+  caption_editable?: boolean;
+  ai_disclosure_required?: boolean;
+  final_title?: string | null;
+  final_caption?: string | null;
+  final_description?: string | null;
+  final_hashtags?: string[];
+  operator_review_notes?: string | null;
+  selected_upload_mode?: UploadMode;
+  available_upload_modes?: ReviewModeOption[];
+  production_allowed?: boolean;
+  production_blockers?: string[];
+  reused_content_risk?: string;
+  reused_content_reasons?: string[];
+  asset_provenance_summary?: string;
+  voiceover_legal?: boolean | null;
+  visual_rights_ok?: boolean | null;
+  music_rights_ok?: boolean | null;
+  source_audio_status?: string;
+  ai_generated?: boolean;
+  realistic_synthetic_content?: boolean;
+  needs_ai_disclosure?: boolean;
+  ai_disclosure_required_reason?: string | null;
+  ai_disclosure_acknowledged?: boolean;
+  ai_disclosure_override?: boolean;
+  copyright_acknowledged?: boolean;
+  approval_status?: Record<string, unknown>;
+  latest_upload?: UploadRecord | null;
+  latest_uploads?: UploadRecord[];
+  background_music_used?: boolean;
+  background_music_source?: string | null;
+  background_music_license_ok?: boolean | null;
+  background_music_volume?: number | null;
+  production_private_allowed?: boolean;
+  production_public_or_scheduled_allowed?: boolean;
+  private_validation_allowed?: boolean;
+  review_summary?: ReviewSummary;
+  rights_assessment?: Record<string, unknown> | null;
 };
 
 export type JobTimelineStage = {
@@ -431,6 +531,7 @@ export type JobTimelinePayload = {
   last_error?: string | null;
   stages: JobTimelineStage[];
   latest_upload: UploadRecord | null;
+  latest_uploads?: UploadRecord[];
   render_sizes: Record<string, number>;
   job_events: JobEventRecord[];
   recent_events: RuntimeEvent[];
@@ -504,8 +605,10 @@ export type PublishStatePayload = {
   };
   actions: PublishActionLink[];
   latest_upload: UploadRecord | null;
+  latest_uploads?: UploadRecord[];
   manifest_status: string;
   manifest_error: string;
+  review_summary?: ReviewSummary;
 };
 
 export type PublishQueueItem = {
@@ -516,6 +619,7 @@ export type PublishQueueItem = {
   publish_state: PublishStatePayload;
   upload_approvals: UploadApprovalRecord[];
   approval_summary: PublishStatePayload["approvals"];
+  review_summary?: ReviewSummary;
 };
 
 export type PublishQueuePayload = {
@@ -577,6 +681,25 @@ export type ManualPushPayload = {
   approval_reason?: string;
   require_credentials?: boolean;
   copyright_acknowledged?: boolean;
+  upload_mode?: UploadMode;
+};
+
+export type ReviewMetadataUpdatePayload = {
+  final_title?: string | null;
+  final_caption?: string | null;
+  final_description?: string | null;
+  final_hashtags?: string[];
+  ai_disclosure_acknowledged?: boolean | null;
+  ai_disclosure_override?: boolean | null;
+  operator_review_notes?: string | null;
+  selected_upload_mode?: UploadMode | string | null;
+};
+
+export type ReviewMetadataUpdateResult = {
+  status: string;
+  job_id: number;
+  manifest_path?: string | null;
+  review_summary: ReviewSummary;
 };
 
 export type UploadApprovalPayload = {

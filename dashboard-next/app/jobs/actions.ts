@@ -2,7 +2,18 @@
 
 import { revalidatePath } from "next/cache";
 import { assertDashboardRole, engineAuditHeaders } from "../../lib/dashboard-auth";
-import { cancelJob, createJob, pauseJob, pushTiktokJob, pushYoutubeJob, requeueJob, resumeJob, runJob } from "../../lib/engine-api";
+import {
+  cancelJob,
+  createJob,
+  pauseJob,
+  pushTiktokJob,
+  pushYoutubeJob,
+  requeueJob,
+  resumeJob,
+  runJob,
+  updateJobReviewMetadata,
+} from "../../lib/engine-api";
+import type { UploadMode } from "../../lib/engine-types";
 
 function optionalNumber(value: FormDataEntryValue | null) {
   const text = String(value || "").trim();
@@ -21,7 +32,16 @@ function publishPayload(formData: FormData) {
     approval_reason: String(formData.get("approval_reason") || ""),
     require_credentials: checked(formData.get("require_credentials")),
     copyright_acknowledged: checked(formData.get("copyright_acknowledged")),
+    upload_mode: String(formData.get("upload_mode") || "private_validation") as UploadMode,
   };
+}
+
+function splitHashtags(value: string) {
+  return value
+    .split(/[\n,]+/g)
+    .flatMap((item) => item.split(/\s+/g))
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 function revalidateBusinessViews(jobId?: number) {
@@ -104,5 +124,25 @@ export async function pushTiktokDashboardJob(formData: FormData) {
   const session = assertDashboardRole("operator");
   const jobId = Number(formData.get("job_id"));
   await pushTiktokJob(jobId, publishPayload(formData), engineAuditHeaders(session));
+  revalidateBusinessViews(jobId);
+}
+
+export async function saveJobReviewMetadata(formData: FormData) {
+  const session = assertDashboardRole("operator");
+  const jobId = Number(formData.get("job_id"));
+  await updateJobReviewMetadata(
+    jobId,
+    {
+      final_title: String(formData.get("final_title") || "").trim() || null,
+      final_caption: String(formData.get("final_caption") || "").trim() || null,
+      final_description: String(formData.get("final_description") || "").trim() || null,
+      final_hashtags: splitHashtags(String(formData.get("final_hashtags") || "")),
+      ai_disclosure_acknowledged: checked(formData.get("ai_disclosure_acknowledged")),
+      ai_disclosure_override: checked(formData.get("ai_disclosure_override")),
+      operator_review_notes: String(formData.get("operator_review_notes") || "").trim() || null,
+      selected_upload_mode: String(formData.get("selected_upload_mode") || "private_validation"),
+    },
+    engineAuditHeaders(session),
+  );
   revalidateBusinessViews(jobId);
 }

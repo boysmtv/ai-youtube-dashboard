@@ -118,7 +118,7 @@ export function JobRealtimePanel({ initial, syncSettings }: Readonly<{ initial: 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="ta-label text-brand-600">Aktivitas produksi</p>
-          <h3 className="mt-2 text-lg font-semibold text-gray-900">Status job #{payload.job.id}</h3>
+          <h3 className="mt-2 text-lg font-semibold text-gray-900">Status video #{payload.job.id}</h3>
           <p className="mt-2 text-sm text-gray-500">Panel ini memperbarui tahap kerja, progres, dan aktivitas terbaru secara otomatis.</p>
         </div>
         <span className={`ta-status font-mono ${status === "live" || status === "polling" ? "bg-success-50 text-success-700" : "bg-warning-50 text-warning-700"}`}>{status}</span>

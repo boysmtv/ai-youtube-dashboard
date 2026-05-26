@@ -1,12 +1,10 @@
 import Link from "next/link";
 import type { PublishHistoryItem, PublishHistoryPayload } from "../lib/engine-types";
+import { businessUploadStatus, summaryText } from "../lib/business-copy";
 
 function PlatformBadge({ platform }: Readonly<{ platform: PublishHistoryItem["platform"] }>) {
-  const className =
-    platform === "youtube"
-      ? "bg-brand-50 text-brand-700"
-      : "bg-warning-50 text-warning-700";
-  return <span className={`ta-status font-mono ${className}`}>{platform}</span>;
+  const className = platform === "youtube" ? "bg-brand-50 text-brand-700" : "bg-warning-50 text-warning-700";
+  return <span className={`ta-status ${className}`}>{platform === "youtube" ? "YouTube" : "TikTok"}</span>;
 }
 
 function StatusBadge({ status }: Readonly<{ status: string }>) {
@@ -19,7 +17,7 @@ function StatusBadge({ status }: Readonly<{ status: string }>) {
         : normalized === "failed"
           ? "bg-error-50 text-error-700"
           : "bg-gray-100 text-gray-700";
-  return <span className={`ta-status font-mono ${className}`}>{status}</span>;
+  return <span className={`ta-status ${className}`}>{businessUploadStatus(status)}</span>;
 }
 
 export function PublishHistoryTable({
@@ -35,12 +33,12 @@ export function PublishHistoryTable({
         <div>
           <p className="ta-label text-brand-600">{limitLabel}</p>
           <p className="mt-1 text-xs text-gray-500">
-            {history.total} items shown from {history.generated_at}
+            {history.total} riwayat dari {history.generated_at}
           </p>
         </div>
         <div className="flex flex-wrap gap-2 text-xs">
           {Object.entries(history.platform_counts).map(([platform, count]) => (
-            <span key={platform} className="ta-status bg-gray-100 font-mono text-gray-700">
+            <span key={platform} className="ta-status bg-gray-100 text-gray-700">
               {platform} {count}
             </span>
           ))}
@@ -51,11 +49,11 @@ export function PublishHistoryTable({
           <thead className="bg-gray-50 text-gray-500">
             <tr>
               <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">Platform</th>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">Item</th>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">State</th>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">IDs</th>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">When</th>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">Note</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">Video</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">Status Upload</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">ID</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">Waktu</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">Catatan</th>
             </tr>
           </thead>
           <tbody>
@@ -76,20 +74,18 @@ export function PublishHistoryTable({
                     <p className="mt-1 text-xs text-gray-500">{item.job_status}</p>
                   </td>
                   <td className="px-4 py-3 font-mono text-xs text-gray-500">
-                    {item.platform === "youtube"
-                      ? item.youtube_video_id || "Pending"
-                      : item.tiktok_publish_id || item.tiktok_post_id || "Pending"}
+                    {item.platform === "youtube" ? item.youtube_video_id || "Pending" : item.tiktok_publish_id || item.tiktok_post_id || "Pending"}
                   </td>
                   <td className="px-4 py-3 font-mono text-xs text-gray-500">{item.created_at}</td>
                   <td className="max-w-md px-4 py-3 text-gray-500">
-                    {item.error_message || item.privacy_status || item.publish_mode || item.transfer_method || ""}
+                    {summaryText(item.error_message || item.privacy_status || item.publish_mode || item.transfer_method || "")}
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
                 <td className="px-4 py-6 text-gray-500" colSpan={6}>
-                  No publish history yet.
+                  Belum ada riwayat publish.
                 </td>
               </tr>
             )}

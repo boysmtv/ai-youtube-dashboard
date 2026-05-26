@@ -7,30 +7,30 @@ const navSections: Array<{ heading: string; items: Array<{ href: string; label: 
   {
     heading: "Menu Utama",
     items: [
-      { href: "/dashboard", label: "Dashboard", role: "viewer" },
+      { href: "/", label: "Dashboard", role: "viewer" },
       { href: "/queue#create-video", label: "Buat Video", role: "viewer" },
-      { href: "/queue#antrian", label: "Antrian", role: "viewer" },
+      { href: "/queue#antrian", label: "Antrian Video", role: "viewer" },
       { href: "/publish", label: "Review & Upload", role: "operator" },
       { href: "/channels", label: "Channel", role: "viewer" },
+      { href: "/analytics", label: "Laporan", role: "viewer" },
       { href: "/settings", label: "Pengaturan", role: "admin" },
     ],
   },
   {
     heading: "Admin / Lanjutan",
     items: [
+      { href: "/jobs", label: "Detail Video", role: "viewer" },
+      { href: "/artifacts", label: "File Video", role: "viewer" },
+      { href: "/operations", label: "Operasi", role: "viewer" },
+      { href: "/quota", label: "Kuota", role: "viewer" },
       { href: "/worker", label: "Worker", role: "operator" },
       { href: "/scheduler", label: "Scheduler", role: "operator" },
-      { href: "/approvals", label: "Approvals", role: "operator" },
-      { href: "/jobs", label: "Jobs", role: "viewer" },
-      { href: "/quota", label: "Quota", role: "viewer" },
       { href: "/logs", label: "Logs", role: "admin" },
       { href: "/health", label: "Health", role: "admin" },
-      { href: "/registry", label: "Registry", role: "admin" },
+      { href: "/registry", label: "Manifest", role: "admin" },
       { href: "/system", label: "System", role: "admin" },
       { href: "/governance", label: "Governance", role: "admin" },
-      { href: "/diagnostics", label: "Diagnostics", role: "admin" },
-      { href: "/analytics", label: "Analytics", role: "viewer" },
-      { href: "/artifacts", label: "Deliverables", role: "viewer" },
+      { href: "/diagnostics", label: "Diagnostik Teknis", role: "admin" },
     ],
   },
 ];
@@ -82,13 +82,13 @@ export async function AppShell({ children }: Readonly<{ children: React.ReactNod
         <header className="sticky top-0 z-10 border-b border-gray-200 bg-white/90 px-4 py-4 backdrop-blur lg:px-8">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="ta-label">Operator Workspace</p>
-              <h2 className="text-xl font-semibold text-gray-900">Short-form production cockpit</h2>
+              <p className="ta-label">Ruang Operator</p>
+              <h2 className="text-xl font-semibold text-gray-900">Dashboard produksi video</h2>
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-3 rounded-full border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-700">
                 <span className="h-2.5 w-2.5 rounded-full bg-success-500" />
-                Engine-linked
+                Tersambung ke engine
               </div>
               {session.authEnabled ? (
                 <form action={logoutDashboard}>

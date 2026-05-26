@@ -26,113 +26,54 @@ export default async function SettingsPage() {
     <AppShell>
       <header className="ta-panel p-6">
         <p className="ta-label text-brand-600">Pengaturan</p>
-        <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900 lg:text-5xl">Pengaturan channel dan engine.</h2>
+        <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900 lg:text-5xl">Pengaturan umum, safety, dan admin.</h2>
         <p className="mt-4 max-w-3xl text-gray-500">
-          Gunakan form aman dulu. Edit JSON mentah hanya jika ada parameter yang belum tercover. Perubahan tetap disimpan ke registry database.
+          Bagian utama untuk operator menampilkan pengaturan yang aman. Detail teknis, backup, dan registry mentah tetap tersedia di bawah sebagai advanced/admin.
         </p>
       </header>
 
-      <section className="mt-6 grid gap-4 md:grid-cols-4">
+      <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="ta-panel p-4">
-          <p className="ta-label">Timezone</p>
-          <strong className="mt-2 block text-lg text-gray-900">{registry.timezone}</strong>
+          <p className="ta-label">Pengaturan Umum</p>
+          <strong className="mt-2 block text-lg text-gray-900">Zona waktu, storage, dan worker</strong>
         </div>
         <div className="ta-panel p-4">
-          <p className="ta-label">Storage Budget</p>
-          <strong className="mt-2 block text-lg text-gray-900">{registry.storage_budget_gb} GB</strong>
+          <p className="ta-label">Copyright & Safety</p>
+          <strong className="mt-2 block text-lg text-gray-900">Blokir upload jika belum aman</strong>
         </div>
         <div className="ta-panel p-4">
-          <p className="ta-label">Channels</p>
-          <strong className="mt-2 block text-lg text-gray-900">{registry.channels.filter((item) => item.enabled).length}/{registry.channels.length}</strong>
-        </div>
-        <div className="ta-panel p-4">
-          <p className="ta-label">TikTok</p>
-          <strong className="mt-2 block text-lg text-gray-900">{registry.channels.filter((item) => item.tiktok_publish?.enabled).length} enabled</strong>
+          <p className="ta-label">Channel</p>
+          <strong className="mt-2 block text-lg text-gray-900">{registry.channels.filter((item) => item.enabled).length}/{registry.channels.length} aktif</strong>
         </div>
         <div className="ta-panel p-4">
           <p className="ta-label">Upload Guard</p>
-          <strong className="mt-2 block text-lg text-gray-900">{registry.upload_approval.enabled ? "Enabled" : "Disabled"}</strong>
-        </div>
-        <div className="ta-panel p-4">
-          <p className="ta-label">Retention</p>
-          <strong className="mt-2 block text-lg text-gray-900">{registry.retention.enabled ? "Enabled" : "Disabled"}</strong>
+          <strong className="mt-2 block text-lg text-gray-900">{registry.upload_approval.enabled ? "Aktif" : "Nonaktif"}</strong>
         </div>
       </section>
 
-      <section className="mt-6 grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
+      <section className="mt-6 grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
         <div className="space-y-6">
           <CoreSettingsForm registry={registry} />
-
-          <div className="ta-panel p-5">
-            <p className="ta-label text-brand-600">Worker</p>
-            <div className="mt-4 grid gap-3 text-sm">
-              <div className="flex justify-between gap-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
-                <span>Max active jobs</span>
-                <strong>{registry.worker.max_active_jobs}</strong>
-              </div>
-              <div className="flex justify-between gap-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
-                <span>Min free disk</span>
-                <strong>{registry.worker.min_free_disk_gb} GB</strong>
-              </div>
-              <div className="flex justify-between gap-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
-                <span>Publish lead time</span>
-                <strong>{registry.worker.publish_lead_time_hours} hours</strong>
-              </div>
-              <div className="flex justify-between gap-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
-                <span>Retention keep recent job dirs</span>
-                <strong>{registry.retention.keep_recent_job_dirs}</strong>
-              </div>
-              <div className="flex justify-between gap-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
-                <span>Retention scheduler tick cleanup</span>
-                <strong>{registry.retention.auto_cleanup_on_scheduler_tick ? "yes" : "no"}</strong>
-              </div>
-            </div>
-          </div>
-
-          <div className="ta-panel p-5">
-            <p className="ta-label text-brand-600">Projects</p>
-            <div className="mt-4 space-y-3">
-              {registry.gcp_projects.map((project) => (
-                <div key={project.id} className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm">
-                  <div className="font-semibold text-gray-900">{project.display_name}</div>
-                  <div className="mt-1 font-mono text-xs text-gray-500">
-                    {project.id} quota={project.daily_quota_units} reserve={project.quota_reserve_units} upload_cost={project.upload_cost_units}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="ta-panel p-5">
-            <p className="ta-label text-brand-600">Channels</p>
-            <div className="mt-4 space-y-3">
-              {registry.channels.map((channel) => (
-                <div key={channel.id} className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <strong className="text-gray-900">{channel.display_name || channel.id}</strong>
-                    <span className="ta-status bg-brand-50 font-mono text-brand-600">{channel.enabled ? "enabled" : "disabled"}</span>
-                  </div>
-                  <div className="mt-1 font-mono text-xs text-gray-500">
-                    {channel.id} niche={channel.niche} slots={(channel.publish_slots.length ? channel.publish_slots : registry.default_publish_slots).join(",")}
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                    <span className="ta-status bg-brand-50 font-mono text-brand-600">
-                      TikTok {channel.tiktok_publish.enabled ? "enabled" : "disabled"}
-                    </span>
-                    <span className="ta-status bg-gray-100 font-mono text-gray-700">
-                      mode={channel.tiktok_publish.publish_mode} transfer={channel.tiktok_publish.transfer_method}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
           <ChannelSettingsForms registry={registry} />
+        </div>
 
+        <div className="space-y-6">
           <div className="ta-panel p-5">
-            <p className="ta-label text-brand-600">Auth readiness</p>
-            <h3 className="mt-2 text-lg font-semibold text-gray-900">Role-based access activation</h3>
+            <p className="ta-label text-brand-600">Advanced / Admin</p>
+            <h3 className="mt-2 text-lg font-semibold text-gray-900">Registry, backup, dan pemulihan</h3>
+            <p className="mt-2 text-sm text-gray-500">Bagian ini tetap tersedia untuk admin teknis. Operator harian tidak perlu membuka detail ini.</p>
+          </div>
+
+          <details className="ta-panel p-5">
+            <summary className="cursor-pointer list-none">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <p className="ta-label text-brand-600">Auth readiness</p>
+                  <h3 className="mt-2 text-lg font-semibold text-gray-900">Cek akses admin</h3>
+                </div>
+                <span className="ta-status bg-gray-100 text-gray-700">Tutup / buka</span>
+              </div>
+            </summary>
             <div className="mt-4 grid gap-3 text-sm">
               <div className="flex justify-between gap-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
                 <span>Auth enabled</span>
@@ -146,20 +87,18 @@ export default async function SettingsPage() {
                 <span>Configured accounts</span>
                 <strong>{authReadiness.account_count}</strong>
               </div>
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
+                <p className="font-mono text-xs text-gray-500">{authReadiness.expected_env.join(", ")}</p>
+              </div>
             </div>
-            <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
-              <p className="font-mono text-xs text-gray-500">{authReadiness.expected_env.join(", ")}</p>
-            </div>
-          </div>
+          </details>
 
           <div className="ta-panel p-5">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <p className="ta-label text-brand-600">Retention policy</p>
-                <h3 className="mt-2 text-lg font-semibold text-gray-900">Manual cleanup run</h3>
-                <p className="mt-2 text-sm text-gray-500">
-                  Executes the current retention policy immediately. Use force only if the policy is disabled but you still want one cleanup pass.
-                </p>
+                <h3 className="mt-2 text-lg font-semibold text-gray-900">Jalankan cleanup manual</h3>
+                <p className="mt-2 text-sm text-gray-500">Memaksa retention policy berjalan sekarang. Dipakai admin jika perlu cleanup segera.</p>
               </div>
               <form action={runRetentionSnapshot} className="rounded-xl border border-gray-200 bg-gray-50 p-3">
                 <label className="flex items-center gap-2 text-sm text-gray-700">
@@ -167,7 +106,7 @@ export default async function SettingsPage() {
                   Force even if disabled
                 </label>
                 <div className="mt-3">
-                  <ConfirmSubmitButton className="px-4 py-2 text-sm" message="Run retention policy now?" tone="warning" pendingText="Running...">
+                  <ConfirmSubmitButton className="px-4 py-2 text-sm" message="Jalankan retention sekarang?" tone="warning" pendingText="Running...">
                     Run retention
                   </ConfirmSubmitButton>
                 </div>
@@ -179,27 +118,25 @@ export default async function SettingsPage() {
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <p className="ta-label text-brand-600">Backup and restore</p>
-                <h3 className="mt-2 text-lg font-semibold text-gray-900">Registry and SQLite snapshots</h3>
-                <p className="mt-2 text-sm text-gray-500">
-                  Backups are written to host-mounted folders. Database restore is blocked while active jobs exist.
-                </p>
+                <h3 className="mt-2 text-lg font-semibold text-gray-900">Snapshot registry dan database</h3>
+                <p className="mt-2 text-sm text-gray-500">Backup disimpan ke folder host. Restore database tetap dibatasi jika masih ada job aktif.</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 <form action={createBackupSnapshot}>
                   <input name="target" type="hidden" value="all" />
-                  <ConfirmSubmitButton className="px-4 py-2 text-sm" message="Create backup snapshots for registry and database?" pendingText="Creating...">
+                  <ConfirmSubmitButton className="px-4 py-2 text-sm" message="Buat backup registry dan database?" pendingText="Creating...">
                     Backup all
                   </ConfirmSubmitButton>
                 </form>
                 <form action={createBackupSnapshot}>
                   <input name="target" type="hidden" value="registry" />
-                  <ConfirmSubmitButton className="px-4 py-2 text-sm" message="Create registry backup snapshot?" tone="muted" pendingText="Creating...">
+                  <ConfirmSubmitButton className="px-4 py-2 text-sm" message="Buat backup registry?" tone="muted" pendingText="Creating...">
                     Backup registry
                   </ConfirmSubmitButton>
                 </form>
                 <form action={createBackupSnapshot}>
                   <input name="target" type="hidden" value="database" />
-                  <ConfirmSubmitButton className="px-4 py-2 text-sm" message="Create database backup snapshot?" tone="muted" pendingText="Creating...">
+                  <ConfirmSubmitButton className="px-4 py-2 text-sm" message="Buat backup database?" tone="muted" pendingText="Creating...">
                     Backup database
                   </ConfirmSubmitButton>
                 </form>
@@ -234,7 +171,7 @@ export default async function SettingsPage() {
                       </form>
                     ))
                   ) : (
-                    <div className="ta-empty">No registry backups yet.</div>
+                    <div className="ta-empty">Belum ada backup registry.</div>
                   )}
                 </div>
               </div>
@@ -258,7 +195,7 @@ export default async function SettingsPage() {
                             <a className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50" href={`${engineBase}/api/admin/backups/download?target=${item.target}&backup_name=${encodeURIComponent(item.name)}`}>
                               Download
                             </a>
-                            <ConfirmSubmitButton className="px-4 py-2 text-sm" message={`Restore database from backup ${item.name}? This is blocked while jobs are active.`} tone="danger" pendingText="Restoring...">
+                            <ConfirmSubmitButton className="px-4 py-2 text-sm" message={`Restore database from backup ${item.name}?`} tone="danger" pendingText="Restoring...">
                               Restore
                             </ConfirmSubmitButton>
                           </div>
@@ -266,61 +203,58 @@ export default async function SettingsPage() {
                       </form>
                     ))
                   ) : (
-                    <div className="ta-empty">No database backups yet.</div>
+                    <div className="ta-empty">Belum ada backup database.</div>
                   )}
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <details className="ta-panel p-5">
-          <summary className="cursor-pointer list-none">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <p className="ta-label text-brand-600">Mode lanjutan</p>
-                <h3 className="mt-2 text-lg font-semibold text-gray-900">Registry JSON</h3>
-                <p className="mt-2 max-w-xl text-sm text-gray-500">
-                  Dibuka hanya jika perlu. Form aman di atas adalah jalur utama untuk kebanyakan perubahan.
-                </p>
+          <details className="ta-panel p-5">
+            <summary className="cursor-pointer list-none">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <p className="ta-label text-brand-600">Detail Teknis</p>
+                  <h3 className="mt-2 text-lg font-semibold text-gray-900">Registry JSON</h3>
+                </div>
+                <span className="ta-status bg-gray-100 text-gray-700">Tutup / buka</span>
               </div>
-              <span className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-semibold text-gray-700">Tutup / buka</span>
-            </div>
-          </summary>
-          <form action={saveRegistrySettings} className="mt-5">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <p className="ta-label text-brand-600">Editable Source</p>
-                <h3 className="mt-2 text-lg font-semibold text-gray-900">Registry JSON</h3>
-                <p className="mt-2 max-w-xl text-sm text-gray-500">
-                  Advanced mode. Use the safe forms first; edit JSON only when a field is not covered yet. Engine validation runs before saving.
-                </p>
+            </summary>
+            <form action={saveRegistrySettings} className="mt-5">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <p className="ta-label text-brand-600">Raw Metadata</p>
+                  <h3 className="mt-2 text-lg font-semibold text-gray-900">Registry JSON</h3>
+                  <p className="mt-2 max-w-xl text-sm text-gray-500">
+                    Mode advanced. Gunakan form aman di atas terlebih dulu. Edit JSON hanya jika ada field yang belum tercover.
+                  </p>
+                </div>
+                <ConfirmSubmitButton className="px-5 py-3 text-sm" message="Simpan registry JSON mentah? Ini bisa memengaruhi semua channel dan worker.">
+                  Save registry
+                </ConfirmSubmitButton>
               </div>
-              <ConfirmSubmitButton className="px-5 py-3 text-sm" message="Save the raw registry JSON? This can affect all channels and workers.">
-                Save registry
-              </ConfirmSubmitButton>
+              <textarea
+                name="registry_json"
+                defaultValue={registryJson}
+                spellCheck={false}
+                className="mt-5 min-h-[720px] w-full rounded-xl border border-gray-700 bg-gray-900 p-4 font-mono text-xs leading-relaxed text-white outline-none focus:shadow-focus"
+              />
+            </form>
+          </details>
+
+          <details className="ta-panel mt-0 p-5">
+            <summary className="cursor-pointer list-none">
+              <div>
+                <p className="ta-label text-brand-600">Pratinjau teknis</p>
+                <h3 className="mt-2 text-lg font-semibold text-gray-900">Read-only preview</h3>
+              </div>
+            </summary>
+            <div className="mt-4">
+              <JsonPreview value={registry} />
             </div>
-            <textarea
-              name="registry_json"
-              defaultValue={registryJson}
-              spellCheck={false}
-              className="mt-5 min-h-[720px] w-full rounded-xl border border-gray-700 bg-gray-900 p-4 font-mono text-xs leading-relaxed text-white outline-none focus:shadow-focus"
-            />
-          </form>
-        </details>
+          </details>
+        </div>
       </section>
-
-      <details className="ta-panel mt-6 p-5">
-        <summary className="cursor-pointer list-none">
-          <div>
-            <p className="ta-label text-brand-600">Pratinjau lanjutan</p>
-            <h3 className="mt-2 text-lg font-semibold text-gray-900">Read-only preview</h3>
-          </div>
-        </summary>
-        <div className="mt-4">
-          <JsonPreview value={registry} />
-        </div>
-      </details>
     </AppShell>
   );
 }

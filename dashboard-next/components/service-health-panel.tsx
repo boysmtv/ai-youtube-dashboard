@@ -15,15 +15,15 @@ export function ServiceHealthPanel({
 
   const items = [
     { label: "API", value: health.status, ok: health.status === "ok" },
-    { label: "Database", value: dbOk ? "reachable" : "unknown", ok: dbOk },
-    { label: "Disk", value: `${overview.storage.free_gb ?? 0} GB free`, ok: diskOk },
-    { label: "Scheduler plan", value: `${overview.worker.publish_lead_time_hours}h lead`, ok: true },
-    { label: "Worker capacity", value: `${overview.worker.max_active_jobs} active max`, ok: true },
-    { label: "Upload guard", value: overview.upload_guard.enabled ? "enabled" : "disabled", ok: overview.upload_guard.enabled },
-    { label: "Stuck jobs", value: runtime ? String(runtime.counts.stuck_jobs) : "n/a", ok: runtime ? runtime.counts.stuck_jobs === 0 : true },
+    { label: "Database", value: dbOk ? "tersambung" : "unknown", ok: dbOk },
+    { label: "Disk", value: `${overview.storage.free_gb ?? 0} GB kosong`, ok: diskOk },
+    { label: "Lead time", value: `${overview.worker.publish_lead_time_hours} jam`, ok: true },
+    { label: "Kapasitas worker", value: `${overview.worker.max_active_jobs} aktif`, ok: true },
+    { label: "Upload guard", value: overview.upload_guard.enabled ? "aktif" : "nonaktif", ok: overview.upload_guard.enabled },
+    { label: "Video macet", value: runtime ? String(runtime.counts.stuck_jobs) : "n/a", ok: runtime ? runtime.counts.stuck_jobs === 0 : true },
     {
       label: "Recovery",
-      value: runtime ? `${runtime.recovery.recovered_stuck_jobs} recovered` : "n/a",
+      value: runtime ? `${runtime.recovery.recovered_stuck_jobs} dipulihkan` : "n/a",
       ok: runtime ? runtime.status === "ok" : true,
     },
   ];
@@ -32,7 +32,7 @@ export function ServiceHealthPanel({
   return (
     <div className="ta-panel p-5">
       <p className="ta-label text-brand-600">Service health</p>
-      <h3 className="mt-2 text-lg font-semibold text-gray-900">24/7 readiness snapshot</h3>
+      <h3 className="mt-2 text-lg font-semibold text-gray-900">Snapshot kesiapan layanan</h3>
       <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {items.map((item) => (
           <div key={item.label} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
@@ -66,7 +66,7 @@ export function ServiceHealthPanel({
       ) : null}
       {audio ? (
         <div className="mt-5 rounded-xl border border-gray-200 bg-gray-50 p-4">
-          <p className="ta-label">Audio readiness</p>
+          <p className="ta-label">Kesiapan audio</p>
           <div className="mt-3 space-y-2 text-sm text-gray-700">
             {audio.messages.map((message) => (
               <p key={message}>{message}</p>
@@ -83,7 +83,7 @@ export function ServiceHealthPanel({
       {runtime ? (
         <div className="mt-5 grid gap-6 xl:grid-cols-2">
           <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-            <p className="ta-label">Runtime checks</p>
+            <p className="ta-label">Pengecekan runtime</p>
             <div className="mt-3 space-y-3">
               {runtime.checks.map((item) => (
                 <div key={item.code} className="flex items-center justify-between gap-4 border-b border-gray-200 pb-3 last:border-b-0 last:pb-0">
@@ -94,7 +94,7 @@ export function ServiceHealthPanel({
             </div>
           </div>
           <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-            <p className="ta-label">Blocking jobs</p>
+            <p className="ta-label">Video penghambat</p>
             <div className="mt-3 space-y-3">
               {runtime.blocking_jobs.length ? (
                 runtime.blocking_jobs.map((item, index) => (
@@ -109,14 +109,14 @@ export function ServiceHealthPanel({
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-gray-500">No stale active jobs are blocking the pipeline.</p>
+                <p className="text-sm text-gray-500">Tidak ada video macet yang menghambat alur.</p>
               )}
             </div>
           </div>
         </div>
       ) : null}
       <p className="mt-4 text-sm text-gray-500">
-        Docker container state is outside the browser-visible engine contract. Use this as app-level health until a host agent exposes container status.
+        Status container Docker tidak tampil langsung di browser. Gunakan snapshot ini sebagai health level aplikasi sampai ada agen host yang menampilkannya.
       </p>
     </div>
   );

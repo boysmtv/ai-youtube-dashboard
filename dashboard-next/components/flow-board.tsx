@@ -2,39 +2,39 @@ import type { OverviewPayload } from "../lib/engine-types";
 
 const flowSections = [
   {
-    title: "Plan",
-    description: "Scheduler creates upcoming jobs and queues manual work.",
+    title: "Rencana",
+    description: "Scheduler menyiapkan video yang akan diproses.",
     items: [
-      { key: "queued", label: "Queued" },
-      { key: "paused", label: "Paused" },
-      { key: "cancelled", label: "Cancelled" },
+      { key: "queued", label: "Menunggu" },
+      { key: "paused", label: "Dijeda" },
+      { key: "cancelled", label: "Dibatalkan" },
     ],
   },
   {
-    title: "Produce",
-    description: "Worker transforms source into publishable output.",
+    title: "Produksi",
+    description: "Worker mengubah bahan menjadi video siap review.",
     items: [
-      { key: "searching", label: "Search" },
-      { key: "downloaded", label: "Download" },
-      { key: "transcribed", label: "Transcript" },
-      { key: "planned", label: "Plan" },
+      { key: "searching", label: "Cari sumber" },
+      { key: "downloaded", label: "Unduh" },
+      { key: "transcribed", label: "Transkrip" },
+      { key: "planned", label: "Rencana" },
       { key: "voiceover", label: "Voice" },
     ],
   },
   {
-    title: "Approve",
-    description: "Rendered output waits for operator decision and audit.",
+    title: "Review",
+    description: "Video render menunggu keputusan operator.",
     items: [
-      { key: "rendered", label: "Rendered" },
-      { key: "failed", label: "Failed" },
+      { key: "rendered", label: "Siap Review" },
+      { key: "failed", label: "Gagal" },
     ],
   },
   {
-    title: "Publish",
-    description: "Upload and schedule execution against quota and credentials.",
+    title: "Publikasi",
+    description: "Tahap upload dan penjadwalan yang terkendali.",
     items: [
-      { key: "uploading", label: "Uploading" },
-      { key: "uploaded", label: "Uploaded" },
+      { key: "uploading", label: "Upload" },
+      { key: "uploaded", label: "Sudah Upload" },
     ],
   },
 ];
@@ -44,11 +44,11 @@ export function FlowBoard({ overview }: Readonly<{ overview: OverviewPayload }>)
     <section className="ta-panel p-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="ta-label text-brand-600">Business flow</p>
-          <h3 className="mt-2 text-xl font-semibold text-gray-900">Plan to publish pipeline.</h3>
+          <p className="ta-label text-brand-600">Alur bisnis</p>
+          <h3 className="mt-2 text-xl font-semibold text-gray-900">Rencana sampai publish.</h3>
         </div>
         <p className="max-w-xl text-sm text-gray-500">
-          This view groups raw job statuses into the actual business process the operator cares about.
+          Tampilan ini mengelompokkan status teknis ke proses bisnis yang lebih mudah dibaca.
         </p>
       </div>
       <div className="mt-5 grid gap-4 xl:grid-cols-4">

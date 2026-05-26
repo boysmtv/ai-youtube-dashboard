@@ -13,8 +13,8 @@ export function JobControlPanel({ job, uploadGuard, canOperate }: Readonly<{ job
     return (
       <div className="ta-panel p-5">
         <p className="ta-label text-brand-600">Read only</p>
-        <h3 className="mt-2 text-lg font-semibold text-gray-900">Control access restricted.</h3>
-        <p className="mt-2 text-sm text-gray-500">Viewer accounts can inspect the job, but cannot change execution state.</p>
+        <h3 className="mt-2 text-lg font-semibold text-gray-900">Akses kontrol dibatasi.</h3>
+        <p className="mt-2 text-sm text-gray-500">Akun viewer bisa melihat video, tapi tidak bisa mengubah status proses.</p>
       </div>
     );
   }
@@ -22,9 +22,9 @@ export function JobControlPanel({ job, uploadGuard, canOperate }: Readonly<{ job
   return (
     <div className="ta-panel p-5">
       <div>
-        <p className="ta-label text-brand-600">Engine control</p>
-        <h3 className="mt-2 text-lg font-semibold text-gray-900">Run with explicit parameters</h3>
-        <p className="mt-1 text-sm text-gray-500">Publish stays guarded by explicit approval parameters.</p>
+        <p className="ta-label text-brand-600">Kontrol teknis</p>
+        <h3 className="mt-2 text-lg font-semibold text-gray-900">Jalankan dengan parameter eksplisit</h3>
+        <p className="mt-1 text-sm text-gray-500">Jalur publish tetap dijaga oleh parameter review yang jelas.</p>
       </div>
       <form action={runDashboardJob} className="mt-5 grid gap-4">
         <input name="job_id" type="hidden" value={job.id} />

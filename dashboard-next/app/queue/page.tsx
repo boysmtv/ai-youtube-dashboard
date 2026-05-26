@@ -28,7 +28,7 @@ export default async function QueuePage({
   searchParams,
 }: Readonly<{ searchParams: Record<string, string | string[] | undefined> }>) {
   const session = requireDashboardSession("/queue");
-  const [payload, registry, overview] = await Promise.all([getJobs(50), getRegistry(), getOverview()]);
+  const [payload, registry, overview] = await Promise.all([getJobs(20), getRegistry(), getOverview()]);
   const canOperate = hasDashboardRole(session, "operator");
   const createdJobId = typeof searchParams.created === "string" ? searchParams.created : Array.isArray(searchParams.created) ? searchParams.created[0] : "";
   const selectedChannelId = typeof searchParams.channel_id === "string" ? searchParams.channel_id : Array.isArray(searchParams.channel_id) ? searchParams.channel_id[0] : "";

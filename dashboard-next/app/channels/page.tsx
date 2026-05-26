@@ -7,7 +7,7 @@ import { getChannelReadiness, getOverview, getRegistry } from "../../lib/engine-
 
 export default async function ChannelsPage() {
   requireDashboardSession("/channels");
-  const [registry, overview, readiness] = await Promise.all([getRegistry(), getOverview(), getChannelReadiness(60)]);
+  const [registry, overview, readiness] = await Promise.all([getRegistry(), getOverview(), getChannelReadiness(20)]);
   const readyCount = readiness.items.filter((item) => item.upload_ready).length;
   const missingTokenCount = readiness.items.filter((item) => item.issues.includes("missing_token")).length;
   const reviewCount = readiness.items.filter((item) => item.enabled && !item.upload_ready && item.issues.length > 0 && !item.issues.includes("missing_token")).length;

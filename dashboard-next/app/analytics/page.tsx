@@ -10,9 +10,9 @@ export default async function AnalyticsPage() {
   requireDashboardRole("viewer", "/analytics");
   const [overview, publishHistory, publishQueue, readiness] = await Promise.all([
     getOverview(),
-    getPublishHistory(80),
-    getPublishQueue(50),
-    getChannelReadiness(60),
+    getPublishHistory(20),
+    getPublishQueue(20),
+    getChannelReadiness(20),
   ]);
   const youtubeHistory = {
     ...publishHistory,

@@ -12,9 +12,9 @@ import { buildQueueWorkflowSteps } from "../../lib/operator-workflow";
 export default async function PublishPage() {
   requireDashboardRole("operator", "/publish");
   const [approvals, publishQueue, publishHistory, overview] = await Promise.all([
-    getRecentApprovals(50),
-    getPublishQueue(50),
-    getPublishHistory(50),
+    getRecentApprovals(20),
+    getPublishQueue(20),
+    getPublishHistory(20),
     getOverview(),
   ]);
   const youtubeHistory = {

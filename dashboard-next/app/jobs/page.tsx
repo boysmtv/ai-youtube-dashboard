@@ -24,7 +24,7 @@ export default async function JobsPage({
         ]}
         breadcrumbs={[
           { href: "/", label: "Dashboard" },
-          { href: "/queue", label: "Antrian Video" },
+          { href: "/queue", label: "Produksi Video" },
           { href: "/jobs", label: "Detail Video" },
         ]}
         description="Gunakan halaman ini untuk menambah kerja, memeriksa status antrian, dan mengendalikan proses berikutnya."

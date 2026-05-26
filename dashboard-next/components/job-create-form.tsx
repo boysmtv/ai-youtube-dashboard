@@ -58,9 +58,9 @@ export function JobCreateForm({
           </select>
         </label>
         <label className="grid gap-2 text-sm font-semibold">
-          Target Waktu
+          Waktu Kerja
           <input name="publish_at" required defaultValue={defaultPublishAt()} placeholder="2026-05-27T09:00" />
-          <span className="text-xs font-normal text-gray-500">Waktu ini dipakai sebagai target kerja, bukan jadwal upload publik.</span>
+          <span className="text-xs font-normal text-gray-500">Dipakai sebagai target kerja, bukan jadwal upload publik.</span>
         </label>
         <label className="grid gap-2 text-sm font-semibold">
           Topik / Ide Video
@@ -70,6 +70,11 @@ export function JobCreateForm({
           Bahasa / Gaya Caption
           <input name="language" defaultValue={selectedChannel?.language} placeholder="id" />
         </label>
+      </div>
+
+      <div className="mt-4 rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
+        <p className="ta-label text-brand-600">Sumber Video</p>
+        <p className="mt-2">Sumber video dipilih dari curated source channel. Operator cukup memilih channel dan topik; detail sumber tetap dikelola engine.</p>
       </div>
 
       <label className="mt-4 grid gap-2 text-sm font-semibold">

@@ -25,14 +25,14 @@ export default async function ChannelsPage() {
           { href: "/", label: "Dashboard" },
           { href: "/channels", label: "Channel" },
         ]}
-        description="Channel ditampilkan sebagai status bisnis yang mudah dibaca: siap, perlu login, perlu review, atau bermasalah."
+        description="Channel ditampilkan sebagai status bisnis yang mudah dibaca: siap, perlu login YouTube, perlu review, atau bermasalah."
         eyebrow="Channel"
-        title="Status kesiapan tiap channel."
+        title="Kesiapan channel dan strategi konten."
       />
 
       <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard href="/channels#channel-health" label="Siap" value={readyCount} tone={readyCount ? "good" : "neutral"} />
-        <MetricCard href="/settings" label="Perlu Login" value={missingTokenCount} tone={missingTokenCount ? "warn" : "neutral"} />
+        <MetricCard href="/settings" label="Perlu Login YouTube" value={missingTokenCount} tone={missingTokenCount ? "warn" : "neutral"} />
         <MetricCard href="/channels#channel-health" label="Perlu Review" value={reviewCount} tone={reviewCount ? "warn" : "neutral"} />
         <MetricCard href="/channels#channel-health" label="Bermasalah" value={blockedCount} tone={blockedCount ? "warn" : "good"} />
       </section>

@@ -13,7 +13,7 @@ export default async function QuotaPage() {
     <AppShell>
       <header className="ta-panel p-6">
         <p className="ta-label text-brand-600">Quota</p>
-        <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900">GCP quota and workload pressure.</h2>
+        <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900">Kuota dan tekanan kerja.</h2>
         <p className="mt-4 max-w-2xl text-gray-500">
           Quota data comes from the engine overview so dashboard decisions use the same registry state as automation.
         </p>

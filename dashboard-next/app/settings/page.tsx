@@ -37,7 +37,7 @@ export default async function SettingsPage() {
         ]}
         description="Bagian utama untuk operator menampilkan pengaturan yang aman. Detail teknis, backup, dan registry mentah tetap tersedia di bawah sebagai advanced/admin."
         eyebrow="Pengaturan"
-        title="Pengaturan umum, safety, dan admin."
+        title="Pengaturan operasional dan safety."
       />
 
       <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">

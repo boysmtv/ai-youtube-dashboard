@@ -43,7 +43,7 @@ export default async function AnalyticsPage() {
     <AppShell>
       <PageHeader
         actions={[
-          { href: "/publish", label: "Lihat Video Sukses Upload", tone: "primary" },
+          { href: "/publish", label: "Lihat Riwayat Upload", tone: "primary" },
           { href: "/queue", label: "Lihat Antrian", tone: "secondary" },
         ]}
         breadcrumbs={[
@@ -52,14 +52,14 @@ export default async function AnalyticsPage() {
         ]}
         description="Halaman ini merangkum throughput, hasil publish, dan performa channel supaya bisnis bisa melihat apa yang berjalan dan apa yang tertahan."
         eyebrow="Laporan"
-        title="Ringkasan performa bisnis."
+        title="Laporan operasional YouTube."
       />
 
       <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard href="/publish" label="Total Video Dibuat" value={totalCreated} />
         <MetricCard href="/publish" label="Upload Private Sukses" value={uploadedPrivate} tone="good" />
         <MetricCard href="/publish#queue" label="Video Siap Review" value={readyReview} tone={readyReview > 0 ? "warn" : "neutral"} />
-        <MetricCard label="Gagal" value={failed} tone={failed > 0 ? "warn" : "neutral"} />
+        <MetricCard label="Video Gagal" value={failed} tone={failed > 0 ? "warn" : "neutral"} />
       </section>
 
       <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -99,8 +99,8 @@ export default async function AnalyticsPage() {
           <p className="mt-1 text-gray-600">{uploadedPrivate} upload YouTube tercatat sukses.</p>
         </div>
         <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
-          <strong className="block text-gray-900">TikTok deferred</strong>
-          <p className="mt-1 text-gray-600">Tidak ditampilkan sebagai metrik utama di laporan operasional.</p>
+          <strong className="block text-gray-900">Data source</strong>
+          <p className="mt-1 text-gray-600">Semua angka dibaca dari Engine API dan PostgreSQL runtime.</p>
         </div>
       </section>
 

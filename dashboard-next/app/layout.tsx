@@ -14,13 +14,13 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AI YouTube Control Plane",
-  description: "Next.js operator dashboard for ai-youtube-langchain.",
+  title: "AI YouTube Business Dashboard",
+  description: "Operator dashboard for the ai-youtube-langchain production pipeline.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${outfit.variable} ${mono.variable}`}>
+    <html lang="id" className={`${outfit.variable} ${mono.variable}`}>
       <body className="font-display">{children}</body>
     </html>
   );

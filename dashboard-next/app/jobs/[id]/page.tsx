@@ -166,7 +166,7 @@ export default async function JobDetailPage({
         ]}
         breadcrumbs={[
           { href: "/", label: "Dashboard" },
-          { href: "/queue", label: "Antrian Video" },
+          { href: "/queue", label: "Produksi Video" },
           { href: `/jobs/${detail.job.id}`, label: "Detail Video" },
         ]}
         description="Halaman ini menempatkan preview, status utama, title/caption/hashtag, copyright, dan label AI di depan. Detail teknis tetap tersedia di bagian lanjutan."

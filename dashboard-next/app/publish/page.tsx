@@ -48,9 +48,9 @@ export default async function PublishPage() {
           { href: "/", label: "Dashboard" },
           { href: "/publish", label: "Review & Upload" },
         ]}
-        description="Halaman ini menampilkan video yang siap dicek, status copyright, label AI, dan riwayat upload terbaru. Aksi upload manual tetap dibatasi oleh gate produksi."
+        description="Halaman ini adalah pusat keputusan untuk cek preview, caption, hashtag, copyright, label AI, dan mode upload sebelum langkah berikutnya."
         eyebrow="Review & Upload"
-        title="Review video sebelum upload private."
+        title="Decision center untuk video siap review."
       />
 
       <GuidedWorkflow
@@ -63,11 +63,11 @@ export default async function PublishPage() {
       />
 
       <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <MetricCard href="/publish#queue" label="Perlu Review" value={queueTotal} tone={queueTotal > 0 ? "warn" : "neutral"} />
-        <MetricCard href="/publish#queue" label="Siap Review" value={readyForReview} tone={readyForReview > 0 ? "good" : "neutral"} />
-        <MetricCard href="/publish#history" label="Upload Berhasil" value={uploadedCount} tone="good" />
+        <MetricCard href="/publish#queue" label="Video Siap Review" value={readyForReview} tone={readyForReview > 0 ? "good" : "neutral"} />
+        <MetricCard href="/publish#queue" label="Video Perlu Copyright" value={blockedCount} tone={blockedCount > 0 ? "warn" : "neutral"} />
+        <MetricCard href="/publish#history" label="Video Sudah Upload Private" value={uploadedCount} tone="good" />
+        <MetricCard href="/publish#queue" label="Video Belum Siap Production" value={queueTotal} tone={queueTotal > 0 ? "warn" : "neutral"} />
         <MetricCard href="/publish#history" label="Upload Gagal" value={failedCount} tone={failedCount > 0 ? "warn" : "neutral"} />
-        <MetricCard href="/publish#queue" label="Diblokir" value={blockedCount} tone={blockedCount > 0 ? "warn" : "neutral"} />
       </section>
 
       <section className="mt-6 grid gap-4 rounded-2xl border border-gray-200 bg-white p-5 lg:grid-cols-3">
@@ -80,8 +80,8 @@ export default async function PublishPage() {
           <p className="mt-1 text-gray-600">Pastikan blocker rights, musik, dan disclosure sudah aman.</p>
         </div>
         <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
-          <strong className="block text-gray-900">TikTok deferred</strong>
-          <p className="mt-1 text-gray-600">Fokus dashboard ini tetap YouTube untuk alur produksi utama.</p>
+          <strong className="block text-gray-900">Langkah aman</strong>
+          <p className="mt-1 text-gray-600">Public atau scheduled tidak jadi default. Private test tetap dipakai untuk validasi teknis.</p>
         </div>
       </section>
 

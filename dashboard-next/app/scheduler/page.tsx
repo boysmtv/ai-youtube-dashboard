@@ -12,7 +12,7 @@ export default async function SchedulerPage() {
     <AppShell>
       <header className="ta-panel p-6">
         <p className="ta-label text-brand-600">Scheduler</p>
-        <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900">Scheduler control.</h2>
+        <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900">Kontrol scheduler.</h2>
         <p className="mt-4 max-w-2xl text-gray-500">Create queued jobs from registry schedule. This does not upload videos.</p>
       </header>
       <section className="mt-6 grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">

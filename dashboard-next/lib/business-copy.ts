@@ -80,7 +80,7 @@ export function channelReadinessLabel(item: ChannelReadinessItem | undefined, en
     return { label: "Siap", tone: "bg-success-50 text-success-700" };
   }
   if (item.issues.includes("missing_token")) {
-    return { label: "Perlu Login", tone: "bg-warning-50 text-warning-700" };
+    return { label: "Perlu Login YouTube", tone: "bg-warning-50 text-warning-700" };
   }
   if (item.issues.length) {
     return { label: "Perlu Review", tone: "bg-warning-50 text-warning-700" };
@@ -130,10 +130,80 @@ export function friendlyErrorMessage(message: string) {
   if (text.includes("oauth token missing") || text.includes("token missing") || text.includes("invalid token")) {
     return "Channel perlu login ulang YouTube.";
   }
+  if (text.includes("preview missing") || text.includes("preview_unavailable")) {
+    return "Preview video belum tersedia.";
+  }
+  if (text.includes("audio not ready") || text.includes("audio_not_ready")) {
+    return "Audio belum siap. Cek mode voice-over atau source audio.";
+  }
+  if (text.includes("copyright_acknowledged missing") || text.includes("copyright_acknowledged=false")) {
+    return "Copyright belum disetujui.";
+  }
   if (text.includes("reused_content_risk=high")) {
     return "Risiko konten ulang terlalu tinggi. Upload production diblokir.";
   }
+  if (text.includes("reused content") && text.includes("high")) {
+    return "Risiko konten ulang tinggi. Production diblokir.";
+  }
   return message;
+}
+
+export function businessBlockerDetail(message: string) {
+  const text = message.toLowerCase();
+  if (text.includes("source_rate_limited")) {
+    return {
+      problem: "Sumber video sedang dibatasi.",
+      impact: "Pipeline harus menunggu atau memakai sumber lokal.",
+      nextStep: "Gunakan sumber lokal atau coba lagi nanti.",
+    };
+  }
+  if (text.includes("local_source_invalid")) {
+    return {
+      problem: "File sumber tidak ditemukan atau tidak valid.",
+      impact: "Video tidak bisa diproses sampai sumber diperbaiki.",
+      nextStep: "Periksa path file sumber dan unggah ulang jika perlu.",
+    };
+  }
+  if (text.includes("oauth token missing") || text.includes("token missing") || text.includes("invalid token")) {
+    return {
+      problem: "Channel perlu login ulang YouTube.",
+      impact: "Upload dan preflight channel tertahan.",
+      nextStep: "Buka pengaturan channel dan login ulang YouTube.",
+    };
+  }
+  if (text.includes("copyright_acknowledged missing") || text.includes("copyright_acknowledged=false")) {
+    return {
+      problem: "Copyright belum disetujui.",
+      impact: "Production tetap diblokir.",
+      nextStep: "Lengkapi review copyright di halaman Review & Upload.",
+    };
+  }
+  if (text.includes("reused_content_risk=high") || (text.includes("reused content") && text.includes("high"))) {
+    return {
+      problem: "Risiko konten ulang tinggi.",
+      impact: "Production diblokir oleh gate rights.",
+      nextStep: "Perbaiki sumber, visual, atau rights assessment dulu.",
+    };
+  }
+  if (text.includes("audio not ready") || text.includes("audio_not_ready")) {
+    return {
+      problem: "Audio belum siap.",
+      impact: "Review final dan production tidak bisa lanjut.",
+      nextStep: "Cek mode voice-over atau source audio.",
+    };
+  }
+  if (text.includes("preview missing") || text.includes("preview_unavailable")) {
+    return {
+      problem: "Preview video belum tersedia.",
+      impact: "Operator belum bisa memverifikasi hasil render.",
+      nextStep: "Tunggu render selesai lalu buka ulang detail video.",
+    };
+  }
+  return {
+    problem: friendlyErrorMessage(message),
+    impact: "Video tertahan pada langkah saat ini.",
+    nextStep: "Buka detail teknis untuk melihat akar masalah.",
+  };
 }
 
 export function summaryText(value?: string | null) {

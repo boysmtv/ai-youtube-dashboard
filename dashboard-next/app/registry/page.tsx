@@ -12,7 +12,7 @@ export default async function RegistryPage() {
     <AppShell>
       <header className="ta-panel p-6">
         <p className="ta-label text-brand-600">Registry</p>
-        <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900">Runtime parameter registry.</h2>
+        <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900">Manifest runtime.</h2>
         <p className="mt-4 max-w-2xl text-gray-500">
           Dashboard reads this database-backed engine registry as source of truth. Editing is centralized in Settings to keep one validated save path.
         </p>

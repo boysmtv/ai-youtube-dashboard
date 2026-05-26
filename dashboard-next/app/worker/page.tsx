@@ -12,7 +12,7 @@ export default async function WorkerPage() {
     <AppShell>
       <header className="ta-panel p-6">
         <p className="ta-label text-brand-600">Worker</p>
-        <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900">Worker control.</h2>
+        <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900">Kontrol worker.</h2>
         <p className="mt-4 max-w-2xl text-gray-500">Manual worker trigger for dry-run processing. Live upload remains guarded in Approvals.</p>
       </header>
       <section className="mt-6 grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">

@@ -42,6 +42,12 @@ export default async function DashboardPage() {
     getRuntimeHealth(),
     getPublishQueue(20),
   ]);
+  const youtubeHistory = {
+    ...publishHistory,
+    items: publishHistory.items.filter((item) => item.platform === "youtube"),
+    total: publishHistory.items.filter((item) => item.platform === "youtube").length,
+    platform_counts: { youtube: publishHistory.items.filter((item) => item.platform === "youtube").length },
+  };
   const canOperate = hasDashboardRole(session, "operator");
   const activeCount = ["searching", "downloaded", "transcribed", "planned", "voiceover", "uploading", "processing"].reduce(
     (total, status) => total + (overview.job_counts[status] || 0),
@@ -49,10 +55,11 @@ export default async function DashboardPage() {
   );
   const readyToReview = overview.job_counts.rendered || 0;
   const needsAttention = (overview.job_counts.failed || 0) + (runtimeHealth.errors?.length || 0) + (runtimeHealth.warnings?.length || 0);
-  const uploadPrivateSuccess = publishHistory.items.filter((item) => item.platform === "youtube" && ["uploaded", "published", "draft_ready"].includes(item.status)).length;
+  const uploadPrivateSuccess = youtubeHistory.items.filter((item) => ["uploaded", "published", "draft_ready"].includes(item.status)).length;
   const copyrightBlocked = publishQueue.items.filter((item) => !item.review_summary?.production_allowed && item.review_summary?.production_blockers.length).length;
   const activeChannels = readiness.items.filter((item) => item.enabled).length;
   const channelReadyCount = readiness.items.filter((item) => item.upload_ready).length;
+  const channelAttentionCount = readiness.items.filter((item) => !item.upload_ready || item.issues.length > 0).length;
   const latestError = runtimeHealth.errors?.[0] || runtimeHealth.warnings?.[0] || "Tidak ada error penting saat ini.";
   const recommendedAction =
     readyToReview > 0
@@ -68,7 +75,7 @@ export default async function DashboardPage() {
     blockedCount: copyrightBlocked,
     channelReadyCount,
     uploadedCount: uploadPrivateSuccess,
-    reportCount: publishHistory.total,
+    reportCount: youtubeHistory.total,
   });
   const primaryChannel = readiness.items.find((item) => item.upload_ready && item.enabled) || readiness.items.find((item) => item.enabled);
   const channelAction = primaryChannel
@@ -80,12 +87,12 @@ export default async function DashboardPage() {
       <PageHeader
         actions={[
           { href: "/queue#create-video", label: "Buat Video Baru", tone: "primary" },
-          { href: "/publish", label: "Review Video Siap Upload", tone: "secondary" },
+          { href: "/publish", label: "Review Sekarang", tone: "secondary" },
         ]}
         breadcrumbs={[{ href: "/", label: "Dashboard" }]}
-        description="Lihat video yang sedang diproses, siap review, butuh perhatian, serta channel yang siap dipakai. Detail teknis tetap tersedia di area lanjutan."
+        description="Lihat apa yang harus dikerjakan hari ini, video yang siap review, channel yang bermasalah, dan status sistem utama. Detail teknis tetap ada di area lanjutan."
         eyebrow="Dashboard"
-        title="Kontrol video produksi untuk operator bisnis."
+        title="Apa yang harus saya lakukan hari ini?"
       />
 
       <GuidedWorkflow
@@ -100,23 +107,23 @@ export default async function DashboardPage() {
       <section className="mt-6 grid gap-3 rounded-2xl border border-gray-200 bg-white p-5 sm:grid-cols-2 xl:grid-cols-5">
         <Link className="rounded-2xl border border-brand-100 bg-brand-25 p-4 text-sm transition hover:border-brand-200" href="/queue#create-video">
           <strong className="block text-gray-900">Buat Video Baru</strong>
-          <p className="mt-1 text-gray-600">Mulai alur kerja video baru. Channel siap: {channelReadyCount}.</p>
+          <p className="mt-1 text-gray-600">Mulai alur video baru. Channel siap: {channelReadyCount}.</p>
         </Link>
         <Link className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm transition hover:border-brand-200" href="/publish">
-          <strong className="block text-gray-900">Review Video Siap Upload</strong>
+          <strong className="block text-gray-900">Review Sekarang</strong>
           <p className="mt-1 text-gray-600">Cek metadata, copyright, dan label AI. Menunggu review: {readyToReview}.</p>
         </Link>
         <Link className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm transition hover:border-brand-200" href="/queue#antrian">
-          <strong className="block text-gray-900">Lihat Antrian</strong>
+          <strong className="block text-gray-900">Cek Video Bermasalah</strong>
           <p className="mt-1 text-gray-600">Pantau proses yang sedang berjalan. Sedang diproses: {activeCount}.</p>
         </Link>
         <Link className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm transition hover:border-brand-200" href="/channels">
-          <strong className="block text-gray-900">Cek Channel</strong>
+          <strong className="block text-gray-900">Channel Perlu Perhatian</strong>
           <p className="mt-1 text-gray-600">Cari channel yang siap atau bermasalah. Siap dipakai: {activeChannels}.</p>
         </Link>
         <Link className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm transition hover:border-brand-200" href="/analytics">
-          <strong className="block text-gray-900">Cek Laporan</strong>
-          <p className="mt-1 text-gray-600">Lihat ringkasan operasional terbaru. Riwayat upload: {publishHistory.total}.</p>
+          <strong className="block text-gray-900">Lihat Laporan</strong>
+          <p className="mt-1 text-gray-600">Lihat ringkasan operasional terbaru. Riwayat upload: {youtubeHistory.total}.</p>
         </Link>
       </section>
 
@@ -125,10 +132,10 @@ export default async function DashboardPage() {
         <div className="mt-3 grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
           <NextActionItem href={recommendedAction.href} title={recommendedAction.title} description={recommendedAction.description} count={readyToReview} tone="primary" />
           <NextActionItem href="/publish" title="Review video siap upload" description="Buka queue review dan cek blocker produksi." count={readyToReview} />
-          <NextActionItem href="/queue" title="Periksa video yang gagal" description="Lihat job yang perlu dipulihkan atau diulang." count={needsAttention} />
+          <NextActionItem href="/queue" title="Cek video bermasalah" description="Lihat job yang perlu dipulihkan atau diulang." count={needsAttention} />
           <NextActionItem href="/publish" title="Lengkapi data copyright" description="Periksa metadata, rights, dan disclosure sebelum upload." count={copyrightBlocked} />
           <NextActionItem href="/channels" title="Cek channel perlu login" description="Cari channel yang butuh token atau perbaikan setup." count={readiness.items.filter((item) => item.issues.includes("missing_token")).length} />
-          <NextActionItem href="/analytics" title="Lihat laporan upload" description="Ringkasan operasional upload YouTube terbaru." count={publishHistory.total} />
+          <NextActionItem href="/analytics" title="Lihat laporan" description="Ringkasan operasional upload YouTube terbaru." count={youtubeHistory.total} />
           <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-4">
             <p className="ta-label text-brand-600">Error penting</p>
             <p className="mt-2 text-sm text-gray-700">{latestError}</p>
@@ -137,12 +144,12 @@ export default async function DashboardPage() {
       </section>
 
       <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
-        <MetricCard href="/queue#antrian" label="Video Diproses" value={activeCount} />
-        <MetricCard href="/publish" label="Siap Review" value={readyToReview} tone={readyToReview > 0 ? "warn" : "neutral"} />
-        <MetricCard href="/queue" label="Perlu Perhatian" value={needsAttention} tone={needsAttention > 0 ? "warn" : "neutral"} />
-        <MetricCard href="/publish" label="Upload Private Sukses" value={uploadPrivateSuccess} tone="good" />
+        <MetricCard href="/queue#antrian" label="Video Sedang Diproses" value={activeCount} />
+        <MetricCard href="/publish" label="Video Siap Review" value={readyToReview} tone={readyToReview > 0 ? "warn" : "neutral"} />
+        <MetricCard href="/queue" label="Video Bermasalah" value={needsAttention} tone={needsAttention > 0 ? "warn" : "neutral"} />
+          <MetricCard href="/publish" label="Upload Private Sukses" value={uploadPrivateSuccess} tone="good" />
         <MetricCard href="/publish" label="Diblokir Copyright" value={copyrightBlocked} tone={copyrightBlocked > 0 ? "warn" : "neutral"} />
-        <MetricCard href="/channels" label="Channel Aktif" value={activeChannels} tone={activeChannels > 0 ? "good" : "neutral"} />
+        <MetricCard href="/channels" label="Channel Perlu Perhatian" value={channelAttentionCount} tone={channelAttentionCount > 0 ? "warn" : "neutral"} />
       </section>
 
       <section className="mt-6 grid gap-4 sm:grid-cols-3">
@@ -208,7 +215,7 @@ export default async function DashboardPage() {
           </div>
           <div>
             <h3 className="mb-3 text-lg font-semibold text-gray-900">Riwayat review dan publish</h3>
-            <PublishHistoryTable history={publishHistory} limitLabel="Riwayat publish" />
+            <PublishHistoryTable history={youtubeHistory} limitLabel="Riwayat publish YouTube" />
           </div>
           <div>
             <h3 className="mb-3 text-lg font-semibold text-gray-900">Audit operator</h3>

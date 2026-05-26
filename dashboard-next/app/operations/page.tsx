@@ -19,8 +19,8 @@ export default async function OperationsPage() {
     <AppShell>
       <header className="ta-panel p-6">
         <p className="ta-label text-brand-600">Operations</p>
-        <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900">Production throughput and publish readiness.</h2>
-        <p className="mt-4 max-w-3xl text-gray-500">Use this page to read the movement of the business: queue pressure, active work, ready items, and publishing output.</p>
+        <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900">Operasi produksi.</h2>
+        <p className="mt-4 max-w-3xl text-gray-500">Ringkasan teknis untuk queue pressure, active work, ready items, dan hasil publish.</p>
       </header>
 
       <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

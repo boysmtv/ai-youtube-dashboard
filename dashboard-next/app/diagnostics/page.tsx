@@ -11,7 +11,7 @@ export default async function DiagnosticsPage() {
     <AppShell>
       <header className="ta-panel p-6">
         <p className="ta-label text-brand-600">Admin / Diagnostics</p>
-        <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900">Pemeriksaan runtime tingkat lanjut.</h2>
+        <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900">Diagnostik teknis.</h2>
         <p className="mt-4 max-w-3xl text-gray-500">
           Halaman ini sengaja teknis untuk troubleshooting admin. Tidak dipakai dalam alur bisnis harian.
         </p>

@@ -60,7 +60,7 @@ export default async function ArtifactsPage({
     <AppShell>
       <header className="ta-panel p-6">
         <p className="ta-label text-brand-600">Artifacts</p>
-        <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900">Working files, outputs, and retention control.</h2>
+        <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900">File video dan output kerja.</h2>
         <p className="mt-4 max-w-3xl text-gray-500">
           Files stay on host volumes. This page only indexes metadata, previews availability, and lets operators clean up files without bloating Docker images.
         </p>

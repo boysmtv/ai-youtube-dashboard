@@ -8,8 +8,7 @@ const navSections: Array<{ heading: string; items: Array<{ href: string; label: 
     heading: "Menu Utama",
     items: [
       { href: "/", label: "Dashboard", role: "viewer" },
-      { href: "/queue#create-video", label: "Buat Video", role: "viewer" },
-      { href: "/queue#antrian", label: "Antrian Video", role: "viewer" },
+      { href: "/queue", label: "Produksi Video", role: "viewer" },
       { href: "/publish", label: "Review & Upload", role: "operator" },
       { href: "/channels", label: "Channel", role: "viewer" },
       { href: "/analytics", label: "Laporan", role: "viewer" },
@@ -51,19 +50,21 @@ export async function AppShell({ children }: Readonly<{ children: React.ReactNod
           <div className="grid h-11 w-11 place-items-center rounded-xl bg-brand-500 text-lg font-bold text-white shadow-elevated">YT</div>
           <div>
             <p className="ta-label">AI YouTube</p>
-            <h1 className="text-xl font-bold leading-none text-gray-900">Production Cockpit</h1>
+            <h1 className="text-xl font-bold leading-none text-gray-900">Business Operator</h1>
           </div>
         </div>
         <nav className="mt-8 space-y-6">
           {allowedSections.map((section) => (
             <div key={section.heading}>
-              <p className="ta-label px-3 text-gray-500">{section.heading}</p>
+              <p className={`ta-label px-3 ${section.heading === "Menu Utama" ? "text-gray-500" : "text-gray-400"}`}>{section.heading}</p>
               <div className="mt-2 grid gap-1">
                 {section.items.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-brand-50 hover:text-brand-600"
+                    className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition hover:bg-brand-50 hover:text-brand-600 ${
+                      section.heading === "Menu Utama" ? "text-gray-800" : "text-gray-600"
+                    }`}
                   >
                     <span className="h-2 w-2 rounded-full bg-gray-300 transition group-hover:bg-brand-500" />
                     {item.label}
@@ -83,7 +84,7 @@ export async function AppShell({ children }: Readonly<{ children: React.ReactNod
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="ta-label">Ruang Operator</p>
-              <h2 className="text-xl font-semibold text-gray-900">Dashboard produksi video</h2>
+              <h2 className="text-xl font-semibold text-gray-900">Dashboard bisnis</h2>
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-3 rounded-full border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-700">

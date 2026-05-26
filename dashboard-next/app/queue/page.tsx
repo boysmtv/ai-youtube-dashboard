@@ -57,24 +57,24 @@ export default async function QueuePage({
     <AppShell>
       <PageHeader
         actions={[
-          { href: "/publish", label: "Review Video Siap Upload", tone: "primary" },
+          { href: "/publish", label: "Review Sekarang", tone: "primary" },
           { href: "/channels", label: "Cek Channel", tone: "secondary" },
         ]}
         breadcrumbs={[
           { href: "/", label: "Dashboard" },
-          { href: "/queue", label: "Antrian Video" },
+          { href: "/queue", label: "Produksi Video" },
         ]}
-        description="Halaman ini dipakai untuk menyusun video baru, melihat antrian yang berjalan, dan mengarah ke review saat video sudah siap."
-        eyebrow="Antrian Video"
-        title="Buat video baru dan pantau antrian kerja."
+        description="Halaman ini dipakai untuk membuat video baru, memantau video yang sedang diproses, dan mengarahkan item siap review ke langkah berikutnya."
+        eyebrow="Produksi Video"
+        title="Buat video baru dan pantau proses."
       />
 
       <GuidedWorkflow
-        eyebrow="Step 2 of 6"
-        title="Pantau Proses"
-        description="Lihat video yang sedang diproses. Jika sudah selesai, lanjutkan ke Review & Upload. Jika gagal, buka detail untuk cek masalah."
+        eyebrow="Alur Produksi"
+        title="Urutan kerja yang aman"
+        description="Buat video baru, pantau proses, review hasil, perbaiki blocker, lalu lanjutkan ke riwayat upload."
         steps={workflowSteps}
-        summaryAction="Lihat antrian"
+        summaryAction="Lihat video yang sedang diproses"
         summaryLink="/queue#antrian"
       />
 
@@ -100,7 +100,7 @@ export default async function QueuePage({
         <MetricCard href="/queue#antrian" label="Menunggu" value={overview.job_counts.queued || 0} />
         <MetricCard href="/queue#antrian" label="Sedang Diproses" value={activeCount} tone={activeCount > 0 ? "warn" : "neutral"} />
         <MetricCard href="/publish" label="Siap Review" value={readyToReview} tone={readyToReview > 0 ? "good" : "neutral"} />
-        <MetricCard href="/jobs" label="Gagal" value={blockedCount} tone={blockedCount > 0 ? "warn" : "neutral"} />
+        <MetricCard href="/jobs" label="Perlu Diperbaiki" value={blockedCount} tone={blockedCount > 0 ? "warn" : "neutral"} />
       </section>
 
       <section className="mt-6 grid gap-4 rounded-2xl border border-gray-200 bg-white p-5 lg:grid-cols-3">
@@ -119,13 +119,22 @@ export default async function QueuePage({
       </section>
 
       <section className="mt-6" id="create-video">
+        <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="ta-label text-brand-600">1. Buat Video Baru</p>
+            <h3 className="mt-2 text-lg font-semibold text-gray-900">Simpan rencana video ke antrian</h3>
+          </div>
+          <Link className="text-sm font-semibold text-brand-600 hover:text-brand-700" href="/channels">
+            Cek channel siap
+          </Link>
+        </div>
         <JobCreateForm defaultChannelId={selectedChannelId} registry={registry} uploadGuard={overview.upload_guard} canOperate={canOperate} />
       </section>
 
       <section className="mt-6" id="antrian">
         <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="ta-label text-brand-600">Antrian kerja</p>
+            <p className="ta-label text-brand-600">2. Sedang Diproses</p>
             <h3 className="mt-2 text-lg font-semibold text-gray-900">Video yang sedang berjalan</h3>
             {selectedChannel ? <p className="mt-1 text-sm text-gray-500">Filter channel: {selectedChannel.display_name || selectedChannel.id}</p> : null}
             <p className="mt-1 text-sm text-gray-500">Filter status: {selectedGroup === "semua" ? "Semua" : selectedGroup.replaceAll("-", " ")}</p>
@@ -153,6 +162,21 @@ export default async function QueuePage({
           </Link>
         </div>
         <JobTable jobs={jobs} canOperate={canOperate} />
+      </section>
+
+      <section className="mt-6 grid gap-4 rounded-2xl border border-gray-200 bg-white p-5 lg:grid-cols-3">
+        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
+          <strong className="block text-gray-900">3. Siap Review</strong>
+          <p className="mt-1 text-gray-600">Pindahkan item yang sudah render ke Review & Upload.</p>
+        </div>
+        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
+          <strong className="block text-gray-900">4. Perlu Diperbaiki</strong>
+          <p className="mt-1 text-gray-600">Buka job yang gagal atau diblokir untuk cek masalah.</p>
+        </div>
+        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
+          <strong className="block text-gray-900">5. Semua Video</strong>
+          <p className="mt-1 text-gray-600">Lihat seluruh riwayat proses tanpa kehilangan konteks produksi.</p>
+        </div>
       </section>
     </AppShell>
   );

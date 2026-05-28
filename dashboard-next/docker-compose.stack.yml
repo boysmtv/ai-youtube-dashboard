@@ -1,0 +1,143 @@
+services:
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ai-youtube-dashboard-next:local
+    container_name: ai-youtube-dashboard-next
+    restart: unless-stopped
+    depends_on:
+      - automation-api
+    environment:
+      ENGINE_API_BASE_URL: "http://automation-api:8080"
+      NEXT_PUBLIC_ENGINE_API_BASE_URL: "${NEXT_PUBLIC_ENGINE_API_BASE_URL:-http://localhost:8080}"
+      ENGINE_SYNC_STATE_VIEW: "${ENGINE_SYNC_STATE_VIEW:-default}"
+      ENGINE_SYNC_WEBSOCKET_ENABLED: "${ENGINE_SYNC_WEBSOCKET_ENABLED:-1}"
+      ENGINE_SYNC_POLLING_INTERVAL_MS: "${ENGINE_SYNC_POLLING_INTERVAL_MS:-15000}"
+      DASHBOARD_AUTH_ENABLED: "${DASHBOARD_AUTH_ENABLED:-0}"
+      DASHBOARD_AUTH_SECRET: "${DASHBOARD_AUTH_SECRET:-}"
+      DASHBOARD_VIEWER_USERNAME: "${DASHBOARD_VIEWER_USERNAME:-}"
+      DASHBOARD_VIEWER_PASSWORD: "${DASHBOARD_VIEWER_PASSWORD:-}"
+      DASHBOARD_OPERATOR_USERNAME: "${DASHBOARD_OPERATOR_USERNAME:-}"
+      DASHBOARD_OPERATOR_PASSWORD: "${DASHBOARD_OPERATOR_PASSWORD:-}"
+      DASHBOARD_ADMIN_USERNAME: "${DASHBOARD_ADMIN_USERNAME:-}"
+      DASHBOARD_ADMIN_PASSWORD: "${DASHBOARD_ADMIN_PASSWORD:-}"
+    ports:
+      - "${NEXT_DASHBOARD_PORT:-3001}:3000"
+
+  automation-api:
+    build:
+      context: ../ai-youtube-langchain
+      dockerfile: Dockerfile
+    image: ai-youtube-langchain:local
+    container_name: ai-youtube-langchain-api
+    restart: unless-stopped
+    env_file:
+      - ../ai-youtube-langchain/.env
+    environment:
+      PYTHONUNBUFFERED: "1"
+      ENABLE_YOUTUBE_UPLOAD: "${ENABLE_YOUTUBE_UPLOAD:-0}"
+      LLM_PROVIDER: "local_disabled"
+      AUTOMATION_API_CORS_ORIGINS: "${AUTOMATION_API_CORS_ORIGINS:-*}"
+      AUTOMATION_AUTO_BACKUP_ENABLED: "${AUTOMATION_AUTO_BACKUP_ENABLED:-0}"
+      AUTOMATION_BACKUP_INTERVAL_HOURS: "${AUTOMATION_BACKUP_INTERVAL_HOURS:-6}"
+      AUTOMATION_BACKUP_KEEP_COUNT: "${AUTOMATION_BACKUP_KEEP_COUNT:-24}"
+    command:
+      - uvicorn
+      - src.automation.api:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8080"
+    ports:
+      - "${AUTOMATION_API_PORT:-8080}:8080"
+    volumes:
+      - ../ai-youtube-langchain/config:/app/config
+      - ../ai-youtube-langchain/data:/app/data
+      - ../ai-youtube-langchain/output:/app/output
+      - ../ai-youtube-langchain/downloads:/app/downloads
+      - ../ai-youtube-langchain/.ai-agent:/app/.ai-agent
+      - ../ai-youtube-langchain/credentials:/app/credentials
+
+  automation-scheduler:
+    build:
+      context: ../ai-youtube-langchain
+      dockerfile: Dockerfile
+    image: ai-youtube-langchain:local
+    container_name: ai-youtube-langchain-scheduler
+    restart: unless-stopped
+    env_file:
+      - ../ai-youtube-langchain/.env
+    environment:
+      PYTHONUNBUFFERED: "1"
+      ENABLE_YOUTUBE_UPLOAD: "${ENABLE_YOUTUBE_UPLOAD:-0}"
+      LLM_PROVIDER: "local_disabled"
+      AUTOMATION_AUTO_BACKUP_ENABLED: "${AUTOMATION_AUTO_BACKUP_ENABLED:-0}"
+      AUTOMATION_BACKUP_INTERVAL_HOURS: "${AUTOMATION_BACKUP_INTERVAL_HOURS:-6}"
+      AUTOMATION_BACKUP_KEEP_COUNT: "${AUTOMATION_BACKUP_KEEP_COUNT:-24}"
+    command:
+      - python
+      - -m
+      - src.automation.cli
+      - scheduler
+      - --days-ahead
+      - "1"
+      - --interval-minutes
+      - "${SCHEDULER_INTERVAL_MINUTES:-30}"
+    volumes:
+      - ../ai-youtube-langchain/config:/app/config
+      - ../ai-youtube-langchain/data:/app/data
+      - ../ai-youtube-langchain/output:/app/output
+      - ../ai-youtube-langchain/downloads:/app/downloads
+      - ../ai-youtube-langchain/.ai-agent:/app/.ai-agent
+      - ../ai-youtube-langchain/credentials:/app/credentials
+    healthcheck:
+      test: ["CMD", "python", "-m", "src.automation.cli", "health", "--recover-stuck", "--stuck-minutes", "${AUTOMATION_STUCK_JOB_MINUTES:-60}", "--max-retries", "${WORKER_MAX_RETRIES:-3}"]
+      interval: 60s
+      timeout: 20s
+      retries: 3
+      start_period: 30s
+
+  automation-worker:
+    build:
+      context: ../ai-youtube-langchain
+      dockerfile: Dockerfile
+    image: ai-youtube-langchain:local
+    container_name: ai-youtube-langchain-worker
+    restart: unless-stopped
+    env_file:
+      - ../ai-youtube-langchain/.env
+    environment:
+      PYTHONUNBUFFERED: "1"
+      ENABLE_YOUTUBE_UPLOAD: "${ENABLE_YOUTUBE_UPLOAD:-0}"
+      LLM_PROVIDER: "local_disabled"
+    command:
+      - python
+      - -m
+      - src.automation.cli
+      - worker
+      - --loop
+      - --sleep-seconds
+      - "${WORKER_SLEEP_SECONDS:-30}"
+      - --max-jobs
+      - "0"
+      - --max-active-jobs
+      - "${WORKER_MAX_ACTIVE_JOBS:-1}"
+      - --max-retries
+      - "${WORKER_MAX_RETRIES:-3}"
+      - --stuck-minutes
+      - "${AUTOMATION_STUCK_JOB_MINUTES:-60}"
+    volumes:
+      - ../ai-youtube-langchain/config:/app/config
+      - ../ai-youtube-langchain/data:/app/data
+      - ../ai-youtube-langchain/output:/app/output
+      - ../ai-youtube-langchain/downloads:/app/downloads
+      - ../ai-youtube-langchain/.ai-agent:/app/.ai-agent
+      - ../ai-youtube-langchain/credentials:/app/credentials
+    healthcheck:
+      test: ["CMD", "python", "-m", "src.automation.cli", "health", "--recover-stuck", "--stuck-minutes", "${AUTOMATION_STUCK_JOB_MINUTES:-60}", "--max-retries", "${WORKER_MAX_RETRIES:-3}"]
+      interval: 60s
+      timeout: 20s
+      retries: 3
+      start_period: 30s
+

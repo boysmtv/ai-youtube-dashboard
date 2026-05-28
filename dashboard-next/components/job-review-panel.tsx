@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { JobDetailPayload, PublishStatePayload, ReviewModeOption, ReviewSummary } from "../lib/engine-types";
+import type { JobRecord, JobTechnicalPayload, PublishStatePayload, ReviewModeOption, ReviewSummary } from "../lib/engine-types";
 import {
   businessAiDisclosureStatus,
   businessBlockerDetail,
@@ -10,7 +10,7 @@ import {
   businessUploadModeOptions,
   summaryText,
 } from "../lib/business-copy";
-import { operatorDecisionForJob } from "../lib/operator-workflow";
+import { formatBoolean } from "../lib/localization";
 import { saveJobReviewMetadata } from "../app/jobs/actions";
 
 function SummaryRow({ label, value }: Readonly<{ label: string; value: string }>) {
@@ -77,19 +77,25 @@ function riskStatus(summary: ReviewSummary) {
 }
 
 export function JobReviewPanel({
-  jobId,
-  detail,
+  job,
+  reviewSummary,
   publishState,
   canOperate,
   previewReady,
+  previewUrl,
+  technical,
+  technicalHref,
 }: Readonly<{
-  jobId: number;
-  detail: JobDetailPayload;
-  publishState: PublishStatePayload;
+  job: JobRecord;
+  reviewSummary: ReviewSummary | null;
+  publishState: Pick<PublishStatePayload, "approvals" | "youtube" | "tiktok" | "latest_upload" | "latest_uploads" | "review_summary" | "ready_to_push">;
   canOperate: boolean;
   previewReady: boolean;
+  previewUrl: string | null;
+  technical: JobTechnicalPayload | null;
+  technicalHref: string;
 }>) {
-  const summary = detail.review_summary || publishState.review_summary;
+  const summary = reviewSummary || publishState.review_summary;
   if (!summary) {
     return (
       <div className="ta-panel p-5">
@@ -99,10 +105,9 @@ export function JobReviewPanel({
     );
   }
 
-  const decision = operatorDecisionForJob(detail.job, detail.review_summary || publishState.review_summary, publishState);
   const uploadModes = businessUploadModeOptions(summary.available_upload_modes);
-  const blockers = summary.production_blockers.length ? summary.production_blockers : [decision.blockerReason].filter(Boolean) as string[];
-  const latestUploads = detail.uploads.slice(0, 3);
+  const blockers = summary.production_blockers.length ? summary.production_blockers : [];
+  const latestUploads = (publishState.latest_uploads || (publishState.latest_upload ? [publishState.latest_upload] : [])).slice(0, 3);
   const scriptStatus = riskStatus(summary);
   const sourceAudio = sourceAudioStatus(summary);
   const aiLabel = businessAiDisclosureStatus(summary);
@@ -115,33 +120,36 @@ export function JobReviewPanel({
           <h3 className="mt-2 text-xl font-semibold text-gray-900">Decision center video</h3>
           <p className="mt-2 text-sm text-gray-500">Cek status utama, metadata final, copyright, lalu pilih mode upload yang aman.</p>
         </div>
-        <span className={`ta-status ${decision.tone === "good" ? "bg-success-50 text-success-700" : decision.tone === "error" ? "bg-error-50 text-error-700" : "bg-warning-50 text-warning-700"}`}>
-          {decision.label}
-        </span>
+        <span className={`ta-status ${summary.production_allowed ? "bg-success-50 text-success-700" : "bg-warning-50 text-warning-700"}`}>{summary.production_allowed ? "Aman" : "Perlu Review"}</span>
       </div>
 
       <div className="mt-5 rounded-2xl border border-brand-100 bg-brand-25 p-4">
         <p className="ta-label text-brand-600">Langkah Berikutnya</p>
         <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <strong className="block text-gray-900">{decision.nextAction}</strong>
-            <p className="mt-1 text-sm text-gray-600">{decision.explanation}</p>
+            <strong className="block text-gray-900">{summary.production_allowed ? "Lanjut ke upload private" : "Perbaiki blocker dulu"}</strong>
+            <p className="mt-1 text-sm text-gray-600">{summary.production_allowed ? "Metadata final dan rights gate sudah cukup untuk melanjutkan." : "Periksa blocker copyright dan disclosure sebelum lanjut."}</p>
           </div>
-          <Link className="ta-button" href={decision.targetLink}>
+          <Link className="ta-button" href={technicalHref}>
             Lanjut
           </Link>
         </div>
-        {decision.blockerReason ? <div className="mt-3">{blockerMessage(decision.blockerReason)}</div> : null}
+        {blockers.length ? <div className="mt-3">{blockers.map((item) => blockerMessage(item))}</div> : null}
       </div>
 
       <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
           <p className="ta-label">Preview Video</p>
           <strong className="mt-2 block text-gray-900">{previewReady ? "Tersedia" : "Belum tersedia"}</strong>
+          {previewReady && previewUrl ? (
+            <a className="mt-3 inline-flex text-sm font-semibold text-brand-600 hover:text-brand-700" href={previewUrl} target="_blank" rel="noreferrer">
+              Buka preview
+            </a>
+          ) : null}
         </div>
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
           <p className="ta-label">Status Utama</p>
-          <strong className={`mt-2 block ${decision.tone === "good" ? "text-success-700" : decision.tone === "error" ? "text-error-700" : "text-warning-700"}`}>{decision.label}</strong>
+          <strong className={`mt-2 block ${summary.production_allowed ? "text-success-700" : "text-warning-700"}`}>{summary.production_allowed ? "Aman" : "Perlu Review"}</strong>
         </div>
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
           <p className="ta-label">Judul Final</p>
@@ -169,23 +177,23 @@ export function JobReviewPanel({
           <div className="rounded-2xl border border-gray-200 bg-white p-4">
             <p className="ta-label text-brand-600">Cek Keamanan Copyright</p>
             <div className="mt-3 space-y-2">
-              <SummaryRow label="Script original" value={scriptStatus.label} />
+              <SummaryRow label="Naskah asli" value={scriptStatus.label} />
               <SummaryRow label="Voice-over legal" value={checklistStatusLabel(summary.voiceover_legal).label} />
               <SummaryRow label="Visual aman" value={checklistStatusLabel(summary.visual_rights_ok).label} />
               <SummaryRow label="Musik berlisensi" value={checklistStatusLabel(summary.music_rights_ok).label} />
               <SummaryRow label="Source audio aman untuk production" value={sourceAudio.label} />
               <SummaryRow label="Risiko konten ulang" value={riskStatus(summary).label} />
               <SummaryRow label="Label AI" value={aiLabel.label} />
-              <SummaryRow label="Copyright acknowledgement" value={checklistStatusLabel(summary.copyright_acknowledged, true).label} />
+              <SummaryRow label="Konfirmasi copyright" value={checklistStatusLabel(summary.copyright_acknowledged, true).label} />
             </div>
             {blockers.length ? <div className="mt-4 grid gap-3">{blockers.map((item) => blockerMessage(item))}</div> : null}
           </div>
           <div className="rounded-2xl border border-gray-200 bg-white p-4">
             <p className="ta-label text-brand-600">Cek Label AI</p>
             <div className="mt-3 space-y-2">
-              <SummaryRow label="AI generated" value={summary.ai_generated ? "Ya" : "Tidak"} />
-              <SummaryRow label="Realistis" value={summary.realistic_synthetic_content ? "Ya" : "Tidak"} />
-              <SummaryRow label="Butuh disclosure" value={summary.needs_ai_disclosure ? "Ya" : "Tidak"} />
+              <SummaryRow label="AI generated" value={formatBoolean(summary.ai_generated)} />
+              <SummaryRow label="Realistis" value={formatBoolean(summary.realistic_synthetic_content)} />
+              <SummaryRow label="Butuh disclosure" value={formatBoolean(summary.needs_ai_disclosure)} />
               <SummaryRow label="Status disclosure" value={aiLabel.label} />
             </div>
             {summary.needs_ai_disclosure && !summary.ai_disclosure_acknowledged && !summary.ai_disclosure_override ? (
@@ -198,7 +206,7 @@ export function JobReviewPanel({
       </div>
 
       <form action={saveJobReviewMetadata} className="mt-5 grid gap-4">
-        <input name="job_id" type="hidden" value={jobId} />
+        <input name="job_id" type="hidden" value={job.id} />
         <div className="grid gap-4 lg:grid-cols-2">
           <label className="grid gap-2 text-sm font-semibold">
             Judul Final
@@ -279,10 +287,10 @@ export function JobReviewPanel({
         <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
           <p className="ta-label text-brand-600">Ringkasan Publikasi</p>
           <div className="mt-3 space-y-2">
-            <SummaryRow label="Status Upload Terakhir" value={publishState.latest_upload ? businessUploadStatus(publishState.latest_upload.status) : "Pending"} />
+            <SummaryRow label="Status Upload Terakhir" value={publishState.latest_upload ? businessUploadStatus(publishState.latest_upload.status) : "Menunggu"} />
             <SummaryRow label="Mode Upload" value={businessUploadModeLabel(summary.selected_upload_mode)} />
-            <SummaryRow label="Status Channel" value={publishState.youtube.privacy_status || "private"} />
-            <SummaryRow label="Publish Siap" value={publishState.ready_to_push ? "Ya" : "Belum"} />
+            <SummaryRow label="Status Channel" value={publishState.youtube.privacy_status === "private" ? "Private" : "Belum tersedia"} />
+            <SummaryRow label="Publish Siap" value={formatBoolean(publishState.ready_to_push)} />
           </div>
         </div>
       </div>
@@ -293,36 +301,51 @@ export function JobReviewPanel({
             <div>
               <p className="ta-label text-brand-600">Detail Teknis</p>
               <h4 className="mt-2 text-lg font-semibold text-gray-900">Payload mentah, manifest, file, dan event</h4>
+              <p className="mt-2 text-sm text-gray-500">Hanya untuk troubleshooting. Tidak diperlukan untuk workflow harian.</p>
             </div>
-            <span className="ta-status bg-gray-100 text-gray-700">Tutup / buka</span>
+            <span className="ta-status bg-gray-100 text-gray-700">{technical ? "Tampil" : "Muat Detail Teknis"}</span>
           </div>
         </summary>
-        <div className="mt-5 grid gap-4 xl:grid-cols-2">
-          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-            <p className="ta-label text-brand-600">Manifest</p>
-            <pre className="mt-3 max-h-72 overflow-auto rounded-xl bg-gray-900 p-4 text-xs leading-relaxed text-white">{JSON.stringify(detail.manifest || {}, null, 2)}</pre>
+        {technical ? (
+          <div className="mt-5 grid gap-4 xl:grid-cols-2">
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+              <p className="ta-label text-brand-600">Manifest</p>
+              <pre className="mt-3 max-h-72 overflow-auto rounded-xl bg-gray-900 p-4 text-xs leading-relaxed text-white">{JSON.stringify(technical.manifest || {}, null, 2)}</pre>
+            </div>
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+              <p className="ta-label text-brand-600">Approval status</p>
+              <pre className="mt-3 max-h-72 overflow-auto rounded-xl bg-gray-900 p-4 text-xs leading-relaxed text-white">{JSON.stringify(technical.approval_status || publishState.approvals || {}, null, 2)}</pre>
+            </div>
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+              <p className="ta-label text-brand-600">Job events</p>
+              <pre className="mt-3 max-h-72 overflow-auto rounded-xl bg-gray-900 p-4 text-xs leading-relaxed text-white">{JSON.stringify(technical.job_events || [], null, 2)}</pre>
+            </div>
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+              <p className="ta-label text-brand-600">Upload records</p>
+              <pre className="mt-3 max-h-72 overflow-auto rounded-xl bg-gray-900 p-4 text-xs leading-relaxed text-white">{JSON.stringify(technical.uploads || [], null, 2)}</pre>
+            </div>
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+              <p className="ta-label text-brand-600">Rekam jejak manifest</p>
+              <pre className="mt-3 max-h-72 overflow-auto rounded-xl bg-gray-900 p-4 text-xs leading-relaxed text-white">{JSON.stringify(technical.parameters || {}, null, 2)}</pre>
+            </div>
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+              <p className="ta-label text-brand-600">Raw review summary</p>
+              <pre className="mt-3 max-h-72 overflow-auto rounded-xl bg-gray-900 p-4 text-xs leading-relaxed text-white">{JSON.stringify(summary || {}, null, 2)}</pre>
+            </div>
           </div>
-          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-            <p className="ta-label text-brand-600">Approval status</p>
-            <pre className="mt-3 max-h-72 overflow-auto rounded-xl bg-gray-900 p-4 text-xs leading-relaxed text-white">{JSON.stringify(summary.approval_status || {}, null, 2)}</pre>
+        ) : (
+          <div className="mt-5 rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
+            <p>Detail teknis belum dimuat. Buka tombol di bawah untuk memuat payload lengkap.</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Link className="ta-button" href={technicalHref}>
+                Muat Detail Teknis
+              </Link>
+              <Link className="ta-button-muted" href={technicalHref}>
+                Buka mode teknis
+              </Link>
+            </div>
           </div>
-          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-            <p className="ta-label text-brand-600">Job events</p>
-            <pre className="mt-3 max-h-72 overflow-auto rounded-xl bg-gray-900 p-4 text-xs leading-relaxed text-white">{JSON.stringify(detail.job_events || [], null, 2)}</pre>
-          </div>
-          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-            <p className="ta-label text-brand-600">Upload records</p>
-            <pre className="mt-3 max-h-72 overflow-auto rounded-xl bg-gray-900 p-4 text-xs leading-relaxed text-white">{JSON.stringify(detail.uploads || [], null, 2)}</pre>
-          </div>
-          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-            <p className="ta-label text-brand-600">Rekam jejak manifest</p>
-            <pre className="mt-3 max-h-72 overflow-auto rounded-xl bg-gray-900 p-4 text-xs leading-relaxed text-white">{JSON.stringify(detail.parameters || {}, null, 2)}</pre>
-          </div>
-          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-            <p className="ta-label text-brand-600">Raw review summary</p>
-            <pre className="mt-3 max-h-72 overflow-auto rounded-xl bg-gray-900 p-4 text-xs leading-relaxed text-white">{JSON.stringify(summary || {}, null, 2)}</pre>
-          </div>
-        </div>
+        )}
       </details>
     </div>
   );

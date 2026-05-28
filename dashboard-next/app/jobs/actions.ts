@@ -59,11 +59,13 @@ function revalidateBusinessViews(jobId?: number) {
 
 export async function createDashboardJob(formData: FormData) {
   const session = assertDashboardRole("operator");
+  const nicheOverride = String(formData.get("niche_override") || "").trim();
+  const languageOverride = String(formData.get("language_override") || "").trim();
   const result = await createJob({
     channel_id: String(formData.get("channel_id") || ""),
     publish_at: String(formData.get("publish_at") || ""),
-    niche: String(formData.get("niche") || "") || undefined,
-    language: String(formData.get("language") || "") || undefined,
+    niche: nicheOverride || String(formData.get("niche") || "") || undefined,
+    language: languageOverride || String(formData.get("language") || "") || undefined,
     status: "queued",
     enable_upload: checked(formData.get("enable_upload")),
     upload_approval: String(formData.get("upload_approval") || ""),

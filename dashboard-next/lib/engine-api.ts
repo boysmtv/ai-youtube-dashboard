@@ -12,7 +12,9 @@ import type {
   JobRecord,
   JobMetricsPayload,
   JobResultPayload,
+  JobSummaryPayload,
   JobTimelinePayload,
+  JobTechnicalPayload,
   ListPayload,
   OverviewPayload,
   ManualPushPayload,
@@ -38,6 +40,10 @@ export function engineBaseUrl() {
 
 export function engineBrowserBaseUrl() {
   return (process.env.NEXT_PUBLIC_ENGINE_API_BASE_URL || DEFAULT_ENGINE_URL).replace(/\/$/, "");
+}
+
+export function engineBrowserUrl(path: string) {
+  return `${engineBrowserBaseUrl()}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
 function withStateView(path: string, stateView: EngineStateView = "default") {
@@ -153,6 +159,14 @@ export async function getJobDetail(jobId: number, stateView: EngineStateView = "
   return fetchEngine<JobDetailPayload>(withStateView(`/api/jobs/${jobId}`, stateView));
 }
 
+export async function getJobSummary(jobId: number, stateView: EngineStateView = "default") {
+  return fetchEngine<JobSummaryPayload>(withStateView(`/api/jobs/${jobId}/summary`, stateView));
+}
+
+export async function getJobTechnical(jobId: number, stateView: EngineStateView = "default") {
+  return fetchEngine<JobTechnicalPayload>(withStateView(`/api/jobs/${jobId}/technical`, stateView));
+}
+
 export async function getJobTimeline(jobId: number, stateView: EngineStateView = "default") {
   return fetchEngine<JobTimelinePayload>(withStateView(`/api/jobs/${jobId}/timeline`, stateView));
 }
@@ -175,6 +189,19 @@ export async function updateJobReviewMetadata(jobId: number, payload: ReviewMeta
 
 export async function getJobResult(jobId: number, stateView: EngineStateView = "default") {
   return fetchEngine<JobResultPayload>(withStateView(`/api/jobs/${jobId}/result`, stateView));
+}
+
+export function engineJobPreviewUrl(jobId: number, previewUrl?: string | null) {
+  if (!previewUrl) {
+    return null;
+  }
+  if (/^https?:\/\//i.test(previewUrl)) {
+    return previewUrl;
+  }
+  if (previewUrl.startsWith("/")) {
+    return engineBrowserUrl(previewUrl);
+  }
+  return engineBrowserUrl(`/api/jobs/${jobId}/${previewUrl.replace(/^\/+/, "")}`);
 }
 
 export async function getJobFile(jobId: number, fileKey: "transcript" | "plan") {

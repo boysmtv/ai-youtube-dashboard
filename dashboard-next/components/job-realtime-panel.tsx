@@ -1,39 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { engineBrowserBaseUrl } from "../lib/engine-api";
-import type { JobDetailPayload } from "../lib/engine-types";
+import { engineBrowserUrl, getJobSummary } from "../lib/engine-api";
+import type { JobSummaryPayload } from "../lib/engine-types";
 import type { EngineSyncSettings } from "../lib/sync-settings";
+import { formatStatus } from "../lib/localization";
 import { StatusBadge } from "./status-badge";
-
-function websocketUrl(jobId: number, stateView: EngineSyncSettings["stateView"]) {
-  const base = engineBrowserBaseUrl();
-  const url = new URL(base);
-  url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
-  url.pathname = `/ws/jobs/${jobId}`;
-  if (stateView === "redis") {
-    url.searchParams.set("state_view", "redis");
-  }
-  return url.toString();
-}
-
-function summarize(item: Record<string, unknown>) {
-  const details = item.details && typeof item.details === "object" ? (item.details as Record<string, unknown>) : {};
-  return Object.entries(details)
-    .filter(([key]) => !["actor", "actor_role", "source"].includes(key))
-    .slice(0, 3)
-    .map(([key, value]) => `${key}=${String(value)}`)
-    .join(" / ") || "No structured details";
-}
-
-function summarizeJobEvent(item: Record<string, unknown>) {
-  const details = item.details && typeof item.details === "object" ? (item.details as Record<string, unknown>) : {};
-  return Object.entries(details)
-    .filter(([key]) => !["job_id", "stage", "event", "source"].includes(key))
-    .slice(0, 3)
-    .map(([key, value]) => `${key}=${String(value)}`)
-    .join(" / ") || "No extra details";
-}
 
 function eventTone(level?: string) {
   const normalized = (level || "").toLowerCase();
@@ -46,72 +18,40 @@ function eventTone(level?: string) {
   return "bg-success-50 text-success-700";
 }
 
-export function JobRealtimePanel({ initial, syncSettings }: Readonly<{ initial: JobDetailPayload; syncSettings: EngineSyncSettings }>) {
+export function JobRealtimePanel({ initial, syncSettings }: Readonly<{ initial: JobSummaryPayload; syncSettings: EngineSyncSettings }>) {
   const [payload, setPayload] = useState(initial);
-  const [status, setStatus] = useState(syncSettings.websocketEnabled ? "connecting" : "polling");
-  const activityFeed = payload.job_events.length ? payload.job_events : payload.runtime_events;
+  const [status, setStatus] = useState(syncSettings.websocketEnabled ? "polling" : "polling");
 
   useEffect(() => {
     let closed = false;
-    let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
-    let pollTimer: ReturnType<typeof setInterval> | undefined;
-    let socket: WebSocket | null = null;
-    const pollUrl = `${engineBrowserBaseUrl()}/api/jobs/${initial.job.id}${syncSettings.stateView === "redis" ? "?state_view=redis" : ""}`;
+    let timer: ReturnType<typeof setInterval> | undefined;
 
     async function poll() {
       try {
-        const response = await fetch(pollUrl, { cache: "no-store" });
-        if (!response.ok) {
-          throw new Error(`poll failed: ${response.status}`);
-        }
-        setPayload((await response.json()) as JobDetailPayload);
-        setStatus("polling");
-      } catch {
-        setStatus("error");
-      }
-    }
-
-    function connect() {
-      if (closed || !syncSettings.websocketEnabled) {
-        return;
-      }
-      socket = new WebSocket(websocketUrl(initial.job.id, syncSettings.stateView));
-      socket.onopen = () => setStatus("live");
-      socket.onmessage = (event) => {
-        const next = JSON.parse(event.data) as JobDetailPayload | { status: string; message: string };
-        if ("job" in next) {
+        const next = await getJobSummary(initial.job.id, syncSettings.stateView);
+        if (!closed) {
           setPayload(next);
-          setStatus("live");
-        } else {
-          setStatus(next.status || "error");
+          setStatus("polling");
         }
-      };
-      socket.onerror = () => setStatus("error");
-      socket.onclose = () => {
-        if (closed) {
-          return;
+      } catch {
+        if (!closed) {
+          setStatus("error");
         }
-        setStatus("closed");
-        reconnectTimer = setTimeout(connect, 3000);
-      };
+      }
     }
 
-    connect();
     poll();
-    pollTimer = setInterval(poll, syncSettings.pollingIntervalMs);
+    timer = setInterval(poll, syncSettings.pollingIntervalMs);
     return () => {
       closed = true;
-      if (socket) {
-        socket.close();
-      }
-      if (reconnectTimer) {
-        clearTimeout(reconnectTimer);
-      }
-      if (pollTimer) {
-        clearInterval(pollTimer);
+      if (timer) {
+        clearInterval(timer);
       }
     };
-  }, [initial.job.id, syncSettings.pollingIntervalMs, syncSettings.stateView, syncSettings.websocketEnabled]);
+  }, [initial.job.id, syncSettings.pollingIntervalMs, syncSettings.stateView]);
+
+  const recentEvents = payload.recent_events.slice(0, 6);
+  const previewLink = payload.preview.preview_url ? `${engineBrowserUrl(payload.preview.preview_url)}` : null;
 
   return (
     <section className="ta-panel p-5">
@@ -119,88 +59,90 @@ export function JobRealtimePanel({ initial, syncSettings }: Readonly<{ initial: 
         <div>
           <p className="ta-label text-brand-600">Aktivitas produksi</p>
           <h3 className="mt-2 text-lg font-semibold text-gray-900">Status video #{payload.job.id}</h3>
-          <p className="mt-2 text-sm text-gray-500">Panel ini memperbarui tahap kerja, progres, dan aktivitas terbaru secara otomatis.</p>
+          <p className="mt-2 text-sm text-gray-500">Panel ini memperbarui status ringkas, progress, dan event terbaru secara otomatis.</p>
         </div>
-        <span className={`ta-status font-mono ${status === "live" || status === "polling" ? "bg-success-50 text-success-700" : "bg-warning-50 text-warning-700"}`}>{status}</span>
+        <span className={`ta-status ${status === "error" ? "bg-warning-50 text-warning-700" : "bg-success-50 text-success-700"}`}>{status === "error" ? "Gangguan" : "Memantau"}</span>
       </div>
 
       <div className="mt-5 rounded-xl border border-gray-200 bg-gray-50 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="ta-label">Tahap saat ini</p>
-          <strong className="mt-2 block text-lg text-gray-900">{payload.current_stage || payload.job.current_stage || payload.job.status}</strong>
+          <div>
+            <p className="ta-label">Tahap saat ini</p>
+            <strong className="mt-2 block text-lg text-gray-900">{formatStatus(payload.current_stage || payload.job.current_stage || payload.job.status)}</strong>
+          </div>
+          <div className="text-right">
+            <p className="ta-label">Progres</p>
+            <strong className="mt-2 block text-lg text-gray-900">{Number(payload.progress_percent ?? payload.job.progress_percent ?? 0).toFixed(0)}%</strong>
+          </div>
         </div>
-        <div className="text-right">
-          <p className="ta-label">Progres</p>
-          <strong className="mt-2 block text-lg text-gray-900">{Number(payload.progress_percent ?? payload.job.progress_percent ?? 0).toFixed(0)}%</strong>
-        </div>
-      </div>
         <div className="mt-3 h-3 rounded-full bg-white">
-          <div
-            className="h-3 rounded-full bg-brand-500 transition-all"
-            style={{ width: `${Math.max(0, Math.min(100, Number(payload.progress_percent ?? payload.job.progress_percent ?? 0)))}%` }}
-          />
+          <div className="h-3 rounded-full bg-brand-500 transition-all" style={{ width: `${Math.max(0, Math.min(100, Number(payload.progress_percent ?? payload.job.progress_percent ?? 0)))}%` }} />
         </div>
         {payload.last_error || payload.job.last_error ? (
-          <p className="mt-3 rounded-lg border border-error-200 bg-error-50 px-3 py-2 text-sm text-error-700">
-            {payload.last_error || payload.job.last_error}
-          </p>
+          <p className="mt-3 rounded-lg border border-error-200 bg-error-50 px-3 py-2 text-sm text-error-700">{payload.last_error || payload.job.last_error}</p>
         ) : null}
       </div>
 
       <div className="mt-5 grid gap-4 md:grid-cols-4">
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
           <p className="ta-label">Status produksi</p>
-          <div className="mt-2"><StatusBadge status={payload.job.status} /></div>
+          <div className="mt-2">
+            <StatusBadge status={payload.job.status} />
+          </div>
         </div>
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
           <p className="ta-label">Percobaan</p>
-          <strong className="mt-2 block text-2xl text-gray-900">{payload.attempts.length}</strong>
+          <strong className="mt-2 block text-2xl text-gray-900">{payload.attempt_count}</strong>
         </div>
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
           <p className="ta-label">File hasil</p>
-          <strong className="mt-2 block text-2xl text-gray-900">{payload.artifacts.length}</strong>
+          <strong className="mt-2 block text-2xl text-gray-900">{payload.artifact_count}</strong>
         </div>
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
           <p className="ta-label">Upload</p>
-          <strong className="mt-2 block text-2xl text-gray-900">{payload.uploads.length}</strong>
+          <strong className="mt-2 block text-2xl text-gray-900">{payload.upload_count}</strong>
         </div>
       </div>
 
       <div className="mt-5 grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-          <p className="ta-label">Riwayat tahap</p>
-          <div className="mt-3 space-y-3">
-            {payload.attempts.slice(0, 4).map((attempt) => (
-                <div key={attempt.id} className="rounded-lg border border-gray-200 bg-white p-3">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <strong className="text-sm text-gray-900">{attempt.stage}</strong>
-                    <StatusBadge status={attempt.status} />
-                  </div>
-                <p className="mt-2 font-mono text-xs text-gray-500">{attempt.started_at} to {attempt.finished_at || "open"}</p>
-              </div>
-            ))}
+          <p className="ta-label">Preview status</p>
+          <div className="mt-3 space-y-2 text-sm text-gray-700">
+            <p>{payload.preview.message || (payload.preview.available ? "Video siap ditonton" : "Preview belum tersedia")}</p>
+            <p className="text-xs text-gray-500">Keamanan produksi: {payload.rights_summary.production_allowed ? "aman" : "perlu review"}</p>
+            <p className="text-xs text-gray-500">Pembaruan terakhir: {payload.updated_at || payload.generated_at}</p>
+            {previewLink ? (
+              <a className="inline-flex font-semibold text-brand-600 hover:text-brand-700" href={previewLink} target="_blank" rel="noreferrer">
+                Buka preview
+              </a>
+            ) : null}
           </div>
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
           <p className="ta-label">Aktivitas terbaru</p>
           <div className="mt-3 space-y-3">
-            {activityFeed.slice(0, 6).map((item, index) => {
-              const event = item as Record<string, unknown>;
-              const createdAt = String(event.created_at || event.timestamp || "no timestamp");
-              return (
-                <div key={`${String(event.timestamp || "event")}-${index}`} className="rounded-lg border border-gray-200 bg-white p-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-xs text-gray-500">
-                    <span>{createdAt}</span>
-                    <span>{String(event.stage || event.command || "event")} / {String(event.level || event.event || "info")}</span>
+            {recentEvents.length ? (
+              recentEvents.map((item, index) => {
+                const event = item as Record<string, unknown>;
+                const createdAt = String(event.created_at || event.timestamp || "Belum tersedia");
+                return (
+                  <div key={`${String(event.timestamp || "event")}-${index}`} className="rounded-lg border border-gray-200 bg-white p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
+                      <span>{createdAt}</span>
+                      <span>{formatStatus(String(event.level || event.event || "info"))}</span>
+                    </div>
+                    <p className="mt-2 text-sm font-medium text-gray-800">{String(event.message || event.event || "Update")}</p>
+                    {event.details && typeof event.details === "object" ? (
+                      <p className="mt-1 text-xs text-gray-500">Detail teknis tersedia di panel teknis bila diperlukan.</p>
+                    ) : null}
+                    <span className={`ta-status mt-3 inline-flex ${eventTone(String(event.level || event.event || ""))}`}>{formatStatus(String(event.level || event.event || "info"))}</span>
                   </div>
-                  <p className="mt-2 text-sm font-medium text-gray-800">{String(event.message || event.event || "Update")}</p>
-                  <p className="mt-1 text-xs text-gray-500">{summarizeJobEvent(event)} {event.details ? "" : summarize(event)}</p>
-                  <span className={`ta-status mt-3 inline-flex font-mono ${eventTone(String(event.level || event.event || ""))}`}>{String(event.level || event.event || "info")}</span>
-                </div>
-              );
-            })}
+                );
+              })
+            ) : (
+              <div className="ta-empty">Belum ada event terbaru.</div>
+            )}
           </div>
         </div>
       </div>

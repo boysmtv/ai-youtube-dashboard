@@ -41,7 +41,9 @@ export function PageHeader({
       <p className="ta-label text-brand-600">{eyebrow}</p>
       <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="max-w-none text-4xl font-bold leading-none text-gray-900 lg:text-5xl">{title}</h2>
+          <h2 data-testid="page-title" className="max-w-none text-4xl font-bold leading-none text-gray-900 lg:text-5xl">
+            {title}
+          </h2>
           <p className="mt-4 max-w-none text-gray-500">{description}</p>
         </div>
         {actions?.length ? (

@@ -1,7 +1,17 @@
 import { expect, test, type Page } from "@playwright/test";
 
-const PAGE_PATHS = ["/", "/publish", "/queue", "/analytics", "/jobs/1836"];
-const MAX_PAGE_LOAD_MS = 5_000;
+const PAGE_CASES = [
+  { path: "/", maxLoadMs: 1_500 },
+  { path: "/publish", maxLoadMs: 2_500 },
+  { path: "/queue", maxLoadMs: 2_500 },
+  { path: "/channels", maxLoadMs: 2_500 },
+  { path: "/settings", maxLoadMs: 2_500 },
+  { path: "/analytics", maxLoadMs: 2_500 },
+  { path: "/jobs/1836", maxLoadMs: 2_500 },
+  { path: "/jobs/1811", maxLoadMs: 2_500 },
+  { path: "/jobs/854", maxLoadMs: 2_500 },
+  { path: "/health", maxLoadMs: 2_500 },
+];
 
 async function observePage(page: Page) {
   const consoleErrors: string[] = [];
@@ -38,27 +48,30 @@ async function observePage(page: Page) {
 }
 
 test.describe("dashboard performance", () => {
-  for (const path of PAGE_PATHS) {
-    test(`loads within budget: ${path}`, async ({ page }) => {
+  for (const pageCase of PAGE_CASES) {
+    test(`loads within budget: ${pageCase.path}`, async ({ page }) => {
       const noise = await observePage(page);
       const started = Date.now();
-      const response = await page.goto(path, { waitUntil: "commit" });
+      const response = await page.goto(pageCase.path, { waitUntil: "commit" });
+      const primaryLocator = page.locator("main").first();
+      await expect(primaryLocator, `Primary content not visible for ${pageCase.path}`).toBeVisible({ timeout: pageCase.maxLoadMs });
       const elapsedMs = Date.now() - started;
-      console.log(`${path} loaded in ${elapsedMs}ms`);
+      console.log(`${pageCase.path} loaded in ${elapsedMs}ms`);
 
-      expect(response, `No response received for ${path}`).not.toBeNull();
-      expect(response?.status() ?? 599, `Unexpected HTTP status for ${path}`).toBeLessThan(400);
-      expect(elapsedMs, `Page load too slow for ${path}`).toBeLessThanOrEqual(MAX_PAGE_LOAD_MS);
+      expect(response, `No response received for ${pageCase.path}`).not.toBeNull();
+      expect(response?.status() ?? 599, `Unexpected HTTP status for ${pageCase.path}`).toBeLessThan(400);
+      expect(elapsedMs, `Page load too slow for ${pageCase.path}`).toBeLessThanOrEqual(pageCase.maxLoadMs);
 
       const body = page.locator("body");
       await expect(body).toBeVisible();
       await page.waitForTimeout(300);
       const bodyText = (await body.innerText()).replace(/\s+/g, " ").trim();
-      expect(bodyText.length, `Body is blank for ${path}`).toBeGreaterThan(0);
+      expect(bodyText.length, `Body is blank for ${pageCase.path}`).toBeGreaterThan(0);
 
-      expect(noise.pageErrors, `Page errors on ${path}: ${noise.pageErrors.join(" | ")}`).toEqual([]);
-      expect(noise.consoleErrors, `Console errors on ${path}: ${noise.consoleErrors.join(" | ")}`).toEqual([]);
-      expect(noise.failedRequests, `Failed requests on ${path}: ${noise.failedRequests.join(" | ")}`).toEqual([]);
+      expect(bodyText, `Raw blocker text leaked on ${pageCase.path}`).not.toMatch(/copyright_acknowledged|production_blockers|rights_assessment/i);
+      expect(noise.pageErrors, `Page errors on ${pageCase.path}: ${noise.pageErrors.join(" | ")}`).toEqual([]);
+      expect(noise.consoleErrors, `Console errors on ${pageCase.path}: ${noise.consoleErrors.join(" | ")}`).toEqual([]);
+      expect(noise.failedRequests, `Failed requests on ${pageCase.path}: ${noise.failedRequests.join(" | ")}`).toEqual([]);
     });
   }
 });

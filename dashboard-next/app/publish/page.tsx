@@ -1,17 +1,16 @@
 import { AppShell } from "../../components/app-shell";
 import { ApprovalList } from "../../components/approval-list";
 import { PublishHistoryTable } from "../../components/publish-history";
-import { PublishQueueTable } from "../../components/publish-queue-table";
 import { MetricCard } from "../../components/metric-card";
 import { PageHeader } from "../../components/page-header";
 import { requireDashboardRole } from "../../lib/dashboard-auth";
-import { getOverview, getPublishHistory, getPublishQueue, getRecentApprovals } from "../../lib/engine-api";
+import { getOverview, getPublishHistory, getRecentApprovals } from "../../lib/engine-api";
+import { formatChannelName, formatStatus } from "../../lib/localization";
 
 export default async function PublishPage() {
   requireDashboardRole("operator", "/publish");
-  const [approvals, publishQueue, publishHistory, overview] = await Promise.all([
+  const [approvals, publishHistory, overview] = await Promise.all([
     getRecentApprovals(20),
-    getPublishQueue(100),
     getPublishHistory(20),
     getOverview(),
   ]);
@@ -21,17 +20,17 @@ export default async function PublishPage() {
     total: publishHistory.items.filter((item) => item.platform === "youtube").length,
     platform_counts: { youtube: publishHistory.items.filter((item) => item.platform === "youtube").length },
   };
-  const queueItems = publishQueue.items.filter((item) => item.status !== "uploaded");
-  const queueTotal = queueItems.length;
-  const readyForReview = queueItems.filter((item) => item.review_summary?.caption_editable || item.review_summary?.auto_copyright_approved).length;
-  const blockedCount = queueItems.filter((item) => item.review_summary && !item.review_summary.auto_copyright_approved).length;
+  const queueItems = overview.jobs.slice(0, 8);
+  const queueTotal = overview.job_counts.queued || 0;
+  const readyForReview = overview.job_counts.rendered || 0;
+  const blockedCount = overview.job_counts.failed || 0;
   const uploadedCount = publishHistory.items.filter((item) => ["uploaded", "published", "draft_ready"].includes(item.status)).length;
   const failedCount = publishHistory.items.filter((item) => item.status === "failed" || Boolean(item.error_message)).length;
   const nextAction =
     readyForReview > 0
       ? { title: "Review video siap upload", description: "Cek metadata, preview, dan status sistem sebelum private test.", href: "/publish#queue" }
       : blockedCount > 0
-        ? { title: "Cek status sistem", description: "Ada video yang belum memenuhi aturan sistem.", href: "/publish#queue" }
+        ? { title: "Cek status sistem", description: "Ada video yang perlu tindak lanjut.", href: "/queue#antrian" }
         : { title: "Lihat antrian", description: "Belum ada item yang siap review.", href: "/queue#antrian" };
 
   return (
@@ -64,8 +63,33 @@ export default async function PublishPage() {
             <p className="ta-label text-brand-600">Queue ringkas</p>
             <h3 className="mt-2 text-lg font-semibold text-gray-900">Video yang perlu ditinjau</h3>
             <p className="mt-1 text-sm text-gray-500">{nextAction.title}</p>
-            <div className="mt-4">
-              <PublishQueueTable items={queueItems.slice(0, 20)} />
+            <div className="mt-4 grid gap-3">
+              {queueItems.length ? (
+                queueItems.map((item) => (
+                  <div key={item.id} className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <a className="font-semibold text-brand-600 underline-offset-4 hover:underline" href={`/jobs/${item.id}`}>
+                          Video #{item.id}
+                        </a>
+                        <p className="mt-1 text-xs text-gray-500">{formatChannelName({ id: item.channel_id, niche: item.niche })}</p>
+                      </div>
+                      <span className="ta-status bg-gray-100 text-gray-700">{formatStatus(item.status)}</span>
+                    </div>
+                    <p className="mt-2 text-xs text-gray-500">{item.selected_title || "Judul belum dipilih"}</p>
+                  </div>
+                ))
+              ) : (
+                <div className="ta-empty">Belum ada video di ringkasan cepat.</div>
+              )}
+            </div>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <a className="ta-button" href="/queue#antrian">
+                Buka antrian penuh
+              </a>
+              <a className="ta-button-muted" href="/queue#create-video">
+                Buat video baru
+              </a>
             </div>
           </div>
         </div>

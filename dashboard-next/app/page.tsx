@@ -3,7 +3,7 @@ import { JobTable } from "../components/job-table";
 import { MetricCard } from "../components/metric-card";
 import { PageHeader } from "../components/page-header";
 import { hasDashboardRole, requireDashboardSession } from "../lib/dashboard-auth";
-import { getHealth, getOverview, getPublishHistory, getPublishQueue, getRuntimeHealth } from "../lib/engine-api";
+import { getHealth, getOverview, getPublishHistory } from "../lib/engine-api";
 
 function lower(value: string) {
   return value.trim().toLowerCase();
@@ -131,12 +131,7 @@ function DailyStatusChart({
 
 export default async function DashboardPage() {
   const session = requireDashboardSession("/");
-  const [overview, publishHistory, publishQueue, runtimeHealth] = await Promise.all([
-    getOverview(),
-    getPublishHistory(20),
-    getPublishQueue(100),
-    getRuntimeHealth().catch(() => null),
-  ]);
+  const [overview, publishHistory] = await Promise.all([getOverview(), getPublishHistory(20)]);
   const engineHealth = await getHealth().catch(() => null);
   const canOperate = hasDashboardRole(session, "operator");
   const youtubeHistory = {
@@ -151,8 +146,6 @@ export default async function DashboardPage() {
   );
   const readyToReview = overview.job_counts.rendered || 0;
   const uploadedPrivateSuccess = youtubeHistory.items.filter((item) => ["uploaded", "published", "draft_ready"].includes(item.status)).length;
-  const systemBlocked = publishQueue.items.filter((item) => item.review_summary && item.review_summary.system_compliance_status && item.review_summary.system_compliance_status !== "system_approved").length;
-  const readyProduction = publishQueue.items.filter((item) => item.review_summary?.auto_copyright_approved).length;
   const totalJobs = overview.jobs.length;
   const chartJobs = overview.jobs
     .map((job) => ({
@@ -169,75 +162,11 @@ export default async function DashboardPage() {
       nextAction: "Periksa service engine lalu muat ulang dashboard.",
     });
   }
-  if (!runtimeHealth) {
+  if (overview.job_counts.failed) {
     systemAlerts.push({
-      label: "Kebutuhan sistem",
-      reason: "Health runtime belum bisa dibaca.",
-      nextAction: "Cek layanan engine, worker, dan publisher.",
-    });
-  } else {
-    if (runtimeHealth.status !== "ok") {
-      systemAlerts.push({
-        label: "Service perlu perhatian",
-        reason: "Ada komponen runtime yang belum aman.",
-        nextAction: "Bersihkan storage atau selesaikan recovery sistem.",
-      });
-    }
-    if (!runtimeHealth.disk.ok || !runtimeHealth.storage.ok) {
-      systemAlerts.push({
-        label: "Service perlu perhatian",
-        reason: "Ruang disk atau storage belum aman.",
-        nextAction: "Bersihkan storage lalu jalankan ulang pipeline.",
-      });
-    }
-    if (!runtimeHealth.quota.ok) {
-      systemAlerts.push({
-        label: "Kuota",
-        reason: "Ada project yang mendekati atau melewati batas aman.",
-        nextAction: "Tunggu kuota tersedia atau sesuaikan jadwal upload.",
-      });
-    }
-    if (!runtimeHealth.credentials.ok || !runtimeHealth.youtube_upload?.upload_allowed) {
-      systemAlerts.push({
-        label: "Login YouTube",
-        reason: "Akses channel belum siap untuk upload.",
-        nextAction: "Perbarui login channel yang bermasalah.",
-      });
-    }
-    if (!runtimeHealth.audio?.ready) {
-      systemAlerts.push({
-        label: "Musik berlisensi",
-        reason: "Mode audio produksi belum memenuhi syarat sistem.",
-        nextAction: "Gunakan audio berlisensi atau jalankan tanpa audio yang memerlukan lisensi.",
-      });
-    }
-    for (const error of runtimeHealth.errors || []) {
-      const text = String(error).toLowerCase();
-      if (text.includes("database_unavailable")) {
-        systemAlerts.push({
-          label: "Database belum tersedia",
-          reason: "Penyimpanan data runtime belum bisa dibaca.",
-          nextAction: "Periksa database lalu muat ulang dashboard.",
-        });
-      }
-      if (text.includes("quota_over_target")) {
-        systemAlerts.push({
-          label: "Kuota",
-          reason: "Ada project yang melewati batas aman.",
-          nextAction: "Tunggu kuota tersedia atau sesuaikan jadwal upload.",
-        });
-      }
-    }
-  }
-  const queueFailure = publishQueue.items.find((item) => {
-    const status = item.status.toLowerCase();
-    return status === "failed" || Boolean(item.latest_upload?.error_message);
-  });
-  if (queueFailure) {
-    systemAlerts.push({
-      label: "Upload gagal",
-      reason: `Job #${queueFailure.job.id} sempat gagal diproses.`,
-      nextAction: "Buka detail job dan jalankan ulang bila diperlukan.",
+      label: "Job gagal",
+      reason: `${overview.job_counts.failed} job tercatat gagal pada snapshot terbaru.`,
+      nextAction: "Buka antrian atau detail job untuk tindak lanjut.",
     });
   }
   const safeSystem = systemAlerts.length === 0;
@@ -261,9 +190,9 @@ export default async function DashboardPage() {
         <MetricCard href="/queue#antrian" label="Sedang Diproses" value={activeCount} tone={activeCount > 0 ? "warn" : "neutral"} />
         <MetricCard href="/publish" label="Siap Review" value={readyToReview} tone={readyToReview > 0 ? "warn" : "neutral"} />
         <MetricCard href="/queue" label="Gagal" value={overview.job_counts.failed || 0} tone={(overview.job_counts.failed || 0) > 0 ? "warn" : "neutral"} />
-        <MetricCard href="/publish" label="Belum Siap Sistem" value={systemBlocked} tone={systemBlocked > 0 ? "warn" : "neutral"} />
         <MetricCard href="/publish" label="Sudah Upload Private" value={uploadedPrivateSuccess} tone="good" />
-        <MetricCard href="/publish" label="Siap Production" value={readyProduction} tone={readyProduction > 0 ? "good" : "neutral"} />
+        <MetricCard href="/health" label="Engine OK" value={engineHealth?.status === "ok" ? "ok" : "warn"} tone={engineHealth?.status === "ok" ? "good" : "warn"} />
+        <MetricCard href="/channels" label="Channel Aktif" value={overview.channels.enabled} tone={overview.channels.enabled > 0 ? "good" : "neutral"} />
       </section>
 
       <section className="mt-6 ta-panel p-5">
@@ -272,9 +201,7 @@ export default async function DashboardPage() {
             <p className="ta-label text-brand-600">Kebutuhan Sistem</p>
             <h3 className="mt-2 text-lg font-semibold text-gray-900">Perhatian sistem</h3>
           </div>
-          <span className={`ta-status ${safeSystem ? "bg-success-50 text-success-700" : "bg-warning-50 text-warning-700"}`}>
-            {safeSystem ? "Sistem siap berjalan" : `${systemAlerts.length} perhatian`}
-          </span>
+          <span className={`ta-status ${safeSystem ? "bg-success-50 text-success-700" : "bg-warning-50 text-warning-700"}`}>{safeSystem ? "Sistem siap berjalan" : `${systemAlerts.length} perhatian`}</span>
         </div>
         <div className="mt-4">
           {safeSystem ? (

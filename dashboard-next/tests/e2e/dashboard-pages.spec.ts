@@ -1,6 +1,17 @@
 import { expect, test, type Page } from "@playwright/test";
 
-const PAGE_PATHS = ["/", "/publish", "/queue", "/channels", "/settings", "/analytics", "/jobs/1836", "/jobs/1811", "/jobs/854"];
+const PAGE_CASES = [
+  { path: "/", heading: "Dashboard monitoring bisnis" },
+  { path: "/publish", heading: "Pusat keputusan untuk video siap review." },
+  { path: "/queue", heading: "Buat video baru dan pantau proses." },
+  { path: "/channels", heading: "Kesiapan channel dan strategi konten." },
+  { path: "/settings", heading: "Pengaturan operasional dan safety." },
+  { path: "/analytics", heading: "Laporan operasional." },
+  { path: "/jobs/1836", heading: "Review video" },
+  { path: "/jobs/1811", heading: "Review video" },
+  { path: "/jobs/854", heading: "Review video" },
+  { path: "/health", heading: "Status sistem." },
+];
 const RAW_BLOCKERS = [/copyright_acknowledged/i, /production_blockers/i, /rights_assessment/i];
 
 async function collectPageNoise(page: Page) {
@@ -37,13 +48,12 @@ async function collectPageNoise(page: Page) {
   return { consoleErrors, pageErrors, failedRequests };
 }
 
-async function assertPageHealthy(page: Page, path: string) {
+async function assertPageHealthy(page: Page, path: string, heading: string) {
   const noise = await collectPageNoise(page);
   const response = await page.goto(path, { waitUntil: "commit" });
 
   expect(response, `No response received for ${path}`).not.toBeNull();
   expect(response?.status() ?? 599, `Unexpected HTTP status for ${path}`).toBeLessThan(400);
-
   const body = page.locator("body");
   await expect(body, `Body not visible for ${path}`).toBeVisible();
   await page.waitForTimeout(300);
@@ -59,8 +69,8 @@ async function assertPageHealthy(page: Page, path: string) {
   expect(noise.failedRequests, `Failed requests on ${path}: ${noise.failedRequests.join(" | ")}`).toEqual([]);
 }
 
-for (const path of PAGE_PATHS) {
-  test(`dashboard page loads cleanly: ${path}`, async ({ page }) => {
-    await assertPageHealthy(page, path);
+for (const pageCase of PAGE_CASES) {
+  test(`dashboard page loads cleanly: ${pageCase.path}`, async ({ page }) => {
+    await assertPageHealthy(page, pageCase.path, pageCase.heading);
   });
 }

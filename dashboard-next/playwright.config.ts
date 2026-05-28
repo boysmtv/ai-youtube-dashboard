@@ -8,7 +8,7 @@ export default defineConfig({
   timeout: 90_000,
   reporter: [["list"], ["html", { open: "never" }]],
   use: {
-    baseURL: "http://localhost:3001",
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3001",
     browserName: "chromium",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",

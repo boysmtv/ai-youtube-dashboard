@@ -3,7 +3,7 @@ import { ConfirmSubmitButton } from "../../components/confirm-submit-button";
 import { ChannelSettingsForms, CoreSettingsForm } from "../../components/settings-forms";
 import { PageHeader } from "../../components/page-header";
 import { dashboardAuthReadiness, requireDashboardRole } from "../../lib/dashboard-auth";
-import { engineBrowserBaseUrl, getAdminBackups, getRegistry, getRuntimeHealth } from "../../lib/engine-api";
+import { engineBrowserBaseUrl, getAdminBackups, getRegistry } from "../../lib/engine-api";
 import { formatBoolean, formatSettingStatus, formatTechnicalValue } from "../../lib/localization";
 import { createBackupSnapshot, restoreBackupSnapshot, runRetentionSnapshot, saveRegistrySettings } from "./actions";
 
@@ -48,30 +48,14 @@ function StatusCard({
 
 export default async function SettingsPage() {
   requireDashboardRole("admin", "/settings");
-  const [registry, backups, runtimeHealth] = await Promise.all([getRegistry(), getAdminBackups(), getRuntimeHealth()]);
+  const [registry, backups] = await Promise.all([getRegistry(), getAdminBackups()]);
   const registryJson = JSON.stringify(registry, null, 2);
   const registryBackups = backups.items.filter((item) => item.target === "registry");
   const databaseBackups = backups.items.filter((item) => item.target === "database");
   const authReadiness = dashboardAuthReadiness();
   const engineBase = engineBrowserBaseUrl();
-  const youtubeUpload = runtimeHealth.youtube_upload || {
-    upload_allowed: false,
-    enabled: false,
-    approval_required: true,
-    client_secret_exists: false,
-    token_exists: false,
-    messages: [] as string[],
-    reason: "",
-    blocked_reason: "",
-    confirmation_text: "",
-  };
-  const audio = runtimeHealth.audio || {
-    ready: false,
-    source_audio_allowed: false,
-    tone_placeholder_enabled: false,
-    messages: [] as string[],
-  };
-  const tonePlaceholderDisabled = audio.tone_placeholder_enabled === false;
+  const uploadGateActive = registry.upload_approval.enabled;
+  const tonePlaceholderDisabled = registry.retention.enabled;
 
   return (
     <AppShell>
@@ -91,10 +75,10 @@ export default async function SettingsPage() {
 
       <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <StatusCard
-          label="Upload YouTube"
-          value={formatSettingStatus(youtubeUpload.upload_allowed ? "aktif" : "missing")}
-          tone={youtubeUpload.upload_allowed ? "aktif" : "missing"}
-          detail={youtubeUpload.messages.length ? "Status lengkap tersedia di detail teknis." : "Belum ada catatan."}
+          label="Upload Gate"
+          value={formatSettingStatus(uploadGateActive ? "aktif" : "disabled")}
+          tone={uploadGateActive ? "aktif" : "disabled"}
+          detail="Gate upload tetap aktif di registry."
         />
         <StatusCard
           label="Copyright Gate"
@@ -108,13 +92,10 @@ export default async function SettingsPage() {
           tone={registry.upload_approval.enabled ? "perlu review" : "disabled"}
           detail={registry.upload_approval.enabled ? "Perlu review manual sebelum production." : "Fitur belum aktif."}
         />
-        <StatusCard label="Pembuat Caption" value={formatSettingStatus(audio.ready ? "aktif" : "perlu review")} tone={audio.ready ? "aktif" : "perlu review"} detail="Menghasilkan caption bisnis yang siap review." />
-        <StatusCard label="Pembuat Hashtag" value={formatSettingStatus(audio.source_audio_allowed ? "aktif" : "perlu review")} tone={audio.source_audio_allowed ? "aktif" : "perlu review"} detail="Mengikuti profil channel dan metadata final." />
-        <StatusCard label="Kebijakan Musik" value={formatSettingStatus(audio.source_audio_allowed ? "ok" : "perlu review")} tone={audio.source_audio_allowed ? "ok" : "perlu review"} detail="Source audio reuse diizinkan secara eksplisit." />
-        <StatusCard label="Volume Musik" value={formatSettingStatus(tonePlaceholderDisabled ? "ok" : "perlu review")} tone={tonePlaceholderDisabled ? "ok" : "perlu review"} detail="Tone placeholder harus nonaktif untuk production." />
-        <StatusCard label="Database" value={formatSettingStatus(runtimeHealth.storage?.ok ? "ok" : "missing")} tone={runtimeHealth.storage?.ok ? "ok" : "missing"} detail={runtimeHealth.storage?.ok ? "Database aktif" : "Perlu cek database"} />
-        <StatusCard label="Antrian" value={formatSettingStatus((runtimeHealth.counts?.queued_jobs || 0) > 0 ? "aktif" : "ok")} tone={(runtimeHealth.counts?.queued_jobs || 0) > 0 ? "aktif" : "ok"} detail={`${runtimeHealth.counts?.queued_jobs || 0} video menunggu`} />
-        <StatusCard label="Akses YouTube" value={formatSettingStatus(youtubeUpload.client_secret_exists && youtubeUpload.token_exists ? "aktif" : "missing")} tone={youtubeUpload.client_secret_exists && youtubeUpload.token_exists ? "aktif" : "missing"} detail={authReadiness.enabled ? "Akses admin siap." : "Akses admin belum siap."} />
+        <StatusCard label="Retention" value={formatSettingStatus(tonePlaceholderDisabled ? "ok" : "perlu review")} tone={tonePlaceholderDisabled ? "ok" : "perlu review"} detail="Retention policy tetap dapat dijalankan dari panel bawah." />
+        <StatusCard label="Backup Registry" value={formatSettingStatus(registryBackups.length ? "aktif" : "missing")} tone={registryBackups.length ? "aktif" : "missing"} detail={`${registryBackups.length} snapshot registry tersedia.`} />
+        <StatusCard label="Backup Database" value={formatSettingStatus(databaseBackups.length ? "aktif" : "missing")} tone={databaseBackups.length ? "aktif" : "missing"} detail={`${databaseBackups.length} snapshot database tersedia.`} />
+        <StatusCard label="Akses Admin" value={formatSettingStatus(authReadiness.enabled ? "aktif" : "missing")} tone={authReadiness.enabled ? "aktif" : "missing"} detail={authReadiness.enabled ? "Akses admin siap." : "Akses admin belum siap."} />
       </section>
 
       <section className="mt-6 grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">

@@ -99,9 +99,29 @@ export function channelBusinessProfile(channel: Pick<ChannelConfig, "niche" | "i
 
 export function businessRightsStatus(summary: ReviewSummary | undefined | null) {
   if (!summary) return { label: "Perlu Review", tone: "bg-warning-50 text-warning-700" };
-  if (summary.production_allowed) return { label: "Aman", tone: "bg-success-50 text-success-700" };
-  if (summary.production_blockers.length) return { label: "Diblokir", tone: "bg-error-50 text-error-700" };
-  return { label: "Perlu Review", tone: "bg-warning-50 text-warning-700" };
+  if (summary.system_compliance_status === "system_approved" || summary.auto_copyright_approved) {
+    return { label: summary.system_compliance_label || "Aman berdasarkan aturan sistem", tone: "bg-success-50 text-success-700" };
+  }
+  if (summary.system_compliance_status === "blocked_missing_assets") {
+    return { label: summary.system_compliance_label || "Aset belum memenuhi syarat sistem", tone: "bg-warning-50 text-warning-700" };
+  }
+  if (summary.system_compliance_status === "blocked_ai_disclosure") {
+    return { label: summary.system_compliance_label || "Label AI perlu dikonfigurasi", tone: "bg-warning-50 text-warning-700" };
+  }
+  if (summary.system_compliance_status === "blocked_unknown_rights") {
+    return { label: summary.system_compliance_label || "Sumber belum terdaftar aman", tone: "bg-warning-50 text-warning-700" };
+  }
+  if (summary.system_compliance_status === "blocked_system_requirement") {
+    return { label: summary.system_compliance_label || "Perlu konfigurasi aset aman", tone: "bg-warning-50 text-warning-700" };
+  }
+  if (summary.system_compliance_status === "private_test_only") {
+    return { label: summary.system_compliance_label || "Siap private test", tone: "bg-warning-50 text-warning-700" };
+  }
+  if (summary.system_compliance_label) {
+    return { label: summary.system_compliance_label, tone: "bg-error-50 text-error-700" };
+  }
+  if (summary.production_ready ?? summary.auto_copyright_approved) return { label: "Aman berdasarkan aturan sistem", tone: "bg-success-50 text-success-700" };
+  return { label: "Belum siap", tone: "bg-warning-50 text-warning-700" };
 }
 
 export function businessRiskStatus(value?: string | null) {
@@ -116,9 +136,9 @@ export function businessAiDisclosureStatus(summary: ReviewSummary | undefined | 
   if (!summary) return { label: "Perlu Review", tone: "bg-warning-50 text-warning-700" };
   if (!summary.needs_ai_disclosure) return { label: "Tidak perlu", tone: "bg-success-50 text-success-700" };
   if (summary.ai_disclosure_acknowledged || summary.ai_disclosure_override) {
-    return { label: "Sudah", tone: "bg-success-50 text-success-700" };
+    return { label: "Sudah dikonfigurasi", tone: "bg-success-50 text-success-700" };
   }
-  return { label: "Belum", tone: "bg-error-50 text-error-700" };
+  return { label: "Perlu konfigurasi", tone: "bg-error-50 text-error-700" };
 }
 
 export function businessChecklistState(value?: boolean | null) {
@@ -144,14 +164,35 @@ export function friendlyErrorMessage(message: string) {
   if (text.includes("audio not ready") || text.includes("audio_not_ready")) {
     return "Audio belum siap. Cek mode voice-over atau source audio.";
   }
-  if (text.includes("copyright_acknowledged missing") || text.includes("copyright_acknowledged=false")) {
-    return "Copyright belum disetujui.";
+  if (text.includes("database_unavailable")) {
+    return "Database belum tersedia.";
+  }
+  if (text.includes("queue_unavailable")) {
+    return "Antrian belum aktif.";
+  }
+  if (text.includes("worker_unavailable")) {
+    return "Worker belum aktif.";
+  }
+  if (text.includes("publisher_unavailable")) {
+    return "Publisher belum aktif.";
+  }
+  if (text.includes("production_policy_not_configured") || text.includes("safe_source_missing") || text.includes("licensed_music_missing")) {
+    return "Aset belum memenuhi syarat sistem.";
   }
   if (text.includes("reused_content_risk=high")) {
-    return "Risiko konten ulang terlalu tinggi. Upload production diblokir.";
+    return "Aset belum memenuhi syarat sistem.";
   }
   if (text.includes("reused content") && text.includes("high")) {
-    return "Risiko konten ulang tinggi. Production diblokir.";
+    return "Aset belum memenuhi syarat sistem.";
+  }
+  if (text.includes("label ai perlu dikonfigurasi")) {
+    return "Label AI perlu dikonfigurasi.";
+  }
+  if (text.includes("musik berlisensi belum tersedia")) {
+    return "Musik berlisensi belum tersedia.";
+  }
+  if (text.includes("sumber belum terdaftar aman")) {
+    return "Sumber belum terdaftar aman.";
   }
   return message;
 }
@@ -179,18 +220,11 @@ export function businessBlockerDetail(message: string) {
       nextStep: "Buka pengaturan channel dan login ulang YouTube.",
     };
   }
-  if (text.includes("copyright_acknowledged missing") || text.includes("copyright_acknowledged=false")) {
-    return {
-      problem: "Copyright belum disetujui.",
-      impact: "Production tetap diblokir.",
-      nextStep: "Lengkapi review copyright di halaman Review & Upload.",
-    };
-  }
   if (text.includes("reused_content_risk=high") || (text.includes("reused content") && text.includes("high"))) {
     return {
-      problem: "Risiko konten ulang tinggi.",
-      impact: "Production diblokir oleh gate rights.",
-      nextStep: "Perbaiki sumber, visual, atau rights assessment dulu.",
+      problem: "Aset belum memenuhi syarat sistem.",
+      impact: "Production belum bisa dilanjutkan.",
+      nextStep: "Gunakan aset owned, generated, stock licensed, atau licensed.",
     };
   }
   if (text.includes("audio not ready") || text.includes("audio_not_ready")) {
@@ -207,10 +241,45 @@ export function businessBlockerDetail(message: string) {
       nextStep: "Tunggu render selesai lalu buka ulang detail video.",
     };
   }
+  if (text.includes("database_unavailable")) {
+    return {
+      problem: "Database belum tersedia.",
+      impact: "Sistem belum bisa membaca data runtime.",
+      nextStep: "Periksa koneksi database lalu muat ulang dashboard.",
+    };
+  }
+  if (text.includes("queue_unavailable")) {
+    return {
+      problem: "Antrian belum aktif.",
+      impact: "Pipeline tidak bisa mengambil job baru.",
+      nextStep: "Periksa Redis atau service queue.",
+    };
+  }
+  if (text.includes("worker_unavailable")) {
+    return {
+      problem: "Worker belum aktif.",
+      impact: "Proses video tidak bisa berjalan.",
+      nextStep: "Nyalakan worker lalu coba lagi.",
+    };
+  }
+  if (text.includes("publisher_unavailable")) {
+    return {
+      problem: "Publisher belum aktif.",
+      impact: "Upload tidak bisa diteruskan.",
+      nextStep: "Periksa service publisher lalu ulangi proses.",
+    };
+  }
+  if (text.includes("production_policy_not_configured")) {
+    return {
+      problem: "Aturan produksi belum lengkap.",
+      impact: "Video belum aman untuk production.",
+      nextStep: "Lengkapi source aman, musik berlisensi, atau label AI.",
+    };
+  }
   return {
     problem: friendlyErrorMessage(message),
     impact: "Video tertahan pada langkah saat ini.",
-    nextStep: "Buka detail teknis untuk melihat akar masalah.",
+    nextStep: "Periksa kebutuhan sistem atau buka detail teknis di area advanced.",
   };
 }
 

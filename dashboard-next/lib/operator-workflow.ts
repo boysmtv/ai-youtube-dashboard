@@ -45,9 +45,9 @@ function uploadDone(reviewSummary: ReviewSummary | undefined, publishState: Publ
 
 export function operatorDecisionForJob(job: JobRecord, reviewSummary?: ReviewSummary | null, publishState?: PublishStatePayload | null): OperatorDecision {
   const status = lower(job.status);
-  const productionAllowed = Boolean(reviewSummary?.production_allowed);
-  const privateAllowed = Boolean(reviewSummary?.private_validation_allowed ?? reviewSummary?.production_allowed);
-  const blockedReason = reviewSummary?.production_blockers?.[0] || friendlyErrorMessage(job.last_error || "") || null;
+  const productionAllowed = Boolean(reviewSummary?.production_ready ?? reviewSummary?.auto_copyright_approved);
+  const privateAllowed = Boolean(reviewSummary?.private_test_ready ?? reviewSummary?.private_validation_allowed ?? reviewSummary?.production_ready);
+  const blockedReason = reviewSummary?.system_compliance_reason || friendlyErrorMessage(job.last_error || "") || null;
 
   if (status === "failed" || status === "cancelled" || status === "canceled") {
     return {
@@ -65,7 +65,7 @@ export function operatorDecisionForJob(job: JobRecord, reviewSummary?: ReviewSum
       return {
         label: "Siap Production",
         tone: "good",
-        explanation: "Private test sudah lolos dan rights gate juga aman.",
+        explanation: "Private test sudah lolos dan status sistem juga aman.",
         nextAction: "Lihat laporan",
         targetLink: "/analytics",
       };
@@ -73,10 +73,10 @@ export function operatorDecisionForJob(job: JobRecord, reviewSummary?: ReviewSum
     return {
       label: "Siap Upload Private Test",
       tone: "good",
-      explanation: "Upload private sudah selesai. Lanjut cek rights untuk production.",
-      nextAction: "Cek copyright",
-      targetLink: `/jobs/${job.id}#copyright-detail`,
-      blockerReason: reviewSummary?.production_blockers?.length ? reviewSummary.production_blockers[0] : null,
+      explanation: "Upload private sudah selesai. Status sistem sudah bisa dibaca dari ringkasan compliance.",
+      nextAction: "Lihat ringkasan sistem",
+      targetLink: `/jobs/${job.id}#review`,
+      blockerReason: blockedReason,
     };
   }
 
@@ -84,20 +84,20 @@ export function operatorDecisionForJob(job: JobRecord, reviewSummary?: ReviewSum
     return {
       label: "Siap Upload Private Test",
       tone: "good",
-      explanation: "Review sudah aman. Jalur berikutnya adalah private test.",
+      explanation: reviewSummary?.system_compliance_label || "Review sudah aman berdasarkan aturan sistem.",
       nextAction: "Upload private test",
       targetLink: `/jobs/${job.id}#review`,
       blockerReason: null,
     };
   }
 
-  if (reviewSummary?.production_blockers?.length) {
+  if (reviewSummary?.system_compliance_status && reviewSummary.system_compliance_status !== "system_approved") {
     return {
       label: "Belum Bisa Upload",
       tone: "warn",
-      explanation: "Masih ada blocker copyright atau disclosure yang perlu dibereskan.",
-      nextAction: "Lengkapi data copyright",
-      targetLink: `/jobs/${job.id}#copyright-detail`,
+      explanation: reviewSummary.system_compliance_reason || "Masih ada status sistem yang perlu dibereskan.",
+      nextAction: reviewSummary.system_compliance_next_action || "Lengkapi konfigurasi aset",
+      targetLink: `/jobs/${job.id}#review`,
       blockerReason: blockedReason,
     };
   }
@@ -143,20 +143,20 @@ export function operatorDecisionForJob(job: JobRecord, reviewSummary?: ReviewSum
     };
   }
 
-  return {
-    label: "Perlu Review",
-    tone: "warn",
-    explanation: "Metadata dan review belum lengkap.",
-    nextAction: "Review video",
-    targetLink: `/jobs/${job.id}#review`,
-    blockerReason: blockedReason,
-  };
+    return {
+      label: "Perlu Review",
+      tone: "warn",
+      explanation: "Metadata dan review belum lengkap.",
+      nextAction: "Review video",
+      targetLink: `/jobs/${job.id}#review`,
+      blockerReason: blockedReason,
+    };
 }
 
 export function buildJobWorkflowSteps(job: JobRecord, reviewSummary?: ReviewSummary | null, publishState?: PublishStatePayload | null): OperatorWorkflowStep[] {
   const status = lower(job.status);
-  const productionAllowed = Boolean(reviewSummary?.production_allowed);
-  const privateAllowed = Boolean(reviewSummary?.private_validation_allowed ?? reviewSummary?.production_allowed);
+  const productionAllowed = Boolean(reviewSummary?.production_ready ?? reviewSummary?.auto_copyright_approved);
+  const privateAllowed = Boolean(reviewSummary?.private_test_ready ?? reviewSummary?.private_validation_allowed ?? reviewSummary?.production_ready);
   const uploaded = uploadDone(reviewSummary || undefined, publishState || undefined);
   const upload = latestUploadState(reviewSummary || undefined, publishState || undefined);
   const failed = hasStatus(status, ["failed", "cancelled", "canceled"]);
@@ -205,38 +205,38 @@ export function buildJobWorkflowSteps(job: JobRecord, reviewSummary?: ReviewSumm
     {
       key: "copyright",
       number: 4,
-      label: "Cek Copyright",
-      status: productionAllowed ? "done" : reviewSummary?.production_blockers?.length ? "blocked" : rendered || uploaded ? "current" : "pending",
-      explanation: reviewSummary?.asset_provenance_summary ? reviewSummary.asset_provenance_summary : "Periksa rights, musik, visual, dan label AI.",
-      recommendedAction: productionAllowed ? "Lanjut private test" : "Cek copyright",
-      targetLink: `/jobs/${job.id}#copyright-detail`,
-      blockerReason: reviewSummary?.production_blockers?.[0] || null,
+      label: "Cek Sistem",
+      status: productionAllowed ? "done" : reviewSummary?.system_compliance_status && reviewSummary.system_compliance_status !== "system_approved" ? "blocked" : rendered || uploaded ? "current" : "pending",
+      explanation: reviewSummary?.system_compliance_reason ? reviewSummary.system_compliance_reason : "Periksa compliance aset, label AI, dan kesiapan upload.",
+      recommendedAction: productionAllowed ? "Lanjut private test" : "Lihat ringkasan sistem",
+      targetLink: `/jobs/${job.id}#review`,
+      blockerReason: reviewSummary?.system_compliance_reason || null,
     },
     {
       key: "private-upload",
       number: 5,
       label: "Upload Private Test",
-      status: uploaded ? "done" : productionAllowed ? "current" : reviewSummary?.production_blockers?.length ? "blocked" : "pending",
+      status: uploaded ? "done" : productionAllowed ? "current" : reviewSummary?.system_compliance_status && reviewSummary.system_compliance_status !== "system_approved" ? "blocked" : "pending",
       explanation: uploaded
         ? `Private upload ${uploadStatusLabel} sudah tercatat.`
         : productionAllowed
           ? "Private test aman dijalankan untuk validasi teknis."
-          : "Upload private belum bisa dijalankan sampai review aman.",
+          : reviewSummary?.system_compliance_next_action || "Upload private belum bisa dijalankan sampai sistem siap.",
       recommendedAction: uploaded ? "Lihat riwayat upload" : "Upload private test",
       targetLink: uploaded ? "/publish#history" : `/jobs/${job.id}#review`,
-      blockerReason: uploaded ? null : reviewSummary?.production_blockers?.[0] || null,
+      blockerReason: uploaded ? null : reviewSummary?.system_compliance_reason || null,
     },
     {
       key: "production",
       number: 6,
       label: "Siap Production",
-      status: productionAllowed ? "current" : reviewSummary?.production_blockers?.length ? "blocked" : "pending",
+      status: productionAllowed ? "current" : reviewSummary?.system_compliance_status && reviewSummary.system_compliance_status !== "system_approved" ? "blocked" : "pending",
       explanation: productionAllowed
-        ? "Rights gate lolos. Konten sudah layak masuk proses produksi final."
-        : "Production belum aman karena rights gate belum lolos.",
-      recommendedAction: productionAllowed ? "Lihat laporan" : "Lengkapi data copyright",
-      targetLink: productionAllowed ? "/analytics" : `/jobs/${job.id}#copyright-detail`,
-      blockerReason: productionAllowed ? null : reviewSummary?.production_blockers?.[0] || null,
+        ? "Aset aman berdasarkan aturan sistem. Production bisa diproses."
+        : reviewSummary?.system_compliance_reason || "Production belum aman karena aturan sistem belum terpenuhi.",
+      recommendedAction: productionAllowed ? "Lihat laporan" : reviewSummary?.system_compliance_next_action || "Lengkapi konfigurasi aset",
+      targetLink: productionAllowed ? "/analytics" : `/jobs/${job.id}#review`,
+      blockerReason: productionAllowed ? null : reviewSummary?.system_compliance_reason || null,
     },
   ];
 }
@@ -280,13 +280,13 @@ export function buildQueueWorkflowSteps(summary: OverviewPayload, readyCount: nu
     {
       key: "copyright",
       number: 4,
-      label: "Cek Copyright",
+      label: "Cek Sistem",
       status: blockedCount > 0 ? "blocked" : "pending",
-      explanation: "Periksa blocker rights sebelum production.",
-      recommendedAction: "Cek copyright",
+      explanation: "Periksa status compliance sebelum production.",
+      recommendedAction: "Lihat ringkasan sistem",
       targetLink: "/publish",
       count: blockedCount,
-      blockerReason: blockedCount > 0 ? "Ada video yang masih perlu ditinjau hak pakainya." : null,
+      blockerReason: blockedCount > 0 ? "Ada video yang belum memenuhi aturan sistem." : null,
     },
     {
       key: "private-upload",
@@ -364,13 +364,13 @@ export function buildHomeWorkflowSteps({
     {
       key: "copyright",
       number: 4,
-      label: "Cek Copyright",
+      label: "Cek Sistem",
       status: blockedCount > 0 ? "blocked" : "pending",
-      explanation: "Pastikan rights, musik, visual, dan disclosure aman.",
-      recommendedAction: "Cek copyright",
+      explanation: "Pastikan aset, musik, visual, dan label AI sudah sesuai aturan sistem.",
+      recommendedAction: "Lihat ringkasan sistem",
       targetLink: "/publish",
       count: blockedCount,
-      blockerReason: blockedCount > 0 ? "Ada video yang masih diblokir rights gate." : null,
+      blockerReason: blockedCount > 0 ? "Ada video yang belum memenuhi aturan sistem." : null,
     },
     {
       key: "private-upload",

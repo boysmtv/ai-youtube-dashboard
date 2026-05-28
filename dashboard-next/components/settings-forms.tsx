@@ -60,7 +60,7 @@ export function CoreSettingsForm({ registry }: Readonly<{ registry: RegistryPayl
       <div className="mt-4 flex flex-wrap gap-4 text-sm font-semibold text-gray-700">
         <label className="flex items-center gap-2">
           <input className="ta-check" name="upload_approval_enabled" type="checkbox" defaultChecked={registry.upload_approval.enabled} />
-          Blokir upload jika copyright belum aman
+          Blokir upload jika aset sistem belum siap
         </label>
         <label className="flex items-center gap-2">
           <input className="ta-check" name="upload_approval_require_operator_name" type="checkbox" defaultChecked={registry.upload_approval.require_operator_name} />
@@ -88,7 +88,7 @@ export function CoreSettingsForm({ registry }: Readonly<{ registry: RegistryPayl
         </label>
       </div>
       <div className="mt-4 rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
-        <p className="ta-label text-brand-600">Copyright & Safety</p>
+        <p className="ta-label text-brand-600">Aset & Safety</p>
         <div className="mt-3 grid gap-2 md:grid-cols-2">
           <div className="rounded-xl bg-white px-4 py-3">Blokir risiko konten ulang tinggi</div>
           <div className="rounded-xl bg-white px-4 py-3">Wajib label AI jika konten realistis</div>

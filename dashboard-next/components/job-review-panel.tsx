@@ -2,15 +2,14 @@ import Link from "next/link";
 import type { JobRecord, JobTechnicalPayload, PublishStatePayload, ReviewModeOption, ReviewSummary } from "../lib/engine-types";
 import {
   businessAiDisclosureStatus,
-  businessBlockerDetail,
   businessChecklistState,
   businessRiskStatus,
+  businessRightsStatus,
   businessUploadStatus,
   businessUploadModeLabel,
   businessUploadModeOptions,
   summaryText,
 } from "../lib/business-copy";
-import { formatBoolean } from "../lib/localization";
 import { saveJobReviewMetadata } from "../app/jobs/actions";
 
 function SummaryRow({ label, value }: Readonly<{ label: string; value: string }>) {
@@ -38,17 +37,6 @@ function ModeCard({ option, selected }: Readonly<{ option: ReviewModeOption; sel
         </div>
       </div>
     </label>
-  );
-}
-
-function blockerMessage(message: string) {
-  const detail = businessBlockerDetail(message);
-  return (
-    <div className="rounded-2xl border border-warning-200 bg-warning-50 p-4 text-sm text-warning-900">
-      <p className="font-semibold">{detail.problem}</p>
-      <p className="mt-2">Dampak: {detail.impact}</p>
-      <p className="mt-2">Langkah berikutnya: {detail.nextStep}</p>
-    </div>
   );
 }
 
@@ -106,11 +94,16 @@ export function JobReviewPanel({
   }
 
   const uploadModes = businessUploadModeOptions(summary.available_upload_modes);
-  const blockers = summary.production_blockers.length ? summary.production_blockers : [];
+  const operatorAlerts = summary.operator_alerts || [];
   const latestUploads = (publishState.latest_uploads || (publishState.latest_upload ? [publishState.latest_upload] : [])).slice(0, 3);
   const scriptStatus = riskStatus(summary);
   const sourceAudio = sourceAudioStatus(summary);
   const aiLabel = businessAiDisclosureStatus(summary);
+  const rightsLabel = businessRightsStatus(summary);
+  const productionAllowed = Boolean(summary.production_ready ?? summary.auto_copyright_approved);
+  const systemReason = summary.system_compliance_reason || (productionAllowed ? "Semua aset memenuhi aturan sistem." : "Aset belum memenuhi syarat sistem.");
+  const systemNextAction = summary.system_compliance_next_action || (productionAllowed ? "Lanjutkan Upload Private Test atau Production sesuai mode yang tersedia." : "Lengkapi konfigurasi aset aman.");
+  const productionReady = productionAllowed;
 
   return (
     <div className="ta-panel p-5">
@@ -118,23 +111,23 @@ export function JobReviewPanel({
         <div>
           <p className="ta-label text-brand-600">Review & Upload</p>
           <h3 className="mt-2 text-xl font-semibold text-gray-900">Decision center video</h3>
-          <p className="mt-2 text-sm text-gray-500">Cek status utama, metadata final, copyright, lalu pilih mode upload yang aman.</p>
+          <p className="mt-2 text-sm text-gray-500">Cek status utama, metadata final, dan compliance sistem lalu pilih mode upload yang tersedia.</p>
         </div>
-        <span className={`ta-status ${summary.production_allowed ? "bg-success-50 text-success-700" : "bg-warning-50 text-warning-700"}`}>{summary.production_allowed ? "Aman" : "Perlu Review"}</span>
+        <span className={`ta-status ${rightsLabel.tone}`}>{rightsLabel.label}</span>
       </div>
 
       <div className="mt-5 rounded-2xl border border-brand-100 bg-brand-25 p-4">
         <p className="ta-label text-brand-600">Langkah Berikutnya</p>
         <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <strong className="block text-gray-900">{summary.production_allowed ? "Lanjut ke upload private" : "Perbaiki blocker dulu"}</strong>
-            <p className="mt-1 text-sm text-gray-600">{summary.production_allowed ? "Metadata final dan rights gate sudah cukup untuk melanjutkan." : "Periksa blocker copyright dan disclosure sebelum lanjut."}</p>
+            <strong className="block text-gray-900">{productionReady ? "Aman berdasarkan aturan sistem" : rightsLabel.label}</strong>
+            <p className="mt-1 text-sm text-gray-600">{systemReason}</p>
           </div>
-          <Link className="ta-button" href={technicalHref}>
-            Lanjut
+          <Link className="ta-button" href={productionReady ? "#review" : "#detail-teknis"}>
+            {productionReady ? "Lanjut Upload Private Test" : "Perbaiki Kebutuhan Sistem"}
           </Link>
         </div>
-        {blockers.length ? <div className="mt-3">{blockers.map((item) => blockerMessage(item))}</div> : null}
+        <p className="mt-3 text-sm text-gray-700">{systemNextAction}</p>
       </div>
 
       <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -149,7 +142,7 @@ export function JobReviewPanel({
         </div>
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
           <p className="ta-label">Status Utama</p>
-          <strong className={`mt-2 block ${summary.production_allowed ? "text-success-700" : "text-warning-700"}`}>{summary.production_allowed ? "Aman" : "Perlu Review"}</strong>
+          <strong className={`mt-2 block ${productionReady ? "text-success-700" : "text-warning-700"}`}>{rightsLabel.label}</strong>
         </div>
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
           <p className="ta-label">Judul Final</p>
@@ -175,8 +168,9 @@ export function JobReviewPanel({
 
         <div className="space-y-4">
           <div className="rounded-2xl border border-gray-200 bg-white p-4">
-            <p className="ta-label text-brand-600">Cek Keamanan Copyright</p>
+            <p className="ta-label text-brand-600">Cek Keamanan Sistem</p>
             <div className="mt-3 space-y-2">
+              <SummaryRow label="Status Sistem" value={rightsLabel.label} />
               <SummaryRow label="Naskah asli" value={scriptStatus.label} />
               <SummaryRow label="Voice-over legal" value={checklistStatusLabel(summary.voiceover_legal).label} />
               <SummaryRow label="Visual aman" value={checklistStatusLabel(summary.visual_rights_ok).label} />
@@ -184,21 +178,34 @@ export function JobReviewPanel({
               <SummaryRow label="Source audio aman untuk production" value={sourceAudio.label} />
               <SummaryRow label="Risiko konten ulang" value={riskStatus(summary).label} />
               <SummaryRow label="Label AI" value={aiLabel.label} />
-              <SummaryRow label="Konfirmasi copyright" value={checklistStatusLabel(summary.copyright_acknowledged, true).label} />
             </div>
-            {blockers.length ? <div className="mt-4 grid gap-3">{blockers.map((item) => blockerMessage(item))}</div> : null}
+            {operatorAlerts.length ? (
+              <div className="mt-4 grid gap-3">
+                {operatorAlerts.map((alert) => {
+                  const item = alert as Record<string, unknown>;
+                  return (
+                    <div key={`${String(item.type || item.label || "alert")}-${String(item.reason || "")}`} className="rounded-xl border border-warning-200 bg-warning-50 p-4 text-sm text-warning-900">
+                      <strong className="block">{String(item.label || "Perhatian Sistem")}</strong>
+                      <p className="mt-2">{String(item.reason || "Ada kebutuhan sistem yang perlu ditangani.")}</p>
+                      <p className="mt-2 text-xs text-warning-800">Langkah berikutnya: {String(item.next_action || "Tindak lanjuti kebutuhan sistem.")}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="mt-4 rounded-xl border border-success-200 bg-success-50 px-4 py-3 text-sm text-success-900">Sistem siap berjalan.</div>
+            )}
           </div>
           <div className="rounded-2xl border border-gray-200 bg-white p-4">
-            <p className="ta-label text-brand-600">Cek Label AI</p>
+            <p className="ta-label text-brand-600">Kebutuhan AI</p>
             <div className="mt-3 space-y-2">
-              <SummaryRow label="AI generated" value={formatBoolean(summary.ai_generated)} />
-              <SummaryRow label="Realistis" value={formatBoolean(summary.realistic_synthetic_content)} />
-              <SummaryRow label="Butuh disclosure" value={formatBoolean(summary.needs_ai_disclosure)} />
               <SummaryRow label="Status disclosure" value={aiLabel.label} />
+              <SummaryRow label="Kondisi konten" value={summary.needs_ai_disclosure ? "Label AI perlu dikonfigurasi" : "Tidak perlu label AI"} />
+              <SummaryRow label="Arah sistem" value={summary.system_compliance_next_action || "Selesaikan konfigurasi yang dibutuhkan."} />
             </div>
-            {summary.needs_ai_disclosure && !summary.ai_disclosure_acknowledged && !summary.ai_disclosure_override ? (
+            {summary.system_compliance_status === "blocked_ai_disclosure" ? (
               <div className="mt-4 rounded-xl border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-900">
-                Konten ini membutuhkan disclosure AI sebelum production.
+                Label AI perlu dikonfigurasi sebelum konten ini bisa masuk production.
               </div>
             ) : null}
           </div>
@@ -240,11 +247,11 @@ export function JobReviewPanel({
         <div className="grid gap-4 lg:grid-cols-2">
           <label className="flex items-start gap-2 text-sm font-semibold text-gray-700">
             <input className="ta-check mt-1" name="ai_disclosure_acknowledged" type="checkbox" defaultChecked={summary.ai_disclosure_acknowledged} />
-            <span>Label AI sudah dicek dan diakui.</span>
+            <span>Label AI sudah dikonfigurasi sesuai metadata.</span>
           </label>
           <label className="flex items-start gap-2 text-sm font-semibold text-gray-700">
             <input className="ta-check mt-1" name="ai_disclosure_override" type="checkbox" defaultChecked={summary.ai_disclosure_override} />
-            <span>Override AI disclosure dicatat untuk review manual.</span>
+            <span>Override AI disclosure dicatat untuk kebutuhan admin.</span>
           </label>
         </div>
 
@@ -284,16 +291,16 @@ export function JobReviewPanel({
             )}
           </div>
         </div>
-        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-          <p className="ta-label text-brand-600">Ringkasan Publikasi</p>
-          <div className="mt-3 space-y-2">
-            <SummaryRow label="Status Upload Terakhir" value={publishState.latest_upload ? businessUploadStatus(publishState.latest_upload.status) : "Menunggu"} />
-            <SummaryRow label="Mode Upload" value={businessUploadModeLabel(summary.selected_upload_mode)} />
-            <SummaryRow label="Status Channel" value={publishState.youtube.privacy_status === "private" ? "Private" : "Belum tersedia"} />
-            <SummaryRow label="Publish Siap" value={formatBoolean(publishState.ready_to_push)} />
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+            <p className="ta-label text-brand-600">Ringkasan Publikasi</p>
+            <div className="mt-3 space-y-2">
+              <SummaryRow label="Status Upload Terakhir" value={publishState.latest_upload ? businessUploadStatus(publishState.latest_upload.status) : "Menunggu"} />
+              <SummaryRow label="Mode Upload" value={businessUploadModeLabel(summary.selected_upload_mode)} />
+              <SummaryRow label="Status Channel" value={publishState.youtube.privacy_status === "private" ? "Private" : "Belum tersedia"} />
+              <SummaryRow label="Publish Siap" value={publishState.ready_to_push ? "Siap" : "Belum siap"} />
+            </div>
           </div>
         </div>
-      </div>
 
       <details className="mt-5 rounded-2xl border border-gray-200 bg-white p-5" id="detail-teknis">
         <summary className="cursor-pointer list-none">

@@ -32,7 +32,6 @@ function publishPayload(formData: FormData) {
     approval_operator_name: String(formData.get("approval_operator_name") || ""),
     approval_reason: String(formData.get("approval_reason") || ""),
     require_credentials: checked(formData.get("require_credentials")),
-    copyright_acknowledged: checked(formData.get("copyright_acknowledged")),
     upload_mode: String(formData.get("upload_mode") || "private_validation") as UploadMode,
   };
 }

@@ -108,8 +108,8 @@ export function JobRealtimePanel({ initial, syncSettings }: Readonly<{ initial: 
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
           <p className="ta-label">Preview status</p>
           <div className="mt-3 space-y-2 text-sm text-gray-700">
-            <p>{payload.preview.message || (payload.preview.available ? "Video siap ditonton" : "Preview belum tersedia")}</p>
-            <p className="text-xs text-gray-500">Keamanan produksi: {payload.rights_summary.production_allowed ? "aman" : "perlu review"}</p>
+          <p>{payload.preview.message || (payload.preview.available ? "Video siap ditonton" : "Preview belum tersedia")}</p>
+            <p className="text-xs text-gray-500">Status sistem: {payload.system_compliance_label || (payload.review_summary?.system_compliance_label ?? "Belum siap")}</p>
             <p className="text-xs text-gray-500">Pembaruan terakhir: {payload.updated_at || payload.generated_at}</p>
             {previewLink ? (
               <a className="inline-flex font-semibold text-brand-600 hover:text-brand-700" href={previewLink} target="_blank" rel="noreferrer">

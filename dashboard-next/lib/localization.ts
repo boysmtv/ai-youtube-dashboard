@@ -47,9 +47,18 @@ const BLOCKER_LABELS: Record<string, string> = {
   missing_token: "Channel perlu login ulang YouTube.",
   missing_client_secret: "Client secret belum tersedia.",
   missing_curated_sources: "Sumber kurasi belum lengkap.",
-  copyright_acknowledged_missing: "Copyright belum disetujui.",
-  "copyright_acknowledged=false": "Copyright belum disetujui.",
-  "reused_content_risk=high": "Risiko konten ulang terlalu tinggi.",
+  service_down: "Service perlu perhatian.",
+  database_unavailable: "Database belum tersedia.",
+  queue_unavailable: "Antrian belum aktif.",
+  worker_unavailable: "Worker belum aktif.",
+  publisher_unavailable: "Publisher belum aktif.",
+  quota_low: "Kuota rendah.",
+  quota_exhausted: "Kuota habis.",
+  channel_login_missing: "Login channel perlu diperbarui.",
+  safe_source_missing: "Sumber belum terdaftar aman.",
+  licensed_music_missing: "Musik berlisensi belum tersedia.",
+  production_policy_not_configured: "Aturan produksi belum lengkap.",
+  "reused_content_risk=high": "Aset belum memenuhi syarat sistem.",
 };
 
 const SETTING_STATUS_LABELS: Record<string, string> = {

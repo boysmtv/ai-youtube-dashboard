@@ -126,7 +126,7 @@ export default async function JobDetailPage({
           { href: "/queue", label: "Produksi Video" },
           { href: `/jobs/${summary.job.id}`, label: "Detail Video" },
         ]}
-        description="Halaman ini menempatkan preview, status utama, metadata final, copyright, dan label AI di depan. Detail teknis hanya dimuat saat diminta."
+        description="Halaman ini menempatkan preview, status utama, metadata final, label AI, dan status sistem di depan. Detail teknis hanya dimuat saat diminta."
         eyebrow="Video Detail"
         title="Review video"
       />
@@ -155,8 +155,8 @@ export default async function JobDetailPage({
         <p className="ta-label text-brand-600">Alasan / langkah berikutnya</p>
         <p className="mt-2">{summary.next_action.reason}</p>
         <div className="mt-4 flex flex-wrap gap-2">
-          <Link className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100" href="#copyright-detail">
-            Cek Detail Copyright
+          <Link className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100" href="#review">
+            Cek Detail Sistem
           </Link>
           <Link className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50" href="#detail-teknis">
             Lihat Detail Teknis

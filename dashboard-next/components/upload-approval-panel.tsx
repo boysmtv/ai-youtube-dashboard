@@ -47,11 +47,6 @@ export function UploadApprovalPanel({
     const note = String(formData.get("note") || "").trim();
     const expiresInMinutesText = String(formData.get("expires_in_minutes") || "").trim();
     const expiresInMinutes = expiresInMinutesText ? Number(expiresInMinutesText) : uploadGuard.session_minutes;
-    const copyrightAcknowledged = formData.get("copyright_acknowledged") === "on" || formData.get("copyright_acknowledged") === "true";
-    if (!copyrightAcknowledged) {
-      setNotice("Peringatan copyright harus dicentang sebelum persetujuan manual diberikan.");
-      return;
-    }
     setPendingKey(`${jobId}:${platform}:approve`);
     setNotice("");
     startTransition(async () => {
@@ -103,15 +98,15 @@ export function UploadApprovalPanel({
         <span className="ta-status bg-warning-50 text-warning-700">{items.length} video</span>
       </div>
       <div className="mt-4 rounded-xl border border-warning-200 bg-warning-50 p-4 text-sm text-warning-900">
-        <strong className="block">Peringatan copyright</strong>
+        <strong className="block">Status sistem</strong>
         <p className="mt-2">
-          Pastikan sumber video/audio dimiliki, berlisensi, atau boleh digunakan. Upload hanya boleh dilakukan setelah operator menyetujui risiko ini.
+          Pastikan sumber video/audio memenuhi aturan sistem sebelum upload dijalankan.
         </p>
       </div>
       {notice ? <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">{notice}</div> : null}
       <div className="mt-5 grid gap-4">
         {items.length === 0 ? (
-          <div className="ta-empty">Belum ada video yang menunggu persetujuan manual.</div>
+          <div className="ta-empty">Belum ada video yang menunggu keputusan upload.</div>
         ) : (
           items.map((item) => (
             <div key={item.job.id} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
@@ -128,7 +123,7 @@ export function UploadApprovalPanel({
                 <div className="flex flex-wrap gap-2">
                   <span className="ta-status bg-white text-gray-700">{item.selected_title || "Judul belum dipilih"}</span>
                   <span className="ta-status bg-gray-900 text-white">Skor potensi viral {item.viral_score ?? "Belum ada"}</span>
-                  <span className={`ta-status ${item.review_summary?.production_allowed ? "bg-success-50 text-success-700" : "bg-warning-50 text-warning-700"}`}>
+                  <span className={`ta-status ${item.review_summary?.auto_copyright_approved ? "bg-success-50 text-success-700" : "bg-warning-50 text-warning-700"}`}>
                     {formatUploadMode(item.review_summary?.selected_upload_mode || "private_validation")}
                   </span>
                 </div>
@@ -136,11 +131,12 @@ export function UploadApprovalPanel({
 
               {item.review_summary ? (
                 <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-4 text-sm text-gray-700">
-                  <p className="ta-label text-brand-600">Ringkasan review</p>
+                  <p className="ta-label text-brand-600">Ringkasan sistem</p>
                   <p className="mt-2">
-                    {item.review_summary.production_allowed ? "Siap production." : "Perlu review rights."} Penghambat:{" "}
-                    {item.review_summary.production_blockers.join("; ") || "Tidak ada penghambat."}
+                    {item.review_summary.system_compliance_label || (item.review_summary.auto_copyright_approved ? "Aman berdasarkan aturan sistem." : "Belum siap untuk production.")}{" "}
+                    {item.review_summary.system_compliance_reason || "Tidak ada hambatan sistem."}
                   </p>
+                  {item.review_summary.system_compliance_next_action ? <p className="mt-2 text-xs text-gray-500">Langkah berikutnya: {item.review_summary.system_compliance_next_action}</p> : null}
                   <p className="mt-2 text-xs text-gray-500">Mode upload: {formatUploadMode(item.review_summary.selected_upload_mode || "private_validation")}</p>
                 </div>
               ) : null}
@@ -194,12 +190,6 @@ export function UploadApprovalPanel({
                           <input name="approved_by" placeholder="Nama operator" required={uploadGuard.require_operator_name} />
                           <input name="note" placeholder={uploadGuard.reason} required={uploadGuard.require_reason} />
                           <input name="expires_in_minutes" placeholder={`${uploadGuard.session_minutes}`} defaultValue={String(uploadGuard.session_minutes)} />
-                          <label className="flex items-start gap-2 text-sm text-gray-700">
-                            <input className="ta-check mt-1" name="copyright_acknowledged" type="checkbox" />
-                            <span>
-                              Saya memahami risiko copyright untuk sumber video/audio ini dan menyetujui review manual sebelum upload.
-                            </span>
-                          </label>
                           <button
                             className="inline-flex items-center justify-center rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
                             disabled={isPending && pendingKey === `${item.job.id}:${platform}:approve`}

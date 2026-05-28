@@ -26,7 +26,7 @@ export default async function AnalyticsPage() {
   const uploadedPrivate = youtubeHistory.items.filter((item) => ["uploaded", "published", "draft_ready"].includes(item.status)).length;
   const failed = overview.job_counts.failed || 0;
   const totalCreated = overview.jobs.length;
-  const copyrightBlocked = publishQueue.items.filter((item) => !item.review_summary?.production_allowed && item.review_summary?.production_blockers.length).length;
+  const complianceBlocked = publishQueue.items.filter((item) => item.review_summary && item.review_summary.system_compliance_status && item.review_summary.system_compliance_status !== "system_approved").length;
   const problemChannels = readiness.items.filter((item) => !item.upload_ready || item.issues.length > 0).length;
   const blockedVideos = overview.jobs.filter((job) => ["failed", "cancelled", "canceled"].includes(job.status.toLowerCase()) || Boolean(job.last_error)).slice(0, 10);
   const latestUploads = youtubeHistory.items.slice(0, 10);
@@ -65,7 +65,7 @@ export default async function AnalyticsPage() {
       </section>
 
       <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard href="/publish#queue" label="Diblokir Copyright" value={copyrightBlocked} tone={copyrightBlocked > 0 ? "warn" : "neutral"} />
+        <MetricCard href="/publish#queue" label="Belum Siap Sistem" value={complianceBlocked} tone={complianceBlocked > 0 ? "warn" : "neutral"} />
         <MetricCard href="/channels" label="Channel Bermasalah" value={problemChannels} tone={problemChannels > 0 ? "warn" : "neutral"} />
         <MetricCard href="/queue" label="Antrian Aktif" value={overview.job_counts.queued || 0} />
         <MetricCard href="/channels" label="Channel Aktif" value={readiness.items.filter((item) => item.enabled).length} tone="good" />
@@ -120,8 +120,8 @@ export default async function AnalyticsPage() {
               <strong>{readyReview}</strong>
             </div>
             <div className="flex justify-between gap-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
-              <span>Diblokir copyright</span>
-              <strong>{copyrightBlocked}</strong>
+              <span>Belum siap sistem</span>
+              <strong>{complianceBlocked}</strong>
             </div>
             <div className="flex justify-between gap-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
               <span>Channel bermasalah</span>

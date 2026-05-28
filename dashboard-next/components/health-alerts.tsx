@@ -88,16 +88,9 @@ export function HealthAlerts({
             {youtube.messages.map((message) => (
               <p key={message}>{message}</p>
             ))}
-            <p className="text-xs text-gray-500">
-              GCP OAuth client: {youtube.client_secret_exists ? "tersedia" : "belum tersedia"}
-            </p>
-            <p className="text-xs text-gray-500">
-              Token OAuth: {youtube.token_exists ? "tersedia" : "belum tersedia"}
-            </p>
-            <p className="text-xs text-gray-500">Token path writable: {youtube.token_writable ? "ya" : "tidak"}</p>
-            <p className="text-xs text-gray-500">Path client: {youtube.client_secret_path}</p>
-            <p className="text-xs text-gray-500">Path token: {youtube.token_path}</p>
-            <p className="text-xs text-gray-500">Status upload: {youtube.upload_allowed ? "siap" : `blocked (${youtube.blocked_reason})`}</p>
+            <p className="text-xs text-gray-500">Kesiapan login: {youtube.upload_allowed ? "siap" : "perlu perhatian"}</p>
+            <p className="text-xs text-gray-500">Client secret: {youtube.client_secret_exists ? "tersedia" : "belum tersedia"}</p>
+            <p className="text-xs text-gray-500">Token OAuth: {youtube.token_exists ? "tersedia" : "belum tersedia"}</p>
           </div>
         </div>
       ) : null}
@@ -109,12 +102,9 @@ export function HealthAlerts({
             {audio.messages.map((message) => (
               <p key={message}>{message}</p>
             ))}
-            <p className="text-xs text-gray-500">Mode: {audio.mode}</p>
-            <p className="text-xs text-gray-500">Local TTS: {audio.local_tts_available ? "tersedia" : "tidak tersedia"}</p>
-            <p className="text-xs text-gray-500">Source audio allowed: {audio.source_audio_allowed ? "ya" : "tidak"}</p>
-            <p className="text-xs text-gray-500">ElevenLabs available: {audio.elevenlabs_available ? "ya" : "tidak"}</p>
-            <p className="text-xs text-gray-500">Tone placeholder: {audio.tone_placeholder_enabled ? "aktif" : "nonaktif"}</p>
-            <p className="text-xs text-gray-500">Status: {audio.ready ? "siap" : `blocked (${audio.blocked_reason})`}</p>
+            <p className="text-xs text-gray-500">Mode audio: {audio.mode}</p>
+            <p className="text-xs text-gray-500">Kesiapan audio: {audio.ready ? "siap" : "perlu perhatian"}</p>
+            <p className="text-xs text-gray-500">Source audio berlisensi: {audio.source_audio_allowed ? "ya" : "tidak"}</p>
           </div>
         </div>
       ) : null}

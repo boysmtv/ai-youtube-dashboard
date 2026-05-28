@@ -7,7 +7,7 @@ import type { PublishQueueItem } from "../lib/engine-types";
 import { businessJobStatus, businessUploadStatus } from "../lib/business-copy";
 import { formatChannelProfile, formatChannelName, formatUploadMode } from "../lib/localization";
 
-type SortKey = "id" | "channel" | "title" | "status" | "copyright" | "upload" | "updated";
+type SortKey = "id" | "channel" | "title" | "status" | "system" | "upload" | "updated";
 
 function toneBadge(value: boolean | undefined) {
   if (value === true) return "bg-success-50 text-success-700";
@@ -25,8 +25,8 @@ function sortableValue(item: PublishQueueItem, key: SortKey) {
       return (item.review_summary?.final_title || item.selected_title || item.job.selected_title || "").toLowerCase();
     case "status":
       return item.status.toLowerCase();
-    case "copyright":
-      return item.review_summary?.production_allowed ? 1 : 0;
+    case "system":
+      return item.review_summary?.auto_copyright_approved ? 1 : 0;
     case "upload":
       return (item.publish_state.youtube.status || "").toLowerCase();
     case "updated":
@@ -114,8 +114,8 @@ export function PublishQueueTable({
                 </button>
               </th>
               <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">
-                <button className="text-xs font-semibold uppercase tracking-wide hover:text-brand-600" type="button" onClick={() => updateSort("copyright")}>
-                  Copyright
+                <button className="text-xs font-semibold uppercase tracking-wide hover:text-brand-600" type="button" onClick={() => updateSort("system")}>
+                  Sistem
                 </button>
               </th>
               <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide">
@@ -134,8 +134,8 @@ export function PublishQueueTable({
           <tbody>
             {sorted.length ? (
               sorted.map((item) => {
-                const reviewAllowed = Boolean(item.review_summary?.production_allowed);
-                const copyStatus = reviewAllowed ? "Aman" : "Perlu Review";
+                const reviewAllowed = Boolean(item.review_summary?.auto_copyright_approved);
+                const copyStatus = item.review_summary?.system_compliance_label || (reviewAllowed ? "Aman berdasarkan aturan sistem" : "Belum siap");
                 const uploadStatus = item.publish_state.youtube.status || item.status;
                 return (
                   <tr key={item.job.id} className="cursor-pointer border-b border-gray-100 text-gray-700 last:border-b-0 hover:bg-gray-50" onClick={() => router.push(`/jobs/${item.job.id}`)}>

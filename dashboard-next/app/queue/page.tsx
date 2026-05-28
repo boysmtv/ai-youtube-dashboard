@@ -1,13 +1,12 @@
 import Link from "next/link";
 import { AppShell } from "../../components/app-shell";
-import { GuidedWorkflow } from "../../components/guided-workflow";
 import { JobCreateForm } from "../../components/job-create-form";
 import { JobTable } from "../../components/job-table";
 import { MetricCard } from "../../components/metric-card";
 import { PageHeader } from "../../components/page-header";
 import { hasDashboardRole, requireDashboardSession } from "../../lib/dashboard-auth";
 import { getJobs, getOverview, getRegistry } from "../../lib/engine-api";
-import { buildQueueWorkflowSteps } from "../../lib/operator-workflow";
+import { formatChannelName, formatStatus } from "../../lib/localization";
 
 function lower(value: string) {
   return value.trim().toLowerCase();
@@ -45,7 +44,6 @@ export default async function QueuePage({
   const readyToReview = overview.job_counts.rendered || 0;
   const blockedCount = overview.job_counts.failed || 0;
   const selectedChannel = registry.channels.find((channel) => channel.id === selectedChannelId);
-  const workflowSteps = buildQueueWorkflowSteps(overview, readyToReview, blockedCount);
   const filterBase = new URLSearchParams();
   if (selectedChannelId) filterBase.set("channel_id", selectedChannelId);
   const filterHref = (group: string) => {
@@ -65,18 +63,9 @@ export default async function QueuePage({
           { href: "/", label: "Dashboard" },
           { href: "/queue", label: "Produksi Video" },
         ]}
-        description="Halaman ini dipakai untuk membuat video baru, memantau proses, dan mengarahkan item yang siap review ke langkah berikutnya."
+        description="Halaman ini dipakai untuk membuat video baru, memantau proses, dan melihat antrian dalam format ringkas."
         eyebrow="Produksi Video"
         title="Buat video baru dan pantau proses."
-      />
-
-      <GuidedWorkflow
-        eyebrow="Alur Produksi"
-        title="Urutan kerja yang aman"
-        description="Buat video baru, pantau proses, review hasil, perbaiki blocker, lalu lanjutkan ke riwayat upload."
-        steps={workflowSteps}
-        summaryAction="Lihat video yang sedang diproses"
-        summaryLink="/queue#antrian"
       />
 
       {createdJobId ? (
@@ -104,21 +93,6 @@ export default async function QueuePage({
         <MetricCard href="/jobs" label="Perlu Diperbaiki" value={blockedCount} tone={blockedCount > 0 ? "warn" : "neutral"} />
       </section>
 
-      <section className="mt-6 grid gap-4 rounded-2xl border border-gray-200 bg-white p-5 lg:grid-cols-3">
-        <Link className="rounded-2xl border border-brand-100 bg-brand-25 p-4 text-sm transition hover:border-brand-200" href="#create-video">
-          <strong className="block text-gray-900">Buat Video Baru</strong>
-          <p className="mt-1 text-gray-600">Mulai dari channel, topik, dan target waktu. Upload tidak dilakukan otomatis.</p>
-        </Link>
-        <Link className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm transition hover:border-brand-200" href="#antrian">
-          <strong className="block text-gray-900">Lihat Antrian</strong>
-          <p className="mt-1 text-gray-600">Cek video yang sedang berjalan atau gagal. Pilih status untuk memfilter.</p>
-        </Link>
-        <Link className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm transition hover:border-brand-200" href="/publish">
-          <strong className="block text-gray-900">Review & Upload</strong>
-          <p className="mt-1 text-gray-600">Buka video yang sudah siap review.</p>
-        </Link>
-      </section>
-
       <section className="mt-6" id="create-video">
         <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
           <div>
@@ -137,8 +111,8 @@ export default async function QueuePage({
           <div>
             <p className="ta-label text-brand-600">2. Sedang Diproses</p>
             <h3 className="mt-2 text-lg font-semibold text-gray-900">Video yang sedang berjalan</h3>
-            {selectedChannel ? <p className="mt-1 text-sm text-gray-500">Filter channel: {selectedChannel.display_name || selectedChannel.id}</p> : null}
-            <p className="mt-1 text-sm text-gray-500">Filter status: {selectedGroup === "semua" ? "Semua" : selectedGroup.replaceAll("-", " ")}</p>
+            {selectedChannel ? <p className="mt-1 text-sm text-gray-500">Filter channel: {formatChannelName(selectedChannel)}</p> : null}
+            <p className="mt-1 text-sm text-gray-500">Filter status: {selectedGroup === "semua" ? "Semua" : formatStatus(selectedGroup)}</p>
           </div>
           <p className="text-sm text-gray-500">Urutan terbaru tampil di atas.</p>
         </div>
@@ -161,26 +135,11 @@ export default async function QueuePage({
           <Link className={`rounded-full border px-3 py-2 text-sm font-semibold ${selectedGroup === "diblokir" ? "border-brand-100 bg-brand-25 text-brand-700" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`} href={filterHref("diblokir")}>
             Diblokir
           </Link>
-          <Link className={`rounded-full border px-3 py-2 text-sm font-semibold ${selectedGroup === "sudah-upload-private" ? "border-brand-100 bg-brand-25 text-brand-700" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`} href={filterHref("sudah-upload-private")}>
+        <Link className={`rounded-full border px-3 py-2 text-sm font-semibold ${selectedGroup === "sudah-upload-private" ? "border-brand-100 bg-brand-25 text-brand-700" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`} href={filterHref("sudah-upload-private")}>
             Sudah Upload Private
           </Link>
         </div>
         <JobTable jobs={jobs} canOperate={canOperate} />
-      </section>
-
-      <section className="mt-6 grid gap-4 rounded-2xl border border-gray-200 bg-white p-5 lg:grid-cols-3">
-        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
-          <strong className="block text-gray-900">3. Siap Review</strong>
-          <p className="mt-1 text-gray-600">Pindahkan item yang sudah render ke Review & Upload.</p>
-        </div>
-        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
-          <strong className="block text-gray-900">4. Perlu Diperbaiki</strong>
-          <p className="mt-1 text-gray-600">Buka job yang gagal atau diblokir untuk cek masalah.</p>
-        </div>
-        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
-          <strong className="block text-gray-900">5. Semua Video</strong>
-          <p className="mt-1 text-gray-600">Lihat seluruh riwayat proses tanpa kehilangan konteks produksi.</p>
-        </div>
       </section>
     </AppShell>
   );

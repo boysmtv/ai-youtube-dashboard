@@ -38,7 +38,7 @@ export default async function ChannelsPage() {
       </section>
 
       <section className="mt-6 rounded-2xl border border-gray-200 bg-white p-5">
-        <p className="ta-label text-brand-600">Channel profile</p>
+        <p className="ta-label text-brand-600">Profil channel</p>
         <p className="mt-2 text-sm text-gray-500">Ringkasan strategi channel untuk operator bisnis, tanpa membuka token atau path teknis di tampilan utama.</p>
       </section>
 

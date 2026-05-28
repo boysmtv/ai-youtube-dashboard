@@ -25,7 +25,7 @@ export function PageHeader({
   actions?: Action[];
 }>) {
   return (
-    <header className="ta-panel p-6">
+    <header className="ta-panel w-full p-6">
       {breadcrumbs?.length ? (
         <nav aria-label="Breadcrumb" className="mb-4 flex flex-wrap items-center gap-2 text-sm text-gray-500">
           {breadcrumbs.map((crumb, index) => (
@@ -41,8 +41,8 @@ export function PageHeader({
       <p className="ta-label text-brand-600">{eyebrow}</p>
       <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="max-w-4xl text-4xl font-bold leading-none text-gray-900 lg:text-5xl">{title}</h2>
-          <p className="mt-4 max-w-3xl text-gray-500">{description}</p>
+          <h2 className="max-w-none text-4xl font-bold leading-none text-gray-900 lg:text-5xl">{title}</h2>
+          <p className="mt-4 max-w-none text-gray-500">{description}</p>
         </div>
         {actions?.length ? (
           <div className="flex flex-wrap gap-3">

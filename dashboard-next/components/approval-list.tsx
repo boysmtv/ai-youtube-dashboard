@@ -15,12 +15,12 @@ export function ApprovalList({ approvals }: Readonly<{ approvals: ApprovalAudit[
                 </p>
                 <h3 className="mt-2 text-lg font-semibold text-gray-900">Riwayat persetujuan</h3>
               </div>
-              <span className="ta-status bg-warning-50 font-mono text-warning-700">{approval.session_minutes}m session</span>
+              <span className="ta-status bg-warning-50 text-warning-700">{approval.session_minutes} menit</span>
             </div>
             <p className="mt-4 text-gray-700">{approval.action}</p>
             <p className="mt-2 text-gray-700">{approval.approval_reason || "Belum ada alasan."}</p>
-            <p className="mt-4 font-mono text-xs text-gray-500">
-              {approval.operator_name || "unknown operator"} / {approval.created_at}
+            <p className="mt-4 text-xs text-gray-500">
+              {approval.operator_name || "Belum diketahui"} · {approval.created_at}
             </p>
           </article>
         ))

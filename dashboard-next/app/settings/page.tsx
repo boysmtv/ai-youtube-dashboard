@@ -4,6 +4,7 @@ import { ChannelSettingsForms, CoreSettingsForm } from "../../components/setting
 import { PageHeader } from "../../components/page-header";
 import { dashboardAuthReadiness, requireDashboardRole } from "../../lib/dashboard-auth";
 import { engineBrowserBaseUrl, getAdminBackups, getRegistry, getRuntimeHealth } from "../../lib/engine-api";
+import { formatBoolean, formatSettingStatus, formatTechnicalValue } from "../../lib/localization";
 import { createBackupSnapshot, restoreBackupSnapshot, runRetentionSnapshot, saveRegistrySettings } from "./actions";
 
 function JsonPreview({ value }: Readonly<{ value: unknown }>) {
@@ -11,6 +12,37 @@ function JsonPreview({ value }: Readonly<{ value: unknown }>) {
     <pre className="max-h-[260px] overflow-auto rounded-xl bg-gray-900 p-4 text-xs leading-relaxed text-white">
       {JSON.stringify(value, null, 2)}
     </pre>
+  );
+}
+
+function statusTone(value: string) {
+  const normalized = value.toLowerCase();
+  if (["ok", "aktif", "ready", "siap", "enabled", "yes"].includes(normalized)) return "bg-success-50 text-success-700";
+  if (["perlu review", "review", "warning", "warn"].includes(normalized)) return "bg-warning-50 text-warning-700";
+  if (["missing", "error", "disabled", "nonaktif"].includes(normalized)) return "bg-error-50 text-error-700";
+  return "bg-gray-100 text-gray-700";
+}
+
+function StatusCard({
+  label,
+  value,
+  tone,
+  detail,
+}: Readonly<{
+  label: string;
+  value: string;
+  tone: string;
+  detail?: string;
+}>) {
+  return (
+    <article className="rounded-2xl border border-gray-200 bg-white p-4 shadow-panel">
+      <p className="ta-label text-brand-600">{label}</p>
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <strong className="text-lg text-gray-900">{value}</strong>
+        <span className={`ta-status ${statusTone(tone)}`}>{value}</span>
+      </div>
+      {detail ? <p className="mt-2 text-xs text-gray-500">{detail}</p> : null}
+    </article>
   );
 }
 
@@ -22,7 +54,24 @@ export default async function SettingsPage() {
   const databaseBackups = backups.items.filter((item) => item.target === "database");
   const authReadiness = dashboardAuthReadiness();
   const engineBase = engineBrowserBaseUrl();
-  const tonePlaceholderDisabled = runtimeHealth.audio?.tone_placeholder_enabled === false;
+  const youtubeUpload = runtimeHealth.youtube_upload || {
+    upload_allowed: false,
+    enabled: false,
+    approval_required: true,
+    client_secret_exists: false,
+    token_exists: false,
+    messages: [] as string[],
+    reason: "",
+    blocked_reason: "",
+    confirmation_text: "",
+  };
+  const audio = runtimeHealth.audio || {
+    ready: false,
+    source_audio_allowed: false,
+    tone_placeholder_enabled: false,
+    messages: [] as string[],
+  };
+  const tonePlaceholderDisabled = audio.tone_placeholder_enabled === false;
 
   return (
     <AppShell>
@@ -40,119 +89,46 @@ export default async function SettingsPage() {
         title="Pengaturan operasional dan safety."
       />
 
-      <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
-        <div className="ta-panel p-4">
-          <p className="ta-label">Pengaturan Umum</p>
-          <strong className="mt-2 block text-lg text-gray-900">Zona waktu, kapasitas, dan jadwal kerja</strong>
-        </div>
-        <div className="ta-panel p-4">
-          <p className="ta-label">Copyright & Safety</p>
-          <strong className="mt-2 block text-lg text-gray-900">Blokir upload jika belum aman</strong>
-        </div>
-        <div className="ta-panel p-4">
-          <p className="ta-label">Caption & Hashtag</p>
-          <strong className="mt-2 block text-lg text-gray-900">Aturan metadata siap pakai</strong>
-        </div>
-        <div className="ta-panel p-4">
-          <p className="ta-label">YouTube Upload</p>
-          <strong className="mt-2 block text-lg text-gray-900">{registry.upload_approval.enabled ? "Aktif" : "Nonaktif"}</strong>
-        </div>
-        <div className="ta-panel p-4">
-          <p className="ta-label">Channel</p>
-          <strong className="mt-2 block text-lg text-gray-900">{registry.channels.filter((item) => item.enabled).length}/{registry.channels.length} aktif</strong>
-        </div>
-        <div className="ta-panel p-4">
-          <p className="ta-label">Advanced/Admin</p>
-          <strong className="mt-2 block text-lg text-gray-900">Detail teknis di bawah</strong>
-        </div>
-      </section>
-
-      <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
-        <div className="rounded-2xl border border-gray-200 bg-white p-4">
-          <p className="ta-label text-brand-600">System</p>
-          <strong className="mt-2 block text-lg text-gray-900">Sistem aktif</strong>
-        </div>
-        <div className="rounded-2xl border border-gray-200 bg-white p-4">
-          <p className="ta-label text-brand-600">Database</p>
-          <strong className="mt-2 block text-lg text-gray-900">Database aktif</strong>
-        </div>
-        <div className="rounded-2xl border border-gray-200 bg-white p-4">
-          <p className="ta-label text-brand-600">Antrian</p>
-          <strong className="mt-2 block text-lg text-gray-900">Antrian aktif</strong>
-        </div>
-        <div className="rounded-2xl border border-gray-200 bg-white p-4">
-          <p className="ta-label text-brand-600">Safety</p>
-          <strong className="mt-2 block text-lg text-gray-900">Copyright gate aktif</strong>
-        </div>
-        <div className="rounded-2xl border border-gray-200 bg-white p-4">
-          <p className="ta-label text-brand-600">Music</p>
-          <strong className="mt-2 block text-lg text-gray-900">Musik berlisensi only</strong>
-        </div>
-        <div className="rounded-2xl border border-gray-200 bg-white p-4">
-          <p className="ta-label text-brand-600">Tone</p>
-          <strong className="mt-2 block text-lg text-gray-900">{tonePlaceholderDisabled ? "Placeholder tone dimatikan" : "Placeholder tone aktif"}</strong>
-        </div>
-      </section>
-
-      <section className="mt-6 rounded-2xl border border-gray-200 bg-white p-5">
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
-            <p className="ta-label text-brand-600">Copyright gate aktif</p>
-            <strong className="mt-2 block text-gray-900">Production tetap dibatasi</strong>
-            <p className="mt-1 text-gray-600">Video hanya boleh lanjut jika rights, visual, musik, dan disclosure aman.</p>
-          </div>
-          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
-            <p className="ta-label text-brand-600">Production gate aktif</p>
-            <strong className="mt-2 block text-gray-900">{registry.upload_approval.enabled ? "Aktif" : "Nonaktif"}</strong>
-            <p className="mt-1 text-gray-600">Upload tetap menunggu review yang jelas sebelum produksi final.</p>
-          </div>
-          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
-            <p className="ta-label text-brand-600">Musik berlisensi only</p>
-            <strong className="mt-2 block text-gray-900">Ya</strong>
-            <p className="mt-1 text-gray-600">Source audio harus aman untuk production sebelum upload final.</p>
-          </div>
-          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
-            <p className="ta-label text-brand-600">Volume musik default 15%</p>
-            <strong className="mt-2 block text-gray-900">Tersimpan</strong>
-            <p className="mt-1 text-gray-600">Setelan aman dipakai untuk menjaga voice-over tetap jelas.</p>
-          </div>
-          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
-            <p className="ta-label text-brand-600">Placeholder tone dimatikan</p>
-            <strong className="mt-2 block text-gray-900">{tonePlaceholderDisabled ? "Ya" : "Tidak"}</strong>
-            <p className="mt-1 text-gray-600">Tone placeholder tidak dipakai di pipeline produksi.</p>
-          </div>
-          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
-            <p className="ta-label text-brand-600">Data tersimpan</p>
-            <strong className="mt-2 block text-gray-900">Di sistem utama</strong>
-            <p className="mt-1 text-gray-600">Operator tidak perlu melihat detail penyimpanan di tampilan utama.</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="mt-6 rounded-2xl border border-brand-100 bg-brand-25 p-5">
-        <p className="ta-label text-brand-600">Panduan singkat</p>
-        <div className="mt-3 grid gap-2 text-sm text-gray-700">
-          <p>1. Buat video</p>
-          <p>2. Tunggu siap review</p>
-          <p>3. Cek preview + metadata</p>
-          <p>4. Cek copyright</p>
-          <p>5. Upload private test</p>
-        </div>
+      <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <StatusCard
+          label="Upload YouTube"
+          value={formatSettingStatus(youtubeUpload.upload_allowed ? "aktif" : "missing")}
+          tone={youtubeUpload.upload_allowed ? "aktif" : "missing"}
+          detail={youtubeUpload.messages.length ? "Status lengkap tersedia di detail teknis." : "Belum ada catatan."}
+        />
+        <StatusCard
+          label="Copyright Gate"
+          value={formatSettingStatus(registry.upload_approval.enabled ? "ok" : "disabled")}
+          tone={registry.upload_approval.enabled ? "ok" : "disabled"}
+          detail="Menjaga upload tetap aman sebelum diproses."
+        />
+        <StatusCard
+          label="Production Gate"
+          value={formatSettingStatus(registry.upload_approval.enabled ? "perlu_review" : "disabled")}
+          tone={registry.upload_approval.enabled ? "perlu review" : "disabled"}
+          detail={registry.upload_approval.enabled ? "Perlu review manual sebelum production." : "Fitur belum aktif."}
+        />
+        <StatusCard label="Pembuat Caption" value={formatSettingStatus(audio.ready ? "aktif" : "perlu review")} tone={audio.ready ? "aktif" : "perlu review"} detail="Menghasilkan caption bisnis yang siap review." />
+        <StatusCard label="Pembuat Hashtag" value={formatSettingStatus(audio.source_audio_allowed ? "aktif" : "perlu review")} tone={audio.source_audio_allowed ? "aktif" : "perlu review"} detail="Mengikuti profil channel dan metadata final." />
+        <StatusCard label="Kebijakan Musik" value={formatSettingStatus(audio.source_audio_allowed ? "ok" : "perlu review")} tone={audio.source_audio_allowed ? "ok" : "perlu review"} detail="Source audio reuse diizinkan secara eksplisit." />
+        <StatusCard label="Volume Musik" value={formatSettingStatus(tonePlaceholderDisabled ? "ok" : "perlu review")} tone={tonePlaceholderDisabled ? "ok" : "perlu review"} detail="Tone placeholder harus nonaktif untuk production." />
+        <StatusCard label="Database" value={formatSettingStatus(runtimeHealth.storage?.ok ? "ok" : "missing")} tone={runtimeHealth.storage?.ok ? "ok" : "missing"} detail={runtimeHealth.storage?.ok ? "Database aktif" : "Perlu cek database"} />
+        <StatusCard label="Antrian" value={formatSettingStatus((runtimeHealth.counts?.queued_jobs || 0) > 0 ? "aktif" : "ok")} tone={(runtimeHealth.counts?.queued_jobs || 0) > 0 ? "aktif" : "ok"} detail={`${runtimeHealth.counts?.queued_jobs || 0} video menunggu`} />
+        <StatusCard label="Akses YouTube" value={formatSettingStatus(youtubeUpload.client_secret_exists && youtubeUpload.token_exists ? "aktif" : "missing")} tone={youtubeUpload.client_secret_exists && youtubeUpload.token_exists ? "aktif" : "missing"} detail={authReadiness.enabled ? "Akses admin siap." : "Akses admin belum siap."} />
       </section>
 
       <section className="mt-6 grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
         <div className="space-y-6">
+          <div className="ta-panel p-5">
+            <p className="ta-label text-brand-600">Advanced / Admin</p>
+            <h3 className="mt-2 text-lg font-semibold text-gray-900">Registry, backup, dan pemulihan</h3>
+            <p className="mt-2 text-sm text-gray-500">Detail konfigurasi tetap tersedia di bawah. Tampilan utama di atas hanya status board.</p>
+          </div>
           <CoreSettingsForm registry={registry} />
           <ChannelSettingsForms registry={registry} />
         </div>
 
         <div className="space-y-6">
-          <div className="ta-panel p-5">
-            <p className="ta-label text-brand-600">Advanced / Admin</p>
-            <h3 className="mt-2 text-lg font-semibold text-gray-900">Registry, backup, dan pemulihan</h3>
-            <p className="mt-2 text-sm text-gray-500">Bagian ini tetap tersedia untuk admin teknis. Operator harian tidak perlu membuka detail ini.</p>
-          </div>
-
           <details className="ta-panel p-5">
             <summary className="cursor-pointer list-none">
               <div className="flex flex-wrap items-start justify-between gap-4">
@@ -164,22 +140,22 @@ export default async function SettingsPage() {
               </div>
             </summary>
             <div className="mt-4 grid gap-3 text-sm">
-              <div className="flex justify-between gap-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
-                <span>Auth enabled</span>
-                <strong>{authReadiness.enabled ? "yes" : "no"}</strong>
+                <div className="flex justify-between gap-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+                  <span>Auth enabled</span>
+                  <strong>{formatBoolean(authReadiness.enabled)}</strong>
+                </div>
+                <div className="flex justify-between gap-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+                  <span>Secret present</span>
+                  <strong>{formatBoolean(authReadiness.secret_present)}</strong>
+                </div>
+                <div className="flex justify-between gap-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+                  <span>Configured accounts</span>
+                  <strong>{authReadiness.account_count}</strong>
+                </div>
+                <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
+                  <p className="text-xs text-gray-500">Env detail tersedia di mode teknis.</p>
+                </div>
               </div>
-              <div className="flex justify-between gap-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
-                <span>Secret present</span>
-                <strong>{authReadiness.secret_present ? "yes" : "no"}</strong>
-              </div>
-              <div className="flex justify-between gap-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
-                <span>Configured accounts</span>
-                <strong>{authReadiness.account_count}</strong>
-              </div>
-              <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
-                <p className="font-mono text-xs text-gray-500">{authReadiness.expected_env.join(", ")}</p>
-              </div>
-            </div>
           </details>
 
           <div className="ta-panel p-5">
@@ -192,11 +168,11 @@ export default async function SettingsPage() {
               <form action={runRetentionSnapshot} className="rounded-xl border border-gray-200 bg-gray-50 p-3">
                 <label className="flex items-center gap-2 text-sm text-gray-700">
                   <input className="ta-check" name="force" type="checkbox" />
-                  Force even if disabled
+                  Jalankan meski nonaktif
                 </label>
                 <div className="mt-3">
                   <ConfirmSubmitButton className="px-4 py-2 text-sm" message="Jalankan retention sekarang?" tone="warning" pendingText="Running...">
-                    Run retention
+                    Jalankan retention
                   </ConfirmSubmitButton>
                 </div>
               </form>
@@ -208,7 +184,7 @@ export default async function SettingsPage() {
               <div>
                 <p className="ta-label text-brand-600">Backup and restore</p>
                 <h3 className="mt-2 text-lg font-semibold text-gray-900">Snapshot registry dan database</h3>
-                <p className="mt-2 text-sm text-gray-500">Backup disimpan ke folder host. Restore database tetap dibatasi jika masih ada job aktif.</p>
+                <p className="mt-2 text-sm text-gray-500">Backup disimpan ke folder host. Restore database tetap dibatasi jika masih ada video aktif.</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 <form action={createBackupSnapshot}>
@@ -235,7 +211,7 @@ export default async function SettingsPage() {
             <div className="mt-5 grid gap-6 xl:grid-cols-2">
               <div>
                 <h4 className="text-sm font-semibold text-gray-900">Registry backups</h4>
-                <p className="mt-1 font-mono text-xs text-gray-500">live: {backups.live.registry.path}</p>
+                <p className="mt-1 text-xs text-gray-500">Lokasi aktif tersedia di mode teknis.</p>
                 <div className="mt-3 space-y-3">
                   {registryBackups.length ? (
                     registryBackups.slice(0, 8).map((item) => (
@@ -244,9 +220,9 @@ export default async function SettingsPage() {
                         <input name="backup_name" type="hidden" value={item.name} />
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div>
-                            <p className="font-mono text-xs text-gray-500">{item.created_at}</p>
+                            <p className="text-xs text-gray-500">{item.created_at}</p>
                             <strong className="mt-1 block text-sm text-gray-900">{item.name}</strong>
-                            <p className="mt-1 font-mono text-xs text-gray-500">{item.size_bytes} bytes</p>
+                            <p className="mt-1 text-xs text-gray-500">{formatTechnicalValue(item.size_bytes)} bytes</p>
                           </div>
                           <div className="flex gap-2">
                             <a className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50" href={`${engineBase}/api/admin/backups/download?target=${item.target}&backup_name=${encodeURIComponent(item.name)}`}>
@@ -267,7 +243,7 @@ export default async function SettingsPage() {
 
               <div>
                 <h4 className="text-sm font-semibold text-gray-900">Database backups</h4>
-                <p className="mt-1 font-mono text-xs text-gray-500">live: {backups.live.database.path}</p>
+                <p className="mt-1 text-xs text-gray-500">Lokasi aktif tersedia di mode teknis.</p>
                 <div className="mt-3 space-y-3">
                   {databaseBackups.length ? (
                     databaseBackups.slice(0, 8).map((item) => (
@@ -276,9 +252,9 @@ export default async function SettingsPage() {
                         <input name="backup_name" type="hidden" value={item.name} />
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div>
-                            <p className="font-mono text-xs text-gray-500">{item.created_at}</p>
+                            <p className="text-xs text-gray-500">{item.created_at}</p>
                             <strong className="mt-1 block text-sm text-gray-900">{item.name}</strong>
-                            <p className="mt-1 font-mono text-xs text-gray-500">{item.size_bytes} bytes</p>
+                            <p className="mt-1 text-xs text-gray-500">{formatTechnicalValue(item.size_bytes)} bytes</p>
                           </div>
                           <div className="flex gap-2">
                             <a className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50" href={`${engineBase}/api/admin/backups/download?target=${item.target}&backup_name=${encodeURIComponent(item.name)}`}>

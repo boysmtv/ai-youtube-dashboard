@@ -132,6 +132,7 @@ export type JobRecord = {
   last_error?: string | null;
   selected_title?: string | null;
   viral_score?: number | null;
+  updated_at?: string | null;
 };
 
 export type UploadApprovalRecord = {
@@ -512,6 +513,66 @@ export type JobDetailPayload = {
   rights_assessment?: Record<string, unknown> | null;
 };
 
+export type JobSummaryPayload = {
+  generated_at: string;
+  job_id: number;
+  job: JobRecord;
+  status: string;
+  current_stage?: string | null;
+  progress_percent: number;
+  last_error?: string | null;
+  updated_at?: string | null;
+  attempt_count: number;
+  artifact_count: number;
+  upload_count: number;
+  recent_events: RuntimeEvent[];
+  preview: {
+    available: boolean;
+    message?: string | null;
+    preview_url?: string | null;
+    download_url?: string | null;
+    preview_artifact?: JobResultArtifact | null;
+  };
+  review_summary?: ReviewSummary | null;
+  publish_state: {
+    ready_to_push: boolean;
+    approvals: PublishStatePayload["approvals"];
+    youtube: PublishStatePayload["youtube"];
+    tiktok: PublishStatePayload["tiktok"];
+    latest_upload: UploadRecord | null;
+    latest_uploads?: UploadRecord[];
+    review_summary?: ReviewSummary;
+    manifest_status: string;
+    manifest_error: string;
+  };
+  rights_summary: {
+    production_allowed: boolean;
+    private_validation_allowed: boolean;
+    copyright_acknowledged: boolean;
+    voiceover_legal?: boolean | null;
+    visual_rights_ok?: boolean | null;
+    music_rights_ok?: boolean | null;
+    source_audio_status: string;
+    reused_content_risk: string;
+    reused_content_reasons: string[];
+    needs_ai_disclosure: boolean;
+    ai_disclosure_acknowledged: boolean;
+    ai_disclosure_override: boolean;
+    production_blockers: string[];
+  };
+  next_action: {
+    label: string;
+    reason: string;
+    targetLink: string;
+    tone: string;
+  };
+  manifest_status: string;
+  manifest_error: string;
+  rights_assessment?: Record<string, unknown> | null;
+};
+
+export type JobTechnicalPayload = JobDetailPayload;
+
 export type JobTimelineStage = {
   key: string;
   label: string;
@@ -616,10 +677,31 @@ export type PublishQueueItem = {
   selected_title?: string | null;
   viral_score?: number | null;
   status: string;
-  publish_state: PublishStatePayload;
-  upload_approvals: UploadApprovalRecord[];
-  approval_summary: PublishStatePayload["approvals"];
-  review_summary?: ReviewSummary;
+  ready_to_push?: boolean;
+  latest_upload?: UploadRecord | null;
+  publish_state: {
+    approvals: {
+      by_platform: Record<string, { status: string; is_active: boolean; approved_by?: string; note?: string; approved_at?: string | null; expires_at?: string | null; revoked_at?: string | null }>;
+    };
+    latest_upload?: UploadRecord | null;
+    manifest_status: string;
+    manifest_error: string;
+    youtube: {
+      available?: boolean;
+      status: string;
+      privacy_status: string;
+      youtube_video_id?: string | null;
+      youtube_url?: string | null;
+    };
+  };
+  review_summary?: {
+    production_allowed: boolean;
+    production_blockers: string[];
+    selected_upload_mode?: UploadMode | string | null;
+    final_title?: string | null;
+    caption_editable?: boolean;
+    reused_content_risk?: string;
+  } | null;
 };
 
 export type PublishQueuePayload = {

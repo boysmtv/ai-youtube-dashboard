@@ -1,13 +1,14 @@
 import Link from "next/link";
 import type { ChannelReadinessPayload, OverviewPayload, RegistryPayload } from "../lib/engine-types";
-import { channelProfileLabel, channelReadinessLabel } from "../lib/business-copy";
+import { channelReadinessLabel } from "../lib/business-copy";
 import { buildChannelNextAction } from "../lib/operator-workflow";
+import { formatChannelName, formatChannelProfile, formatIssueList, formatStatus } from "../lib/localization";
 
 function lastUploadLabel(value: Record<string, unknown> | null | undefined) {
   if (!value) return "Belum ada";
   const createdAt = String(value.created_at || value.updated_at || value.approved_at || "Belum ada");
   const status = String(value.status || value.privacy_status || "unknown");
-  return `${status} / ${createdAt}`;
+  return `${formatStatus(status)} · ${createdAt}`;
 }
 
 function channelQueueHref(channelId: string, anchor: string) {
@@ -48,8 +49,8 @@ export function ChannelGrid({
                 <>
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <h4 className="text-lg font-semibold text-gray-900">{channel.display_name || channel.id}</h4>
-                      <p className="mt-1 text-sm text-gray-500">{channelProfileLabel(channel)}</p>
+                      <h4 className="text-lg font-semibold text-gray-900">{formatChannelName(channel)}</h4>
+                      <p className="mt-1 text-sm text-gray-500">{formatChannelProfile(channel)}</p>
                     </div>
                     <span className={`ta-status ${health.tone}`}>{health.label}</span>
                   </div>
@@ -57,11 +58,11 @@ export function ChannelGrid({
                   <div className="mt-4 grid gap-2 text-sm">
                     <div className="flex justify-between gap-4">
                       <span className="text-gray-500">Channel</span>
-                      <strong className="text-gray-900">{channel.display_name || channel.id}</strong>
+                      <strong className="text-gray-900">{formatChannelName(channel)}</strong>
                     </div>
                     <div className="flex justify-between gap-4">
-                      <span className="text-gray-500">Strategy / profile</span>
-                      <strong className="text-gray-900">{channelProfileLabel(channel)}</strong>
+                      <span className="text-gray-500">Profil channel</span>
+                      <strong className="text-gray-900">{formatChannelProfile(channel)}</strong>
                     </div>
                     <div className="flex justify-between gap-4">
                       <span className="text-gray-500">Status</span>
@@ -115,15 +116,15 @@ export function ChannelGrid({
                     </summary>
                     <div className="mt-3 space-y-3 text-sm text-gray-700">
                       <div className="flex justify-between gap-4">
-                        <span>Language</span>
+                        <span>Bahasa</span>
                         <strong>{channel.language}</strong>
                       </div>
                       <div className="flex justify-between gap-4">
-                        <span>Publish slots</span>
+                        <span>Slot kerja</span>
                         <strong>{(channel.publish_slots.length ? channel.publish_slots : registry.default_publish_slots).join(", ")}</strong>
                       </div>
                       <div className="flex justify-between gap-4">
-                        <span>OAuth token</span>
+                        <span>Status login YouTube</span>
                         <strong>{item?.paths.token_exists ? "tersedia" : "belum ada"}</strong>
                       </div>
                       <div className="flex justify-between gap-4">
@@ -131,8 +132,8 @@ export function ChannelGrid({
                         <strong>{item?.paths.client_secret_exists ? "tersedia" : "belum ada"}</strong>
                       </div>
                       <div className="flex justify-between gap-4">
-                        <span>Issue list</span>
-                        <strong>{issues.length ? issues.join(", ") : "Tidak ada"}</strong>
+                        <span>Catatan teknis</span>
+                        <strong>{issues.length ? formatIssueList(issues) : "Tidak ada"}</strong>
                       </div>
                     </div>
                     </details>

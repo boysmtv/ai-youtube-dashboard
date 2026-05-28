@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { approveUploadJob, revokeUploadJob } from "../lib/engine-api";
 import type { PublishQueueItem, UploadGuard } from "../lib/engine-types";
+import { formatChannelProfile, formatUploadMode } from "../lib/localization";
 
 function platformLabel(platform: "youtube" | "tiktok") {
   return platform === "youtube" ? "YouTube" : "TikTok";
@@ -18,10 +19,18 @@ function approvalTone(status?: string) {
   return "bg-gray-100 text-gray-700";
 }
 
+function approvalLabel(status?: string) {
+  const normalized = String(status || "").toLowerCase();
+  if (normalized === "approved") return "Disetujui";
+  if (normalized === "expired") return "Kedaluwarsa";
+  if (normalized === "revoked") return "Dicabut";
+  return "Menunggu";
+}
+
 export function UploadApprovalPanel({
   items,
   uploadGuard,
-  title = "Ready items",
+  title = "Video siap review",
 }: Readonly<{
   items: PublishQueueItem[];
   uploadGuard: UploadGuard;
@@ -91,7 +100,7 @@ export function UploadApprovalPanel({
           <p className="ta-label text-brand-600">Butuh persetujuan</p>
           <h3 className="mt-2 text-lg font-semibold text-gray-900">{title}</h3>
         </div>
-        <span className="ta-status bg-warning-50 font-mono text-warning-700">{items.length} item(s)</span>
+        <span className="ta-status bg-warning-50 text-warning-700">{items.length} video</span>
       </div>
       <div className="mt-4 rounded-xl border border-warning-200 bg-warning-50 p-4 text-sm text-warning-900">
         <strong className="block">Peringatan copyright</strong>
@@ -102,50 +111,37 @@ export function UploadApprovalPanel({
       {notice ? <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">{notice}</div> : null}
       <div className="mt-5 grid gap-4">
         {items.length === 0 ? (
-          <div className="ta-empty">No items are waiting for manual approval.</div>
+          <div className="ta-empty">Belum ada video yang menunggu persetujuan manual.</div>
         ) : (
           items.map((item) => (
             <div key={item.job.id} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <Link className="font-mono text-sm font-semibold text-brand-600 underline-offset-4 hover:underline" href={`/jobs/${item.job.id}`}>
-                    Job #{item.job.id}
+                  <Link className="text-sm font-semibold text-brand-600 underline-offset-4 hover:underline" href={`/jobs/${item.job.id}`}>
+                    Video #{item.job.id}
                   </Link>
                   <p className="mt-1 text-sm text-gray-500">
-                    {item.job.channel_id} / {item.job.niche}
+                    {formatChannelProfile({ id: item.job.channel_id, niche: item.job.niche })}
                   </p>
-                  <p className="mt-1 text-xs text-gray-500">Publish {item.job.publish_at}</p>
+                  <p className="mt-1 text-xs text-gray-500">Waktu target {item.job.publish_at}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <span className="ta-status bg-white text-gray-700">{item.selected_title || "Judul belum dipilih"}</span>
-                  <span className="ta-status bg-gray-900 text-white">Skor potensi viral {item.viral_score ?? "Not set"}</span>
-                  <span className={`ta-status ${(item.review_summary?.production_allowed ?? item.publish_state.review_summary?.production_allowed) ? "bg-success-50 text-success-700" : "bg-warning-50 text-warning-700"}`}>
-                    {item.review_summary?.selected_upload_mode || item.publish_state.review_summary?.selected_upload_mode || "private_validation"}
+                  <span className="ta-status bg-gray-900 text-white">Skor potensi viral {item.viral_score ?? "Belum ada"}</span>
+                  <span className={`ta-status ${item.review_summary?.production_allowed ? "bg-success-50 text-success-700" : "bg-warning-50 text-warning-700"}`}>
+                    {formatUploadMode(item.review_summary?.selected_upload_mode || "private_validation")}
                   </span>
                 </div>
               </div>
 
               {item.review_summary ? (
-                <div className="mt-4 grid gap-3 rounded-2xl border border-gray-200 bg-white p-4 text-sm text-gray-700 md:grid-cols-2">
-                  <div>
-                    <p className="ta-label text-brand-600">Caption final</p>
-                    <p className="mt-1 whitespace-pre-wrap">{item.review_summary.final_caption || item.review_summary.recommended_caption || "Belum diisi"}</p>
-                  </div>
-                  <div>
-                    <p className="ta-label text-brand-600">Deskripsi</p>
-                    <p className="mt-1 whitespace-pre-wrap">{item.review_summary.final_description || item.review_summary.recommended_short_description || "Belum diisi"}</p>
-                  </div>
-                  <div>
-                    <p className="ta-label text-brand-600">Hashtag</p>
-                    <p className="mt-1">{(item.review_summary.final_hashtags || item.review_summary.recommended_hashtags).join(" ") || "Belum diisi"}</p>
-                  </div>
-                  <div>
-                    <p className="ta-label text-brand-600">Rights</p>
-                    <p className="mt-1">
-                      {item.review_summary.production_allowed ? "Production allowed" : "Production blocked"} | reused {item.review_summary.reused_content_risk}
-                    </p>
-                    <p className="mt-1 text-xs text-gray-500">{item.review_summary.production_blockers.join("; ") || item.review_summary.reused_content_reasons.join("; ") || "Tidak ada blocker."}</p>
-                  </div>
+                <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-4 text-sm text-gray-700">
+                  <p className="ta-label text-brand-600">Ringkasan review</p>
+                  <p className="mt-2">
+                    {item.review_summary.production_allowed ? "Siap production." : "Perlu review rights."} Penghambat:{" "}
+                    {item.review_summary.production_blockers.join("; ") || "Tidak ada penghambat."}
+                  </p>
+                  <p className="mt-2 text-xs text-gray-500">Mode upload: {formatUploadMode(item.review_summary.selected_upload_mode || "private_validation")}</p>
                 </div>
               ) : null}
 
@@ -161,12 +157,12 @@ export function UploadApprovalPanel({
                           <p className="ta-label text-brand-600">{platformLabel(platform)}</p>
                           <strong className="mt-1 block text-gray-900">{isActive ? "Siap upload" : "Butuh persetujuan"}</strong>
                         </div>
-                        <span className={`ta-status ${approvalTone(status)}`}>{status}</span>
+                        <span className={`ta-status ${approvalTone(status)}`}>{approvalLabel(status)}</span>
                       </div>
                       <div className="mt-3 space-y-1 text-sm text-gray-600">
-                        <p>Approved by: {String(approval?.approved_by || "Belum ada")}</p>
-                        <p>Note: {String(approval?.note || uploadGuard.reason)}</p>
-                        <p>Expires: {String(approval?.expires_at || "Not set")}</p>
+                        <p>Disetujui oleh: {String(approval?.approved_by || "Belum ada")}</p>
+                        <p>Catatan: {String(approval?.note || uploadGuard.reason)}</p>
+                        <p>Kedaluwarsa: {String(approval?.expires_at || "Belum diatur")}</p>
                       </div>
 
                       {isActive ? (
@@ -177,8 +173,8 @@ export function UploadApprovalPanel({
                             submitRevocation(item.job.id, platform, event.currentTarget as HTMLFormElement);
                           }}
                         >
-                          <input name="revoked_by" placeholder="operator name" required />
-                          <input name="note" placeholder="Reason for revocation" />
+                          <input name="revoked_by" placeholder="Nama operator" required />
+                          <input name="note" placeholder="Alasan pencabutan" />
                           <button
                             className="inline-flex items-center justify-center rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
                             disabled={isPending && pendingKey === `${item.job.id}:${platform}:revoke`}
@@ -195,7 +191,7 @@ export function UploadApprovalPanel({
                             submitApproval(item.job.id, platform, event.currentTarget as HTMLFormElement);
                           }}
                         >
-                          <input name="approved_by" placeholder="operator name" required={uploadGuard.require_operator_name} />
+                          <input name="approved_by" placeholder="Nama operator" required={uploadGuard.require_operator_name} />
                           <input name="note" placeholder={uploadGuard.reason} required={uploadGuard.require_reason} />
                           <input name="expires_in_minutes" placeholder={`${uploadGuard.session_minutes}`} defaultValue={String(uploadGuard.session_minutes)} />
                           <label className="flex items-start gap-2 text-sm text-gray-700">

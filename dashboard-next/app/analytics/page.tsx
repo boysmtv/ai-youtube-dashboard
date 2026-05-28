@@ -5,13 +5,15 @@ import { PublishHistoryTable } from "../../components/publish-history";
 import { PageHeader } from "../../components/page-header";
 import { requireDashboardRole } from "../../lib/dashboard-auth";
 import { getChannelReadiness, getOverview, getPublishHistory, getPublishQueue } from "../../lib/engine-api";
+import { formatChannelProfile } from "../../lib/localization";
+import { businessJobStatus, businessUploadStatus } from "../../lib/business-copy";
 
 export default async function AnalyticsPage() {
   requireDashboardRole("viewer", "/analytics");
   const [overview, publishHistory, publishQueue, readiness] = await Promise.all([
     getOverview(),
     getPublishHistory(20),
-    getPublishQueue(20),
+    getPublishQueue(100),
     getChannelReadiness(20),
   ]);
   const youtubeHistory = {
@@ -99,8 +101,8 @@ export default async function AnalyticsPage() {
           <p className="mt-1 text-gray-600">{uploadedPrivate} upload private tercatat sukses.</p>
         </div>
         <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm">
-          <strong className="block text-gray-900">Data source</strong>
-          <p className="mt-1 text-gray-600">Semua angka dibaca dari data operasional terbaru.</p>
+          <strong className="block text-gray-900">Sumber data</strong>
+          <p className="mt-1 text-gray-600">Semua angka dibaca dari ringkasan operasional terbaru.</p>
         </div>
       </section>
 
@@ -147,11 +149,11 @@ export default async function AnalyticsPage() {
                   <div key={`${item.platform}-${item.record_id}`} className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <Link className="font-mono font-semibold text-brand-600 underline-offset-4 hover:underline" href={`/jobs/${item.job_id}`}>
-                        Video #{item.job_id}
+                        Upload YouTube
                       </Link>
-                      <span className="ta-status bg-success-50 text-success-700">{item.status}</span>
+                      <span className="ta-status bg-success-50 text-success-700">{businessUploadStatus(item.status)}</span>
                     </div>
-                    <p className="mt-2 text-gray-600">{item.channel_id}</p>
+                    <p className="mt-2 text-gray-600">{formatChannelProfile({ id: item.channel_id, niche: item.channel_id })}</p>
                     <p className="mt-2 text-xs text-gray-500">{item.created_at}</p>
                   </div>
                 ))
@@ -168,9 +170,9 @@ export default async function AnalyticsPage() {
                   <div key={job.id} className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <Link className="font-mono font-semibold text-brand-600 underline-offset-4 hover:underline" href={`/jobs/${job.id}`}>
-                        Video #{job.id}
+                        Video terbaru
                       </Link>
-                      <span className="ta-status bg-error-50 text-error-700">{job.status}</span>
+                      <span className="ta-status bg-error-50 text-error-700">{businessJobStatus(job.status)}</span>
                     </div>
                     <p className="mt-2 text-gray-600">{job.last_error || "Tidak ada detail error."}</p>
                   </div>

@@ -22,13 +22,13 @@ const navSections: Array<{ heading: string; items: Array<{ href: string; label: 
       { href: "/artifacts", label: "File Video", role: "viewer" },
       { href: "/operations", label: "Operasi", role: "viewer" },
       { href: "/quota", label: "Kuota", role: "viewer" },
-      { href: "/worker", label: "Worker", role: "operator" },
-      { href: "/scheduler", label: "Scheduler", role: "operator" },
-      { href: "/logs", label: "Logs", role: "admin" },
-      { href: "/health", label: "Health", role: "admin" },
+      { href: "/worker", label: "Mesin Proses", role: "operator" },
+      { href: "/scheduler", label: "Jadwal Sistem", role: "operator" },
+      { href: "/logs", label: "Log", role: "admin" },
+      { href: "/health", label: "Kesehatan Sistem", role: "admin" },
       { href: "/registry", label: "Manifest", role: "admin" },
-      { href: "/system", label: "System", role: "admin" },
-      { href: "/governance", label: "Governance", role: "admin" },
+      { href: "/system", label: "Sistem", role: "admin" },
+      { href: "/governance", label: "Aturan", role: "admin" },
       { href: "/diagnostics", label: "Diagnostik Teknis", role: "admin" },
     ],
   },
@@ -50,7 +50,7 @@ export async function AppShell({ children }: Readonly<{ children: React.ReactNod
           <div className="grid h-11 w-11 place-items-center rounded-xl bg-brand-500 text-lg font-bold text-white shadow-elevated">YT</div>
           <div>
             <p className="ta-label">AI YouTube</p>
-            <h1 className="text-xl font-bold leading-none text-gray-900">Business Operator</h1>
+            <h1 className="text-xl font-bold leading-none text-gray-900">Operator Bisnis</h1>
           </div>
         </div>
         <nav className="mt-8 space-y-6">
@@ -102,7 +102,7 @@ export async function AppShell({ children }: Readonly<{ children: React.ReactNod
         </nav>
         <div className="mt-8 rounded-2xl border border-brand-100 bg-brand-25 p-4 text-sm text-gray-700">
           <p className="ta-label text-brand-600">Mode</p>
-          <p className="mt-2">Business-first control surface. Technical views stay behind detail and advanced ops.</p>
+          <p className="mt-2">Tampilan bisnis harian. Detail teknis tetap berada di area advanced dan panel troubleshooting.</p>
         </div>
       </aside>
       <section className="min-w-0">
@@ -120,16 +120,16 @@ export async function AppShell({ children }: Readonly<{ children: React.ReactNod
               {session.authEnabled ? (
                 <form action={logoutDashboard}>
                   <button className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50" type="submit">
-                    {session.username} / {session.role} / Sign out
+                    {session.username} / {session.role} / Keluar
                   </button>
                 </form>
               ) : (
-                <div className="rounded-full border border-brand-100 bg-brand-25 px-4 py-2 text-sm text-brand-600">local-admin</div>
+                <div className="rounded-full border border-brand-100 bg-brand-25 px-4 py-2 text-sm text-brand-600">Admin lokal</div>
               )}
             </div>
           </div>
         </header>
-        <div className="mx-auto max-w-[1440px] px-4 py-6 lg:px-8">{children}</div>
+        <div className="w-full max-w-none px-4 py-6 lg:px-8">{children}</div>
       </section>
     </main>
   );

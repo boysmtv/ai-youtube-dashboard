@@ -2,19 +2,19 @@
 
 ## Verdict
 
-This stack is **infra-ready** and **low-storage ready**, but it is **not fully go-live ready for automatic publishing**.
+This stack is **infra-ready**, **content-ready**, and **low-storage ready**. Automatic publishing still stays operator-gated, so full unattended go-live remains disabled by design.
 
 ## Status Labels
 
 - `infra_ready`: yes
-- `content_ready`: no
+- `content_ready`: yes
 - `go_live_ready`: no
 
 ## Why
 
 - `infra_ready` is yes because Docker Compose starts cleanly, the dashboard and engine are healthy, dashboard auth is enabled, and PostgreSQL is the only runtime database.
-- `content_ready` is no because a real job still stops at rights and asset safety gates before publish.
-- `go_live_ready` is no because the publish path must remain blocked until the source, voice-over, visual rights, and music rights checks pass.
+- `content_ready` is yes because job `30` now passes the rights gate with a local operator-approved source, legal voiceover, no background music, and production-safe asset policy.
+- `go_live_ready` is no because publishing still requires operator approval and credentials.
 
 ## What Is Production Safe Today
 
@@ -41,4 +41,4 @@ Create a job that passes the rights gate with:
 - licensed music or no music
 - clear asset provenance
 
-Then re-run the production validation and publish flow.
+Then re-run the production validation and publish flow. Job `30` is the current reference for a production-safe validation run.

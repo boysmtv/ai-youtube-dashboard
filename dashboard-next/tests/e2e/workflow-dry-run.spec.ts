@@ -17,6 +17,7 @@ test.describe("workflow dry-run", () => {
     await page.goto("/settings", { waitUntil: "commit" });
     await assertPageBaseline(page, "/settings", /Pengaturan operasional dan safety/i);
     await dismissConfirmAndClick(page, page.getByRole("button", { name: /Simpan umum/i }).first());
+    await page.getByRole("button", { name: "Backup", exact: true }).click();
     await dismissConfirmAndClick(page, page.getByRole("button", { name: /Backup all/i }).first());
 
     const channelSaveButtons = page.getByRole("button", { name: "Simpan channel" });

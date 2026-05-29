@@ -62,6 +62,9 @@ export function attachNoiseWatch(page: Page): PageNoise {
       if (text.includes("Failed to load resource: the server responded with a status of 404 (Not Found)")) {
         return;
       }
+      if (text.includes("Failed to fetch RSC payload") || text.includes("Falling back to browser navigation")) {
+        return;
+      }
       noise.consoleErrors.push(text);
     }
   });

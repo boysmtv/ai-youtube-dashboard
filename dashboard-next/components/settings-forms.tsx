@@ -1,6 +1,7 @@
 import type { RegistryPayload } from "../lib/engine-types";
 import { saveChannelSettings, saveCoreSettings } from "../app/settings/actions";
 import { ConfirmSubmitButton } from "./confirm-submit-button";
+import { ChannelAdvancedSettings } from "./channel-advanced-settings";
 
 function Field({
   label,
@@ -128,46 +129,7 @@ export function ChannelSettingsForms({ registry }: Readonly<{ registry: Registry
                 Channel aktif
               </label>
             </div>
-            <details className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
-              <summary className="cursor-pointer list-none">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="ta-label text-brand-600">Advanced / Admin</span>
-                  <span className="ta-status bg-gray-100 text-gray-700">Tutup / buka</span>
-                </div>
-              </summary>
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <Field id={`settings-${channel.id}-client-secret-path`} label="Client secret path" name="client_secret_path" defaultValue={channel.client_secret_path} />
-                <Field id={`settings-${channel.id}-token-path`} label="Token path" name="token_path" defaultValue={channel.token_path} />
-                <Field label="Publish slots CSV" name="publish_slots" defaultValue={channel.publish_slots.join(",")} />
-                <Field label="Curated sources path" name="curated_sources_path" defaultValue={channel.curated_sources_path} />
-              </div>
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                  <input className="ta-check" name="require_client_secret" type="checkbox" defaultChecked={channel.upload_preflight.require_client_secret} />
-                  Wajib client secret
-                </label>
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                  <input className="ta-check" name="require_token" type="checkbox" defaultChecked={channel.upload_preflight.require_token} />
-                  Wajib token
-                </label>
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                  <input className="ta-check" name="require_curated_sources" type="checkbox" defaultChecked={channel.upload_preflight.require_curated_sources} />
-                  Wajib curated source
-                </label>
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                  <input className="ta-check" name="require_publish_slots" type="checkbox" defaultChecked={channel.upload_preflight.require_publish_slots} />
-                  Wajib slot kerja
-                </label>
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                  <input className="ta-check" name="validate_oauth_credentials" type="checkbox" defaultChecked={channel.upload_preflight.validate_oauth_credentials} />
-                  Cek login YouTube
-                </label>
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                  <input className="ta-check" name="auto_bootstrap_allowed" type="checkbox" defaultChecked={channel.upload_preflight.auto_bootstrap_allowed} />
-                  Auto bootstrap diperbolehkan
-                </label>
-              </div>
-            </details>
+            <ChannelAdvancedSettings channel={channel} />
           </form>
         ))}
       </div>

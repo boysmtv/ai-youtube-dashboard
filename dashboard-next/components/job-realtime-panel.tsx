@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { engineBrowserUrl } from "../lib/engine-api";
-import type { JobDetailPayload } from "../lib/engine-types";
+import type { JobSummaryPayload } from "../lib/engine-types";
 import type { EngineSyncSettings } from "../lib/sync-settings";
 import { formatStatus } from "../lib/localization";
 import { StatusBadge } from "./status-badge";
@@ -18,21 +17,28 @@ function eventTone(level?: string) {
   return "bg-success-50 text-success-700";
 }
 
-export function JobRealtimePanel({ initial, syncSettings }: Readonly<{ initial: JobDetailPayload; syncSettings: EngineSyncSettings }>) {
+export function JobRealtimePanel({ initial, syncSettings }: Readonly<{ initial: JobSummaryPayload; syncSettings: EngineSyncSettings }>) {
   const [payload, setPayload] = useState(initial);
-  const [status, setStatus] = useState(syncSettings.websocketEnabled ? "polling" : "polling");
+  const [status, setStatus] = useState(syncSettings.websocketEnabled ? "polling" : "idle");
 
   useEffect(() => {
     let closed = false;
     let timer: ReturnType<typeof setInterval> | undefined;
 
     async function poll() {
+      if (document.hidden) {
+        setStatus("idle");
+        return;
+      }
+
       try {
-        const response = await fetch(`/api/dashboard/jobs/${initial.job.id}?state_view=${syncSettings.stateView}`, { cache: "no-store" });
+        const response = await fetch(`/api/dashboard/jobs/${initial.job.id}/summary?${syncSettings.stateView === "redis" ? "state_view=redis" : ""}`, {
+          cache: "no-store",
+        });
         if (!response.ok) {
-          throw new Error(`Job detail fetch failed: ${response.status}`);
+          throw new Error(`Job summary fetch failed: ${response.status}`);
         }
-        const next = (await response.json()) as JobDetailPayload;
+        const next = (await response.json()) as JobSummaryPayload;
         if (!closed) {
           setPayload(next);
           setStatus("polling");
@@ -44,18 +50,29 @@ export function JobRealtimePanel({ initial, syncSettings }: Readonly<{ initial: 
       }
     }
 
-    poll();
+    const handleVisibility = () => {
+      if (!document.hidden) {
+        void poll();
+      } else if (!closed) {
+        setStatus("idle");
+      }
+    };
+
+    void poll();
     timer = setInterval(poll, syncSettings.pollingIntervalMs);
+    document.addEventListener("visibilitychange", handleVisibility);
+
     return () => {
       closed = true;
+      document.removeEventListener("visibilitychange", handleVisibility);
       if (timer) {
         clearInterval(timer);
       }
     };
   }, [initial.job.id, syncSettings.pollingIntervalMs, syncSettings.stateView]);
 
-  const recentEvents = payload.runtime_events.slice(0, 6);
-  const previewLink = payload.artifacts.some((item) => strItemLooksLikePreview(item.path || "")) ? engineBrowserUrl(`/api/jobs/${payload.job.id}/preview`) : null;
+  const recentEvents = payload.recent_events.slice(0, 6);
+  const previewLink = payload.preview.available && payload.preview.preview_url ? payload.preview.preview_url : null;
 
   return (
     <section className="ta-panel p-5">
@@ -65,7 +82,7 @@ export function JobRealtimePanel({ initial, syncSettings }: Readonly<{ initial: 
           <h3 className="mt-2 text-lg font-semibold text-gray-900">Status video #{payload.job.id}</h3>
           <p className="mt-2 text-sm text-gray-500">Panel ini memperbarui status ringkas, progress, dan event terbaru secara otomatis.</p>
         </div>
-        <span className={`ta-status ${status === "error" ? "bg-warning-50 text-warning-700" : "bg-success-50 text-success-700"}`}>{status === "error" ? "Gangguan" : "Memantau"}</span>
+        <span className={`ta-status ${status === "error" ? "bg-warning-50 text-warning-700" : "bg-success-50 text-success-700"}`}>{status === "error" ? "Gangguan" : status === "idle" ? "Diam" : "Memantau"}</span>
       </div>
 
       <div className="mt-5 rounded-xl border border-gray-200 bg-gray-50 p-4">
@@ -91,20 +108,20 @@ export function JobRealtimePanel({ initial, syncSettings }: Readonly<{ initial: 
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
           <p className="ta-label">Status produksi</p>
           <div className="mt-2">
-            <StatusBadge status={payload.job.status} />
+            <StatusBadge status={payload.status} />
           </div>
         </div>
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
           <p className="ta-label">Percobaan</p>
-          <strong className="mt-2 block text-2xl text-gray-900">{payload.attempts.length}</strong>
+          <strong className="mt-2 block text-2xl text-gray-900">{payload.attempt_count}</strong>
         </div>
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
           <p className="ta-label">File hasil</p>
-          <strong className="mt-2 block text-2xl text-gray-900">{payload.artifacts.length}</strong>
+          <strong className="mt-2 block text-2xl text-gray-900">{payload.artifact_count}</strong>
         </div>
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
           <p className="ta-label">Upload</p>
-          <strong className="mt-2 block text-2xl text-gray-900">{payload.uploads.length}</strong>
+          <strong className="mt-2 block text-2xl text-gray-900">{payload.upload_count}</strong>
         </div>
       </div>
 
@@ -112,9 +129,9 @@ export function JobRealtimePanel({ initial, syncSettings }: Readonly<{ initial: 
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
           <p className="ta-label">Preview status</p>
           <div className="mt-3 space-y-2 text-sm text-gray-700">
-            <p>{payload.review_summary ? "Video siap ditinjau" : "Preview belum tersedia"}</p>
-            <p className="text-xs text-gray-500">Status sistem: {payload.system_compliance_label || (payload.review_summary?.system_compliance_label ?? "Belum siap")}</p>
-            <p className="text-xs text-gray-500">Pembaruan terakhir: {payload.job.updated_at || payload.job.publish_at}</p>
+            <p>{payload.preview.available ? "Video siap ditinjau" : "Preview belum tersedia"}</p>
+            <p className="text-xs text-gray-500">Status sistem: {payload.review_summary?.system_compliance_label || "Belum siap"}</p>
+            <p className="text-xs text-gray-500">Pembaruan terakhir: {payload.updated_at || payload.job.updated_at || payload.job.publish_at}</p>
             {previewLink ? (
               <a className="inline-flex font-semibold text-brand-600 hover:text-brand-700" href={previewLink} target="_blank" rel="noreferrer">
                 Buka preview
@@ -129,7 +146,7 @@ export function JobRealtimePanel({ initial, syncSettings }: Readonly<{ initial: 
             {recentEvents.length ? (
               recentEvents.map((item, index) => {
                 const event = item as Record<string, unknown>;
-                const createdAt = String(event.created_at || event.timestamp || "Belum tersedia");
+                const createdAt = String(event.timestamp || event.created_at || "Belum tersedia");
                 return (
                   <div key={`${String(event.timestamp || "event")}-${index}`} className="rounded-lg border border-gray-200 bg-white p-3">
                     <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
@@ -152,9 +169,4 @@ export function JobRealtimePanel({ initial, syncSettings }: Readonly<{ initial: 
       </div>
     </section>
   );
-}
-
-function strItemLooksLikePreview(path: string) {
-  const value = path.toLowerCase();
-  return value.endsWith(".mp4") || value.endsWith(".mov") || value.endsWith(".webm") || value.includes("/render/");
 }

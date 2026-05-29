@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { JobRecord, JobTechnicalPayload, PublishStatePayload, ReviewModeOption, ReviewSummary } from "../lib/engine-types";
+import type { JobRecord, PublishStatePayload, ReviewModeOption, ReviewSummary } from "../lib/engine-types";
 import {
   businessAiDisclosureStatus,
   businessChecklistState,
@@ -11,6 +11,7 @@ import {
   summaryText,
 } from "../lib/business-copy";
 import { saveJobReviewMetadata } from "../app/jobs/actions";
+import { JobTechnicalPanel } from "./job-technical-panel";
 
 function SummaryRow({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
@@ -71,7 +72,7 @@ export function JobReviewPanel({
   canOperate,
   previewReady,
   previewUrl,
-  technical,
+  stateView,
   technicalHref,
 }: Readonly<{
   job: JobRecord;
@@ -80,7 +81,7 @@ export function JobReviewPanel({
   canOperate: boolean;
   previewReady: boolean;
   previewUrl: string | null;
-  technical: JobTechnicalPayload | null;
+  stateView: "default" | "redis";
   technicalHref: string;
 }>) {
   const summary = reviewSummary || publishState.review_summary;
@@ -302,58 +303,7 @@ export function JobReviewPanel({
           </div>
         </div>
 
-      <details className="mt-5 rounded-2xl border border-gray-200 bg-white p-5" id="detail-teknis">
-        <summary className="cursor-pointer list-none">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="ta-label text-brand-600">Detail Teknis</p>
-              <h4 className="mt-2 text-lg font-semibold text-gray-900">Payload mentah, manifest, file, dan event</h4>
-              <p className="mt-2 text-sm text-gray-500">Hanya untuk troubleshooting. Tidak diperlukan untuk workflow harian.</p>
-            </div>
-            <span className="ta-status bg-gray-100 text-gray-700">{technical ? "Tampil" : "Muat Detail Teknis"}</span>
-          </div>
-        </summary>
-        {technical ? (
-          <div className="mt-5 grid gap-4 xl:grid-cols-2">
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-              <p className="ta-label text-brand-600">Manifest</p>
-              <pre className="mt-3 max-h-72 overflow-auto rounded-xl bg-gray-900 p-4 text-xs leading-relaxed text-white">{JSON.stringify(technical.manifest || {}, null, 2)}</pre>
-            </div>
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-              <p className="ta-label text-brand-600">Approval status</p>
-              <pre className="mt-3 max-h-72 overflow-auto rounded-xl bg-gray-900 p-4 text-xs leading-relaxed text-white">{JSON.stringify(technical.approval_status || publishState.approvals || {}, null, 2)}</pre>
-            </div>
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-              <p className="ta-label text-brand-600">Job events</p>
-              <pre className="mt-3 max-h-72 overflow-auto rounded-xl bg-gray-900 p-4 text-xs leading-relaxed text-white">{JSON.stringify(technical.job_events || [], null, 2)}</pre>
-            </div>
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-              <p className="ta-label text-brand-600">Upload records</p>
-              <pre className="mt-3 max-h-72 overflow-auto rounded-xl bg-gray-900 p-4 text-xs leading-relaxed text-white">{JSON.stringify(technical.uploads || [], null, 2)}</pre>
-            </div>
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-              <p className="ta-label text-brand-600">Rekam jejak manifest</p>
-              <pre className="mt-3 max-h-72 overflow-auto rounded-xl bg-gray-900 p-4 text-xs leading-relaxed text-white">{JSON.stringify(technical.parameters || {}, null, 2)}</pre>
-            </div>
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-              <p className="ta-label text-brand-600">Raw review summary</p>
-              <pre className="mt-3 max-h-72 overflow-auto rounded-xl bg-gray-900 p-4 text-xs leading-relaxed text-white">{JSON.stringify(summary || {}, null, 2)}</pre>
-            </div>
-          </div>
-        ) : (
-          <div className="mt-5 rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
-            <p>Detail teknis belum dimuat. Buka tombol di bawah untuk memuat payload lengkap.</p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Link className="ta-button" href={technicalHref}>
-                Muat Detail Teknis
-              </Link>
-              <Link className="ta-button-muted" href={technicalHref}>
-                Buka mode teknis
-              </Link>
-            </div>
-          </div>
-        )}
-      </details>
+      <JobTechnicalPanel jobId={job.id} stateView={stateView} technicalHref={technicalHref} />
     </div>
   );
 }

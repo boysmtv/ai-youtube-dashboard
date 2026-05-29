@@ -128,9 +128,8 @@ test.describe("ui interactions", () => {
           await firstChannel.getByRole("link", { name: "Lihat Video", exact: true }).first().click();
           await expect(page).toHaveURL(/\/queue\?channel_id=/);
           await page.goBack();
-          const details = firstChannel.locator("details");
-          await details.locator("summary").click();
-          await expect(details).toHaveAttribute("open", "");
+          await firstChannel.getByRole("button", { name: "Buka detail", exact: true }).click();
+          await expect(firstChannel.getByRole("button", { name: "Sembunyikan detail", exact: true })).toBeVisible();
           break;
         }
         case "/settings": {

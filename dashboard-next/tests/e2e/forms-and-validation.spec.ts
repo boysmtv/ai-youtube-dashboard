@@ -145,9 +145,9 @@ test.describe("forms and validation", () => {
       expect(await overrideDisclosure.isChecked()).toBe(initialOverride);
 
       const technicalDetails = page.locator("#detail-teknis");
-      await technicalDetails.locator("summary").click();
-      await expect(technicalDetails).toHaveAttribute("open", "");
-      await technicalDetails.locator("summary").click();
+      await page.getByRole("button", { name: "Muat Detail Teknis" }).click();
+      await expect(technicalDetails).toBeVisible();
+      await expect(technicalDetails.getByText("Manifest", { exact: true })).toBeVisible();
 
       await assertNoNoise(`job forms ${path}`, noise);
     });

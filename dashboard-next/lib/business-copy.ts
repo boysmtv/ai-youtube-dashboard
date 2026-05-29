@@ -7,27 +7,28 @@ function lower(value: string) {
 
 export function businessJobStatus(status: string) {
   const normalized = lower(status);
-  if (["queued", "searching", "pending"].includes(normalized)) return "Menunggu";
-  if (["downloaded", "transcribed", "planned", "voiceover", "rendering", "uploading", "processing"].includes(normalized)) return "Sedang Diproses";
-  if (normalized === "rendered") return "Siap Review";
+  if (["queued", "generating_script", "pending"].includes(normalized)) return "Sedang membuat 1 video";
+  if (["generating_voice", "generating_visual", "rendering", "finalizing", "processing"].includes(normalized)) return "Sedang Diproses";
+  if (["ready_for_approval", "approval_required"].includes(normalized)) return "Menunggu persetujuan upload";
+  if (["approved_waiting_schedule", "scheduled_upload"].includes(normalized)) return "Menunggu jadwal upload";
   if (["uploaded", "published", "draft_ready"].includes(normalized)) return "Sudah Upload Private";
   if (normalized === "completed") return "Selesai";
   if (normalized === "paused") return "Dijeda";
   if (normalized === "blocked") return "Diblokir";
-  if (["failed", "cancelled", "canceled"].includes(normalized)) return "Perlu Diperbaiki";
+  if (["failed", "failed_final", "cancelled", "canceled", "rejected"].includes(normalized)) return "Perlu Diperbaiki";
   return status;
 }
 
 export function businessJobStatusTone(status: string) {
   const normalized = lower(status);
   if (["uploaded", "published", "draft_ready", "completed"].includes(normalized)) return "bg-success-50 text-success-700";
-  if (normalized === "rendered") return "bg-warning-50 text-warning-700";
-  if (["queued", "searching", "pending", "downloaded", "transcribed", "planned", "voiceover", "rendering", "uploading", "processing"].includes(normalized)) {
+  if (["ready_for_approval", "approval_required", "approved_waiting_schedule", "scheduled_upload"].includes(normalized)) return "bg-brand-50 text-brand-700";
+  if (["queued", "generating_script", "pending", "generating_voice", "generating_visual", "rendering", "finalizing", "processing"].includes(normalized)) {
     return "bg-brand-50 text-brand-700";
   }
   if (normalized === "paused") return "bg-gray-100 text-gray-700";
   if (normalized === "blocked") return "bg-error-50 text-error-700";
-  if (["failed", "cancelled", "canceled"].includes(normalized)) return "bg-warning-50 text-warning-700";
+  if (["failed", "failed_final", "cancelled", "canceled", "rejected"].includes(normalized)) return "bg-warning-50 text-warning-700";
   return "bg-gray-100 text-gray-700";
 }
 

@@ -22,13 +22,14 @@ export default async function PublishPage() {
   };
   const queueItems = overview.jobs.slice(0, 8);
   const queueTotal = overview.job_counts.queued || 0;
-  const readyForReview = overview.job_counts.rendered || 0;
-  const blockedCount = overview.job_counts.failed || 0;
+  const readyForReview = (overview.job_counts.ready_for_approval || 0) + (overview.job_counts.approval_required || 0);
+  const scheduledCount = (overview.job_counts.approved_waiting_schedule || 0) + (overview.job_counts.scheduled_upload || 0);
+  const blockedCount = (overview.job_counts.failed_final || 0) + (overview.job_counts.failed || 0);
   const uploadedCount = publishHistory.items.filter((item) => ["uploaded", "published", "draft_ready"].includes(item.status)).length;
   const failedCount = publishHistory.items.filter((item) => item.status === "failed" || Boolean(item.error_message)).length;
   const nextAction =
     readyForReview > 0
-      ? { title: "Review video siap upload", description: "Cek metadata, preview, dan status sistem sebelum private test.", href: "/publish#queue" }
+      ? { title: "Review video siap approval", description: "Cek metadata, preview, dan status sistem sebelum approval upload terjadwal.", href: "/publish#queue" }
       : blockedCount > 0
         ? { title: "Cek status sistem", description: "Ada video yang perlu tindak lanjut.", href: "/queue#antrian" }
         : { title: "Lihat antrian", description: "Belum ada item yang siap review.", href: "/queue#antrian" };
@@ -50,7 +51,8 @@ export default async function PublishPage() {
       />
 
       <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <MetricCard href="/publish#queue" label="Video Siap Review" value={readyForReview} tone={readyForReview > 0 ? "good" : "neutral"} />
+        <MetricCard href="/publish#queue" label="Menunggu Approval" value={readyForReview} tone={readyForReview > 0 ? "good" : "neutral"} />
+        <MetricCard href="/publish#queue" label="Menunggu Jadwal" value={scheduledCount} tone={scheduledCount > 0 ? "warn" : "neutral"} />
         <MetricCard href="/publish#queue" label="Video Perlu Status Sistem" value={blockedCount} tone={blockedCount > 0 ? "warn" : "neutral"} />
         <MetricCard href="/publish#history" label="Video Sudah Upload Private" value={uploadedCount} tone="good" />
         <MetricCard href="/publish#queue" label="Video Belum Siap Production" value={queueTotal} tone={queueTotal > 0 ? "warn" : "neutral"} />
@@ -61,7 +63,7 @@ export default async function PublishPage() {
         <div className="space-y-6">
           <div className="ta-panel p-5">
             <p className="ta-label text-brand-600">Queue ringkas</p>
-            <h3 className="mt-2 text-lg font-semibold text-gray-900">Video yang perlu ditinjau</h3>
+            <h3 className="mt-2 text-lg font-semibold text-gray-900">Video yang menunggu approval atau jadwal</h3>
             <p className="mt-1 text-sm text-gray-500">{nextAction.title}</p>
             <div className="mt-4 grid gap-3">
               {queueItems.length ? (

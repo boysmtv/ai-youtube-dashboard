@@ -12,6 +12,11 @@ export default async function ChannelsPage() {
   const missingTokenCount = readiness.items.filter((item) => item.issues.includes("missing_token")).length;
   const reviewCount = readiness.items.filter((item) => item.enabled && !item.upload_ready && item.issues.length > 0 && !item.issues.includes("missing_token")).length;
   const blockedCount = readiness.items.filter((item) => !item.enabled).length;
+  const activeStatuses = new Set(["queued", "generating_script", "generating_voice", "generating_visual", "rendering", "finalizing", "ready_for_approval", "approval_required", "approved_waiting_schedule", "scheduled_upload", "uploading"]);
+  const fullPipelineChannels = registry.channels.filter((channel) => {
+    const activeCount = overview.jobs.filter((job) => job.channel_id === channel.id && activeStatuses.has(String(job.status).toLowerCase())).length;
+    return activeCount >= 3;
+  }).length;
   const firstProblemChannel = readiness.items.find((item) => !item.upload_ready && item.issues.length > 0);
 
   return (
@@ -35,6 +40,7 @@ export default async function ChannelsPage() {
         <MetricCard href="/settings" label="Perlu Login" value={missingTokenCount} tone={missingTokenCount ? "warn" : "neutral"} />
         <MetricCard href="/channels#channel-health" label="Perlu Review" value={reviewCount} tone={reviewCount ? "warn" : "neutral"} />
         <MetricCard href="/channels#channel-health" label="Bermasalah" value={blockedCount} tone={blockedCount ? "warn" : "good"} />
+        <MetricCard href="/channels#channel-health" label="Penuh 3 Video" value={fullPipelineChannels} tone={fullPipelineChannels > 0 ? "warn" : "neutral"} />
       </section>
 
       <section className="mt-6 rounded-2xl border border-gray-200 bg-white p-5">

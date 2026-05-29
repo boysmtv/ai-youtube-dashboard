@@ -21,6 +21,12 @@ export function ChannelGrid({
   readiness: ChannelReadinessPayload;
 }>) {
   const readinessByChannel = new Map(readiness.items.map((item) => [item.channel_id, item]));
+  const activeStatuses = new Set(["queued", "generating_script", "generating_voice", "generating_visual", "rendering", "finalizing", "ready_for_approval", "approval_required", "approved_waiting_schedule", "scheduled_upload", "uploading"]);
+  const pipelineByChannel = new Map<string, number>();
+  for (const job of overview.jobs) {
+    if (!activeStatuses.has(String(job.status).toLowerCase())) continue;
+    pipelineByChannel.set(job.channel_id, (pipelineByChannel.get(job.channel_id) || 0) + 1);
+  }
 
   return (
     <section className="ta-panel p-5">
@@ -48,6 +54,7 @@ export function ChannelGrid({
               healthLabel={health.label}
               healthTone={health.tone}
               jobsInChannel={overview.jobs_by_channel[channel.id] || 0}
+              pipelineCount={pipelineByChannel.get(channel.id) || 0}
               latestJobHref={item?.latest_job?.id ? `/jobs/${item.latest_job.id}` : nextAction.targetLink}
               latestJobLabel={item?.latest_job?.id ? "Cek Upload Terakhir" : nextAction.nextAction}
               nextActionHref={nextAction.targetLink}

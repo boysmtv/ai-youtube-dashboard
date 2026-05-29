@@ -97,7 +97,7 @@ export function RealtimeOverview({
     };
   }, [syncSettings.pollingIntervalMs, syncSettings.stateView, syncSettings.websocketEnabled]);
 
-  const activeCount = ["searching", "downloaded", "transcribed", "planned", "voiceover", "rendered", "uploading"].reduce(
+  const activeCount = ["queued", "generating_script", "generating_voice", "generating_visual", "rendering", "finalizing"].reduce(
     (total, item) => total + (overview.job_counts[item] || 0),
     0,
   );
@@ -128,8 +128,8 @@ export function RealtimeOverview({
           <strong className="mt-1 block text-2xl text-gray-900">{activeCount}</strong>
         </div>
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-          <p className="font-mono text-xs text-gray-500">Rendered</p>
-          <strong className="mt-1 block text-2xl text-gray-900">{overview.job_counts.rendered || 0}</strong>
+          <p className="font-mono text-xs text-gray-500">Menunggu approval</p>
+          <strong className="mt-1 block text-2xl text-gray-900">{(overview.job_counts.ready_for_approval || 0) + (overview.job_counts.approval_required || 0)}</strong>
         </div>
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
           <p className="font-mono text-xs text-gray-500">Free disk</p>

@@ -10,7 +10,7 @@ export default async function OperationsPage() {
   const session = requireDashboardSession("/operations");
   const [overview, approvals] = await Promise.all([getOverview(), getRecentApprovals(10)]);
   const canOperate = hasDashboardRole(session, "operator");
-  const activeCount = ["searching", "downloaded", "transcribed", "planned", "voiceover", "rendered", "uploading"].reduce(
+  const activeCount = ["queued", "generating_script", "generating_voice", "generating_visual", "rendering", "finalizing"].reduce(
     (total, status) => total + (overview.job_counts[status] || 0),
     0,
   );
@@ -20,13 +20,13 @@ export default async function OperationsPage() {
       <header className="ta-panel p-6">
         <p className="ta-label text-brand-600">Operations</p>
         <h2 className="mt-3 text-4xl font-bold leading-none text-gray-900">Operasi produksi.</h2>
-        <p className="mt-4 max-w-3xl text-gray-500">Ringkasan teknis untuk queue pressure, active work, ready items, dan hasil publish.</p>
+        <p className="mt-4 max-w-3xl text-gray-500">Ringkasan teknis untuk queue pressure, active work, approval handoff, dan hasil publish.</p>
       </header>
 
       <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard label="Queued" value={overview.job_counts.queued || 0} />
-        <MetricCard label="Active" value={activeCount} />
-        <MetricCard label="Ready to publish" value={overview.job_counts.rendered || 0} tone={(overview.job_counts.rendered || 0) > 0 ? "warn" : "neutral"} />
+        <MetricCard label="Sedang membuat 1 video" value={activeCount} tone={activeCount > 0 ? "warn" : "neutral"} />
+        <MetricCard label="Menunggu Approval" value={(overview.job_counts.ready_for_approval || 0) + (overview.job_counts.approval_required || 0)} tone={(overview.job_counts.ready_for_approval || 0) > 0 ? "warn" : "neutral"} />
         <MetricCard label="Published" value={overview.job_counts.uploaded || overview.job_counts.completed || 0} tone="good" />
       </section>
 

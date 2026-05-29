@@ -377,6 +377,7 @@ export type ApprovalAudit = {
   action: string;
   operator_name: string;
   approval_reason: string;
+  payload_json?: Record<string, unknown> | null;
   session_minutes: number;
   guard_requires_operator_name: boolean;
   guard_requires_reason: boolean;

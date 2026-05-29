@@ -32,6 +32,8 @@ function hasStatus(status: string, values: string[]) {
   return values.includes(lower(status));
 }
 
+const GENERATION_STATUSES = ["queued", "generating_script", "generating_voice", "generating_visual", "rendering", "finalizing"];
+
 function latestUploadState(reviewSummary: ReviewSummary | undefined, publishState: PublishStatePayload | undefined) {
   const upload = reviewSummary?.latest_upload || publishState?.latest_upload || null;
   return upload;
@@ -102,28 +104,28 @@ export function operatorDecisionForJob(job: JobRecord, reviewSummary?: ReviewSum
     };
   }
 
-  if (status === "rendered") {
+  if (["ready_for_approval", "approval_required"].includes(status)) {
     return {
-      label: "Perlu Review",
+      label: "Menunggu persetujuan upload",
       tone: "warn",
-      explanation: "Video sudah dirender, tapi metadata final belum disimpan.",
-      nextAction: "Review video",
+      explanation: "Video sudah selesai dibuat dan menunggu approval sebelum upload terjadwal.",
+      nextAction: "Buka approval",
       targetLink: `/jobs/${job.id}#review`,
       blockerReason: null,
     };
   }
 
-  if (hasStatus(status, ["queued", "searching"])) {
+  if (hasStatus(status, ["queued", "generating_script"])) {
     return {
-      label: "Perlu Review",
+      label: "Sedang membuat 1 video",
       tone: "neutral",
-      explanation: "Video sudah dibuat dan sedang menunggu giliran proses.",
+      explanation: "Sistem sedang membuat video pertama yang aktif.",
       nextAction: "Pantau proses",
       targetLink: "/queue#antrian",
     };
   }
 
-  if (hasStatus(status, ["downloaded", "transcribed", "planned", "voiceover", "rendering", "uploading", "processing"])) {
+  if (hasStatus(status, ["generating_voice", "generating_visual", "rendering", "finalizing", "uploading", "processing"])) {
     return {
       label: "Sedang Diproses",
       tone: "neutral",
@@ -160,8 +162,9 @@ export function buildJobWorkflowSteps(job: JobRecord, reviewSummary?: ReviewSumm
   const uploaded = uploadDone(reviewSummary || undefined, publishState || undefined);
   const upload = latestUploadState(reviewSummary || undefined, publishState || undefined);
   const failed = hasStatus(status, ["failed", "cancelled", "canceled"]);
-  const processing = hasStatus(status, ["queued", "searching", "downloaded", "transcribed", "planned", "voiceover", "rendering", "uploading", "processing"]);
-  const rendered = status === "rendered";
+  const processing = hasStatus(status, ["queued", ...GENERATION_STATUSES.slice(1), "uploading", "processing"]);
+  const readyForApproval = hasStatus(status, ["ready_for_approval", "approval_required"]);
+  const waitingSchedule = hasStatus(status, ["approved_waiting_schedule", "scheduled_upload"]);
   const uploadStatusLabel = upload?.status ? businessUploadStatus(upload.status) : "Belum ada";
 
   return [
@@ -178,7 +181,7 @@ export function buildJobWorkflowSteps(job: JobRecord, reviewSummary?: ReviewSumm
       key: "process",
       number: 2,
       label: "Proses Video",
-      status: failed ? "blocked" : processing ? "current" : rendered || uploaded ? "done" : "pending",
+      status: failed ? "blocked" : processing ? "current" : readyForApproval || waitingSchedule || uploaded ? "done" : "pending",
       explanation: failed
         ? friendlyErrorMessage(job.last_error || "Video gagal diproses.")
         : processing
@@ -192,21 +195,21 @@ export function buildJobWorkflowSteps(job: JobRecord, reviewSummary?: ReviewSumm
       key: "review",
       number: 3,
       label: "Review Hasil",
-      status: rendered ? "current" : uploaded || productionAllowed || privateAllowed ? "done" : "pending",
-      explanation: rendered
+      status: readyForApproval ? "current" : uploaded || productionAllowed || privateAllowed ? "done" : "pending",
+      explanation: readyForApproval
         ? "Preview sudah tersedia. Operator perlu cek metadata final sebelum lanjut."
         : uploaded
           ? "Video sudah melewati private test."
           : "Review hasil belum bisa dilakukan sampai video selesai dirender.",
-      recommendedAction: rendered ? "Review video" : "Lihat preview",
+      recommendedAction: readyForApproval ? "Review video" : "Lihat preview",
       targetLink: `/jobs/${job.id}#review`,
-      blockerReason: rendered ? null : failed ? "Proses gagal sebelum preview siap." : null,
+      blockerReason: readyForApproval ? null : failed ? "Proses gagal sebelum preview siap." : null,
     },
     {
       key: "copyright",
       number: 4,
       label: "Cek Sistem",
-      status: productionAllowed ? "done" : reviewSummary?.system_compliance_status && reviewSummary.system_compliance_status !== "system_approved" ? "blocked" : rendered || uploaded ? "current" : "pending",
+      status: productionAllowed ? "done" : reviewSummary?.system_compliance_status && reviewSummary.system_compliance_status !== "system_approved" ? "blocked" : readyForApproval || waitingSchedule || uploaded ? "current" : "pending",
       explanation: reviewSummary?.system_compliance_reason ? reviewSummary.system_compliance_reason : "Periksa compliance aset, label AI, dan kesiapan upload.",
       recommendedAction: productionAllowed ? "Lanjut private test" : "Lihat ringkasan sistem",
       targetLink: `/jobs/${job.id}#review`,
@@ -216,7 +219,7 @@ export function buildJobWorkflowSteps(job: JobRecord, reviewSummary?: ReviewSumm
       key: "private-upload",
       number: 5,
       label: "Upload Private Test",
-      status: uploaded ? "done" : productionAllowed ? "current" : reviewSummary?.system_compliance_status && reviewSummary.system_compliance_status !== "system_approved" ? "blocked" : "pending",
+      status: uploaded ? "done" : waitingSchedule || productionAllowed ? "current" : reviewSummary?.system_compliance_status && reviewSummary.system_compliance_status !== "system_approved" ? "blocked" : "pending",
       explanation: uploaded
         ? `Private upload ${uploadStatusLabel} sudah tercatat.`
         : productionAllowed
@@ -242,7 +245,7 @@ export function buildJobWorkflowSteps(job: JobRecord, reviewSummary?: ReviewSumm
 }
 
 export function buildQueueWorkflowSteps(summary: OverviewPayload, readyCount: number, blockedCount: number): OperatorWorkflowStep[] {
-  const activeCount = ["searching", "downloaded", "transcribed", "planned", "voiceover", "rendering", "uploading", "processing"].reduce(
+  const activeCount = GENERATION_STATUSES.reduce(
     (total, status) => total + (summary.job_counts[status] || 0),
     0,
   );
@@ -252,7 +255,7 @@ export function buildQueueWorkflowSteps(summary: OverviewPayload, readyCount: nu
       number: 1,
       label: "Buat Video",
       status: "done",
-      explanation: "Video baru dibuat dari halaman ini, lalu scheduler auto hanya menyiapkan satu job berikutnya.",
+      explanation: "Video baru dibuat dari halaman ini, lalu scheduler hanya menambah job berikutnya saat slot tersedia.",
       recommendedAction: "Buat video baru",
       targetLink: "/queue#create-video",
       count: summary.job_counts.queued || 0,
@@ -261,8 +264,8 @@ export function buildQueueWorkflowSteps(summary: OverviewPayload, readyCount: nu
       key: "process",
       number: 2,
       label: "Pantau Proses",
-      status: activeCount > 0 || (summary.job_counts.queued || 0) > 0 ? "current" : "pending",
-      explanation: "Lihat video yang masih menunggu atau sedang diproses, satu per satu.",
+      status: activeCount > 0 || (summary.job_counts.ready_for_approval || 0) > 0 || (summary.job_counts.approval_required || 0) > 0 ? "current" : "pending",
+      explanation: "Lihat video yang masih dibuat, menunggu approval, atau menunggu jadwal upload.",
       recommendedAction: "Lihat antrian",
       targetLink: "/queue#antrian",
       count: activeCount || summary.job_counts.queued || 0,
@@ -272,7 +275,7 @@ export function buildQueueWorkflowSteps(summary: OverviewPayload, readyCount: nu
       number: 3,
       label: "Review Hasil",
       status: readyCount > 0 ? "current" : "pending",
-      explanation: "Video siap dicek sebelum masuk tahap upload private.",
+      explanation: "Video siap dicek sebelum masuk tahap approval upload.",
       recommendedAction: "Review video siap upload",
       targetLink: "/publish",
       count: readyCount,
@@ -282,7 +285,7 @@ export function buildQueueWorkflowSteps(summary: OverviewPayload, readyCount: nu
       number: 4,
       label: "Cek Sistem",
       status: blockedCount > 0 ? "blocked" : "pending",
-      explanation: "Periksa status compliance sebelum production.",
+      explanation: "Periksa status compliance sebelum upload terjadwal.",
       recommendedAction: "Lihat ringkasan sistem",
       targetLink: "/publish",
       count: blockedCount,
@@ -293,7 +296,7 @@ export function buildQueueWorkflowSteps(summary: OverviewPayload, readyCount: nu
       number: 5,
       label: "Upload Private Test",
       status: readyCount > 0 ? "current" : "pending",
-      explanation: "Private test dipakai untuk validasi teknis, bukan publikasi.",
+      explanation: "Upload private dipakai untuk validasi teknis, bukan publikasi.",
       recommendedAction: "Review & upload",
       targetLink: "/publish",
       count: readyCount,
@@ -326,7 +329,7 @@ export function buildHomeWorkflowSteps({
   uploadedCount: number;
   reportCount: number;
 }>): OperatorWorkflowStep[] {
-  const activeCount = ["searching", "downloaded", "transcribed", "planned", "voiceover", "rendering", "uploading", "processing"].reduce(
+  const activeCount = GENERATION_STATUSES.reduce(
     (total, status) => total + (overview.job_counts[status] || 0),
     0,
   );
@@ -345,8 +348,8 @@ export function buildHomeWorkflowSteps({
       key: "process",
       number: 2,
       label: "Pantau Antrian",
-      status: activeCount > 0 || (overview.job_counts.queued || 0) > 0 ? "current" : "pending",
-      explanation: "Lihat video yang sedang diproses atau masih menunggu giliran pertama.",
+      status: activeCount > 0 || (overview.job_counts.ready_for_approval || 0) > 0 || (overview.job_counts.approval_required || 0) > 0 ? "current" : "pending",
+      explanation: "Lihat video yang sedang dibuat, menunggu approval, atau menunggu jadwal upload.",
       recommendedAction: "Lihat antrian",
       targetLink: "/queue#antrian",
       count: activeCount + (overview.job_counts.queued || 0),

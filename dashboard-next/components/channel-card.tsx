@@ -9,6 +9,7 @@ type ChannelCardProps = Readonly<{
   channel: ChannelConfig;
   readiness: ChannelReadinessItem | undefined;
   jobsInChannel: number;
+  pipelineCount: number;
   defaultPublishSlots: string[];
   healthLabel: string;
   healthTone: string;
@@ -24,6 +25,7 @@ export function ChannelCard({
   channel,
   readiness,
   jobsInChannel,
+  pipelineCount,
   defaultPublishSlots,
   healthLabel,
   healthTone,
@@ -65,6 +67,10 @@ export function ChannelCard({
           <span className="text-gray-500">Video aktif</span>
           <strong className="text-gray-900">{jobsInChannel}</strong>
         </div>
+        <div className="flex justify-between gap-4">
+          <span className="text-gray-500">Pipeline aktif</span>
+          <strong className={pipelineCount >= 3 ? "text-warning-700" : "text-gray-900"}>{pipelineCount}</strong>
+        </div>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
@@ -81,7 +87,7 @@ export function ChannelCard({
 
       <div className="mt-4 rounded-xl border border-brand-100 bg-brand-25 p-3 text-sm text-gray-700">
         <p className="ta-label text-brand-600">Langkah berikutnya</p>
-        <p className="mt-2">{nextActionReason}</p>
+        <p className="mt-2">{pipelineCount >= 3 ? "Batas 3 video per channel sudah penuh." : nextActionReason}</p>
         <div className="mt-3">
           <Link className="ta-button" href={nextActionHref}>
             {nextActionLabel}

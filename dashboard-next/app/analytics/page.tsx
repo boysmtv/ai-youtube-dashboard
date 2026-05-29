@@ -21,12 +21,12 @@ export default async function AnalyticsPage() {
     total: publishHistory.items.filter((item) => item.platform === "youtube").length,
     platform_counts: { youtube: publishHistory.items.filter((item) => item.platform === "youtube").length },
   };
-  const readyReview = overview.job_counts.rendered || 0;
+  const readyReview = (overview.job_counts.ready_for_approval || 0) + (overview.job_counts.approval_required || 0);
   const uploadedPrivate = youtubeHistory.items.filter((item) => ["uploaded", "published", "draft_ready"].includes(item.status)).length;
-  const failed = overview.job_counts.failed || 0;
+  const failed = (overview.job_counts.failed || 0) + (overview.job_counts.failed_final || 0);
   const totalCreated = overview.jobs.length;
   const problemChannels = readiness.items.filter((item) => !item.upload_ready || item.issues.length > 0).length;
-  const blockedVideos = overview.jobs.filter((job) => ["failed", "cancelled", "canceled"].includes(job.status.toLowerCase()) || Boolean(job.last_error)).slice(0, 10);
+  const blockedVideos = overview.jobs.filter((job) => ["failed", "failed_final", "cancelled", "canceled"].includes(job.status.toLowerCase()) || Boolean(job.last_error)).slice(0, 10);
   const latestUploads = youtubeHistory.items.slice(0, 10);
   const nextAction =
     uploadedPrivate > 0

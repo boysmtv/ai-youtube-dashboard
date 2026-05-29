@@ -14,13 +14,16 @@ function lower(value: string) {
 
 function jobPrimaryAction(job: JobRecord) {
   const status = lower(job.status);
-  if (["queued", "searching", "downloaded", "transcribed", "planned", "voiceover", "rendering", "uploading", "processing"].includes(status)) {
+  if (["queued", "generating_script", "generating_voice", "generating_visual", "rendering", "finalizing", "uploading", "processing"].includes(status)) {
     return { label: "Lihat Proses", href: `/jobs/${job.id}` };
   }
-  if (status === "rendered") {
-    return { label: "Review Video", href: `/jobs/${job.id}#review` };
+  if (["ready_for_approval", "approval_required"].includes(status)) {
+    return { label: "Buka Approval", href: `/jobs/${job.id}#review` };
   }
-  if (["failed", "cancelled", "canceled", "blocked"].includes(status)) {
+  if (["approved_waiting_schedule", "scheduled_upload"].includes(status)) {
+    return { label: "Cek Jadwal", href: `/jobs/${job.id}#review` };
+  }
+  if (["failed", "failed_final", "cancelled", "canceled", "blocked", "rejected"].includes(status)) {
     return { label: "Cek Masalah", href: `/jobs/${job.id}#detail-teknis` };
   }
   if (["uploaded", "published", "draft_ready", "completed"].includes(status)) {
@@ -204,7 +207,7 @@ export function JobTable({ jobs, canOperate = true }: Readonly<{ jobs: JobRecord
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-col gap-2" onClick={(event) => event.stopPropagation()}>
-                      <Link className="inline-flex rounded-lg border border-brand-100 bg-brand-25 px-3 py-2 text-sm font-semibold text-brand-700 hover:border-brand-200" href={action.href}>
+                  <Link className="inline-flex rounded-lg border border-brand-100 bg-brand-25 px-3 py-2 text-sm font-semibold text-brand-700 hover:border-brand-200" href={action.href}>
                         {action.label}
                       </Link>
                       <span className="text-xs text-gray-500">{canOperate ? "Aksi operator" : "Lihat detail untuk tindak lanjut."}</span>

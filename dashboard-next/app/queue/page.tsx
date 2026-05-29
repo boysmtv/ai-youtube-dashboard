@@ -14,10 +14,11 @@ function lower(value: string) {
 
 function statusGroupForJob(status: string) {
   const normalized = lower(status);
-  if (["queued", "searching"].includes(normalized)) return "menunggu";
-  if (["downloaded", "transcribed", "planned", "voiceover", "rendering", "uploading", "processing"].includes(normalized)) return "sedang-diproses";
-  if (normalized === "rendered") return "siap-review";
-  if (["failed", "cancelled", "canceled"].includes(normalized)) return "gagal";
+  if (["queued", "generating_script"].includes(normalized)) return "menunggu";
+  if (["generating_voice", "generating_visual", "rendering", "finalizing", "uploading", "processing"].includes(normalized)) return "sedang-diproses";
+  if (["ready_for_approval", "approval_required"].includes(normalized)) return "menunggu-approval";
+  if (["approved_waiting_schedule", "scheduled_upload"].includes(normalized)) return "menunggu-jadwal";
+  if (["failed", "failed_final", "cancelled", "canceled", "rejected"].includes(normalized)) return "gagal";
   if (normalized === "blocked") return "diblokir";
   if (["uploaded", "published", "draft_ready"].includes(normalized)) return "sudah-upload-private";
   return "semua";
@@ -37,12 +38,12 @@ export default async function QueuePage({
     const group = statusGroupForJob(job.status);
     return currentChannelIds.has(job.channel_id) && (!selectedChannelId || job.channel_id === selectedChannelId) && (selectedGroup === "semua" || group === selectedGroup);
   });
-  const activeCount = ["searching", "downloaded", "transcribed", "planned", "voiceover", "uploading", "processing"].reduce(
+  const activeCount = ["queued", "generating_script", "generating_voice", "generating_visual", "rendering", "finalizing"].reduce(
     (total, status) => total + (overview.job_counts[status] || 0),
     0,
   );
-  const readyToReview = overview.job_counts.rendered || 0;
-  const blockedCount = overview.job_counts.failed || 0;
+  const readyToReview = (overview.job_counts.ready_for_approval || 0) + (overview.job_counts.approval_required || 0);
+  const blockedCount = (overview.job_counts.failed_final || 0) + (overview.job_counts.failed || 0);
   const selectedChannel = registry.channels.find((channel) => channel.id === selectedChannelId);
   const filterBase = new URLSearchParams();
   if (selectedChannelId) filterBase.set("channel_id", selectedChannelId);
@@ -89,7 +90,7 @@ export default async function QueuePage({
       <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard href="/queue#antrian" label="Menunggu" value={overview.job_counts.queued || 0} />
         <MetricCard href="/queue#antrian" label="Sedang Diproses" value={activeCount} tone={activeCount > 0 ? "warn" : "neutral"} />
-        <MetricCard href="/publish" label="Siap Review" value={readyToReview} tone={readyToReview > 0 ? "good" : "neutral"} />
+        <MetricCard href="/publish" label="Menunggu Persetujuan" value={readyToReview} tone={readyToReview > 0 ? "good" : "neutral"} />
         <MetricCard href="/jobs" label="Perlu Diperbaiki" value={blockedCount} tone={blockedCount > 0 ? "warn" : "neutral"} />
       </section>
 
@@ -126,8 +127,11 @@ export default async function QueuePage({
           <Link className={`rounded-full border px-3 py-2 text-sm font-semibold ${selectedGroup === "sedang-diproses" ? "border-brand-100 bg-brand-25 text-brand-700" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`} href={filterHref("sedang-diproses")}>
             Sedang Diproses
           </Link>
-          <Link className={`rounded-full border px-3 py-2 text-sm font-semibold ${selectedGroup === "siap-review" ? "border-brand-100 bg-brand-25 text-brand-700" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`} href={filterHref("siap-review")}>
-            Siap Review
+          <Link className={`rounded-full border px-3 py-2 text-sm font-semibold ${selectedGroup === "menunggu-approval" ? "border-brand-100 bg-brand-25 text-brand-700" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`} href={filterHref("menunggu-approval")}>
+            Menunggu Approval
+          </Link>
+          <Link className={`rounded-full border px-3 py-2 text-sm font-semibold ${selectedGroup === "menunggu-jadwal" ? "border-brand-100 bg-brand-25 text-brand-700" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`} href={filterHref("menunggu-jadwal")}>
+            Menunggu Jadwal
           </Link>
           <Link className={`rounded-full border px-3 py-2 text-sm font-semibold ${selectedGroup === "gagal" ? "border-brand-100 bg-brand-25 text-brand-700" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`} href={filterHref("gagal")}>
             Gagal

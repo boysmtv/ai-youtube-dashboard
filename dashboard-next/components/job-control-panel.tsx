@@ -69,7 +69,7 @@ export function JobControlPanel({ job, uploadGuard, canOperate }: Readonly<{ job
         </div>
       </form>
       <div className="mt-4 flex flex-wrap gap-2">
-        {["queued", "rendered"].includes(job.status) ? (
+        {["queued", "ready_for_approval", "approval_required"].includes(job.status) ? (
           <form action={pauseDashboardJob}>
             <input name="job_id" type="hidden" value={job.id} />
             <ConfirmSubmitButton className="px-4 py-2 text-sm" message={`Pause job #${job.id}?`} tone="warning" pendingText="Pausing...">
@@ -85,7 +85,7 @@ export function JobControlPanel({ job, uploadGuard, canOperate }: Readonly<{ job
             </ConfirmSubmitButton>
           </form>
         ) : null}
-        {["failed", "rendered"].includes(job.status) ? (
+        {["failed", "failed_final", "ready_for_approval", "approval_required"].includes(job.status) ? (
           <form action={requeueDashboardJob}>
             <input name="job_id" type="hidden" value={job.id} />
             <ConfirmSubmitButton className="px-4 py-2 text-sm" message={`Requeue job #${job.id}? This creates another processing attempt.`} tone="muted" pendingText="Requeueing...">
@@ -93,7 +93,7 @@ export function JobControlPanel({ job, uploadGuard, canOperate }: Readonly<{ job
             </ConfirmSubmitButton>
           </form>
         ) : null}
-        {["queued", "paused", "failed", "rendered"].includes(job.status) ? (
+        {["queued", "paused", "failed", "failed_final", "ready_for_approval", "approval_required"].includes(job.status) ? (
           <form action={cancelDashboardJob}>
             <input name="job_id" type="hidden" value={job.id} />
             <ConfirmSubmitButton className="px-4 py-2 text-sm" message={`Cancel job #${job.id}?`} tone="danger" pendingText="Cancelling...">

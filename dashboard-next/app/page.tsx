@@ -11,12 +11,13 @@ function lower(value: string) {
 
 function statusGroup(status: string) {
   const normalized = lower(status);
-  if (["queued", "searching"].includes(normalized)) return "Menunggu";
-  if (["downloaded", "transcribed", "planned", "voiceover", "rendering", "uploading", "processing"].includes(normalized)) return "Sedang Diproses";
-  if (normalized === "rendered") return "Siap Review";
+  if (["queued", "generating_script"].includes(normalized)) return "Menunggu";
+  if (["generating_voice", "generating_visual", "rendering", "finalizing", "uploading", "processing"].includes(normalized)) return "Sedang Diproses";
+  if (["ready_for_approval", "approval_required"].includes(normalized)) return "Menunggu Approval";
+  if (["approved_waiting_schedule", "scheduled_upload"].includes(normalized)) return "Menunggu Jadwal";
   if (["uploaded", "published", "draft_ready", "completed"].includes(normalized)) return "Sudah Upload Private";
   if (["blocked", "rejected"].includes(normalized)) return "Diblokir";
-  if (["failed", "cancelled", "canceled"].includes(normalized)) return "Gagal";
+  if (["failed", "failed_final", "cancelled", "canceled"].includes(normalized)) return "Gagal";
   return "Lainnya";
 }
 
@@ -140,11 +141,11 @@ export default async function DashboardPage() {
     total: publishHistory.items.filter((item) => item.platform === "youtube").length,
     platform_counts: { youtube: publishHistory.items.filter((item) => item.platform === "youtube").length },
   };
-  const activeCount = ["searching", "downloaded", "transcribed", "planned", "voiceover", "uploading", "processing"].reduce(
+  const activeCount = ["queued", "generating_script", "generating_voice", "generating_visual", "rendering", "finalizing"].reduce(
     (total, status) => total + (overview.job_counts[status] || 0),
     0,
   );
-  const readyToReview = overview.job_counts.rendered || 0;
+  const readyToReview = (overview.job_counts.ready_for_approval || 0) + (overview.job_counts.approval_required || 0);
   const uploadedPrivateSuccess = youtubeHistory.items.filter((item) => ["uploaded", "published", "draft_ready"].includes(item.status)).length;
   const totalJobs = overview.jobs.length;
   const chartJobs = overview.jobs

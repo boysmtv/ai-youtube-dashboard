@@ -2,19 +2,19 @@
 
 ## Verdict
 
-This stack is **infra-ready**, **content-ready**, and **low-storage ready**. Automatic publishing still stays operator-gated, so full unattended go-live remains disabled by design.
+This stack is **infra-ready**, **content-ready**, and **low-storage ready**. The current production reference job `30` has already been uploaded to YouTube as a private production upload. Automatic publishing still stays operator-gated, so full unattended go-live remains disabled by design.
 
 ## Status Labels
 
 - `infra_ready`: yes
 - `content_ready`: yes
-- `go_live_ready`: no
+- `go_live_ready`: partially
 
 ## Why
 
 - `infra_ready` is yes because Docker Compose starts cleanly, the dashboard and engine are healthy, dashboard auth is enabled, and PostgreSQL is the only runtime database.
 - `content_ready` is yes because job `30` now passes the rights gate with a local operator-approved source, legal voiceover, no background music, and production-safe asset policy.
-- `go_live_ready` is no because publishing still requires operator approval and credentials.
+- `go_live_ready` is partial because the production path works end-to-end for private YouTube upload, but unattended public release is still operator-gated.
 
 ## What Is Production Safe Today
 
@@ -27,7 +27,7 @@ This stack is **infra-ready**, **content-ready**, and **low-storage ready**. Aut
 
 ## What Is Not Yet Go-Live Safe
 
-- Automatic publish of new content
+- Automatic publish of new content without operator gate
 - Any job that fails rights or asset provenance checks
 - Any job that depends on unapproved source audio or unlicensed music
 
@@ -41,4 +41,10 @@ Create a job that passes the rights gate with:
 - licensed music or no music
 - clear asset provenance
 
-Then re-run the production validation and publish flow. Job `30` is the current reference for a production-safe validation run.
+Job `30` is the current reference for a production-safe validation run and private YouTube production upload.
+
+## Current Reference Result
+
+- Job `30` passed rights and production checks.
+- Job `30` was uploaded to YouTube as `private_immediate`.
+- TikTok publishing remains disabled in the channel registry, so TikTok upload is not available for this channel.

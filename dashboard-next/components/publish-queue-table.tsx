@@ -15,6 +15,40 @@ function toneBadge(value: boolean | undefined) {
   return "bg-gray-100 text-gray-700";
 }
 
+function normalizeHashtag(tag: string) {
+  const cleaned = String(tag || "").trim();
+  if (!cleaned) return "";
+  const withoutPrefix = cleaned.replace(/^#+/, "");
+  const normalized = withoutPrefix.replace(/[^A-Za-z0-9_]+/g, "");
+  if (!normalized) return "";
+  return normalized.toLowerCase() === "shorts" ? "#Shorts" : `#${normalized}`;
+}
+
+function HashtagPills({ hashtags }: Readonly<{ hashtags: string[] }>) {
+  const normalized = Array.from(
+    new Map(
+      hashtags
+        .map(normalizeHashtag)
+        .filter(Boolean)
+        .map((item) => [item.toLowerCase(), item]),
+    ).values(),
+  );
+
+  if (!normalized.length) {
+    return null;
+  }
+
+  return (
+    <div className="mt-2 flex flex-wrap gap-2">
+      {normalized.slice(0, 4).map((tag) => (
+        <span key={tag} className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-gray-600">
+          {tag}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function sortableValue(item: PublishQueueItem, key: SortKey) {
   switch (key) {
     case "id":
@@ -137,6 +171,15 @@ export function PublishQueueTable({
                 const reviewAllowed = Boolean(item.review_summary?.auto_copyright_approved);
                 const copyStatus = item.review_summary?.system_compliance_label || (reviewAllowed ? "Aman berdasarkan aturan sistem" : "Belum siap");
                 const uploadStatus = item.publish_state.youtube.status || item.status;
+                const reviewSummary = item.review_summary as
+                  | {
+                      final_title?: string | null;
+                      recommended_title?: string | null;
+                      final_hashtags?: string[];
+                      recommended_hashtags?: string[];
+                    }
+                  | undefined;
+                const hashtagSource = reviewSummary?.final_hashtags?.length ? reviewSummary.final_hashtags : reviewSummary?.recommended_hashtags || [];
                 return (
                   <tr key={item.job.id} className="cursor-pointer border-b border-gray-100 text-gray-700 last:border-b-0 hover:bg-gray-50" onClick={() => router.push(`/jobs/${item.job.id}`)}>
                   <td className="px-4 py-3">
@@ -145,6 +188,7 @@ export function PublishQueueTable({
                     </Link>
                     <p className="mt-1 text-xs text-gray-500">Video #{item.job.id}</p>
                     <p className="mt-1 text-xs text-gray-500">{formatChannelProfile({ id: item.job.channel_id, niche: item.job.niche })}</p>
+                    <HashtagPills hashtags={hashtagSource} />
                   </td>
                   <td className="px-4 py-3">
                       <div className="font-medium text-gray-900">{formatChannelName({ id: item.job.channel_id, niche: item.job.niche })}</div>

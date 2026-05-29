@@ -27,6 +27,40 @@ function approvalLabel(status?: string) {
   return "Menunggu";
 }
 
+function normalizeHashtag(tag: string) {
+  const cleaned = String(tag || "").trim();
+  if (!cleaned) return "";
+  const withoutPrefix = cleaned.replace(/^#+/, "");
+  const normalized = withoutPrefix.replace(/[^A-Za-z0-9_]+/g, "");
+  if (!normalized) return "";
+  return normalized.toLowerCase() === "shorts" ? "#Shorts" : `#${normalized}`;
+}
+
+function HashtagPills({ hashtags }: Readonly<{ hashtags: string[] }>) {
+  const normalized = Array.from(
+    new Map(
+      hashtags
+        .map(normalizeHashtag)
+        .filter(Boolean)
+        .map((item) => [item.toLowerCase(), item]),
+    ).values(),
+  );
+
+  if (!normalized.length) {
+    return <span className="text-xs text-gray-500">Belum ada hashtag</span>;
+  }
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {normalized.slice(0, 5).map((tag) => (
+        <span key={tag} className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-gray-700">
+          {tag}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export function UploadApprovalPanel({
   items,
   uploadGuard,
@@ -110,6 +144,19 @@ export function UploadApprovalPanel({
         ) : (
           items.map((item) => (
             <div key={item.job.id} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+              {(() => {
+                const reviewSummary = item.review_summary as
+                  | {
+                      final_title?: string | null;
+                      recommended_title?: string | null;
+                      final_hashtags?: string[];
+                      recommended_hashtags?: string[];
+                    }
+                  | undefined;
+                const hashtagSource = reviewSummary?.final_hashtags?.length ? reviewSummary.final_hashtags : reviewSummary?.recommended_hashtags || [];
+                const titleSource = reviewSummary?.final_title || reviewSummary?.recommended_title || item.selected_title || "Belum dipilih";
+
+                return (
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <Link className="text-sm font-semibold text-brand-600 underline-offset-4 hover:underline" href={`/jobs/${item.job.id}`}>
@@ -118,6 +165,10 @@ export function UploadApprovalPanel({
                   <p className="mt-1 text-sm text-gray-500">
                     {formatChannelProfile({ id: item.job.channel_id, niche: item.job.niche })}
                   </p>
+                  <p className="mt-2 text-xs text-gray-500">Judul Shorts: {titleSource}</p>
+                  <div className="mt-2">
+                    <HashtagPills hashtags={hashtagSource} />
+                  </div>
                   <p className="mt-1 text-xs text-gray-500">Waktu target {item.job.publish_at}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -128,6 +179,8 @@ export function UploadApprovalPanel({
                   </span>
                 </div>
               </div>
+                );
+              })()}
 
               {item.review_summary ? (
                 <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-4 text-sm text-gray-700">

@@ -7,7 +7,7 @@ import { JobReviewPanel } from "../../../components/job-review-panel";
 import { PageHeader } from "../../../components/page-header";
 import { hasDashboardRole, requireDashboardSession } from "../../../lib/dashboard-auth";
 import { businessUploadModeLabel, channelProfileLabel } from "../../../lib/business-copy";
-import { engineJobPreviewUrl, getJobSummary, getOverview } from "../../../lib/engine-api";
+import { engineJobPreviewUrl, getJobDetail, getJobSummary, getOverview } from "../../../lib/engine-api";
 import type { JobSummaryPayload } from "../../../lib/engine-types";
 import { parseEngineSyncSettings } from "../../../lib/sync-settings";
 
@@ -132,7 +132,7 @@ async function JobDetailContent({
   stateView: "default" | "redis";
   syncSettings: ReturnType<typeof parseEngineSyncSettings>;
 }>) {
-  const [summary, overview] = await Promise.all([getJobSummary(jobId, stateView), getOverview(syncSettings.stateView)]);
+  const [summary, overview, detail] = await Promise.all([getJobSummary(jobId, stateView), getOverview(syncSettings.stateView), getJobDetail(jobId, stateView)]);
   const reviewSummary = summary.review_summary || null;
   const previewUrl = summary.preview.preview_url ? engineJobPreviewUrl(jobId, summary.preview.preview_url) : null;
   const downloadUrl = summary.preview.download_url ? engineJobPreviewUrl(jobId, summary.preview.download_url) : null;
@@ -192,6 +192,7 @@ async function JobDetailContent({
               previewUrl={previewUrl}
               publishState={publishState}
               reviewSummary={reviewSummary}
+              titleVariants={detail.title_variants}
               stateView={stateView}
               technicalHref={technicalHref}
             />

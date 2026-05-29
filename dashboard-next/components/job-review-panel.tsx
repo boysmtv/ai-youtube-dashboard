@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { JobRecord, PublishStatePayload, ReviewModeOption, ReviewSummary } from "../lib/engine-types";
+import type { JobRecord, PublishStatePayload, ReviewModeOption, ReviewSummary, TitleVariantRecord } from "../lib/engine-types";
 import {
   businessAiDisclosureStatus,
   businessChecklistState,
@@ -18,6 +18,71 @@ function SummaryRow({ label, value }: Readonly<{ label: string; value: string }>
     <div className="flex items-start justify-between gap-4 border-b border-gray-100 py-3 last:border-b-0">
       <span className="ta-label">{label}</span>
       <span className="max-w-[72%] break-words text-right text-sm text-gray-700">{value}</span>
+    </div>
+  );
+}
+
+function normalizeHashtag(tag: string) {
+  const cleaned = String(tag || "").trim();
+  if (!cleaned) return "";
+  const withoutPrefix = cleaned.replace(/^#+/, "");
+  const normalized = withoutPrefix.replace(/[^A-Za-z0-9_]+/g, "");
+  if (!normalized) return "";
+  return normalized.toLowerCase() === "shorts" ? "#Shorts" : `#${normalized}`;
+}
+
+function HashtagPills({
+  hashtags,
+  emptyLabel = "Belum diisi",
+}: Readonly<{
+  hashtags: string[];
+  emptyLabel?: string;
+}>) {
+  const normalized = Array.from(
+    new Map(
+      hashtags
+        .map(normalizeHashtag)
+        .filter(Boolean)
+        .map((item) => [item.toLowerCase(), item]),
+    ).values(),
+  );
+
+  if (!normalized.length) {
+    return <span className="text-sm text-gray-500">{emptyLabel}</span>;
+  }
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {normalized.map((tag) => (
+        <span key={tag} className="rounded-full border border-brand-100 bg-brand-25 px-3 py-1 text-xs font-semibold text-brand-700">
+          {tag}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function TitleVariantList({ variants }: Readonly<{ variants: TitleVariantRecord[] }>) {
+  if (!variants.length) {
+    return <div className="text-sm text-gray-500">Belum ada title variant dari engine.</div>;
+  }
+
+  return (
+    <div className="grid gap-2">
+      {variants.slice(0, 4).map((variant) => (
+        <div key={`${variant.job_id}-${variant.variant_rank}-${variant.title}`} className="rounded-xl border border-gray-200 bg-white p-3">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <strong className="block text-sm text-gray-900">{variant.title}</strong>
+              <p className="mt-1 text-xs text-gray-500">{variant.reason}</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="ta-status bg-gray-100 text-gray-700">Skor {variant.score}</span>
+              {variant.selected ? <span className="ta-status bg-success-50 text-success-700">Dipilih engine</span> : null}
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -68,6 +133,7 @@ function riskStatus(summary: ReviewSummary) {
 export function JobReviewPanel({
   job,
   reviewSummary,
+  titleVariants,
   publishState,
   canOperate,
   previewReady,
@@ -77,6 +143,7 @@ export function JobReviewPanel({
 }: Readonly<{
   job: JobRecord;
   reviewSummary: ReviewSummary | null;
+  titleVariants: TitleVariantRecord[];
   publishState: Pick<PublishStatePayload, "approvals" | "youtube" | "tiktok" | "latest_upload" | "latest_uploads" | "review_summary" | "ready_to_push">;
   canOperate: boolean;
   previewReady: boolean;
@@ -105,6 +172,14 @@ export function JobReviewPanel({
   const systemReason = summary.system_compliance_reason || (productionAllowed ? "Semua aset memenuhi aturan sistem." : "Aset belum memenuhi syarat sistem.");
   const systemNextAction = summary.system_compliance_next_action || (productionAllowed ? "Lanjutkan Upload Private Test atau Production sesuai mode yang tersedia." : "Lengkapi konfigurasi aset aman.");
   const productionReady = productionAllowed;
+  const selectedTitle =
+    summary.final_title ||
+    summary.recommended_title ||
+    titleVariants.find((variant) => variant.selected)?.title ||
+    titleVariants[0]?.title ||
+    job.selected_title ||
+    "Belum tersedia";
+  const selectedHashtags = summary.final_hashtags.length ? summary.final_hashtags : summary.recommended_hashtags;
 
   return (
     <div className="ta-panel p-5">
@@ -158,6 +233,20 @@ export function JobReviewPanel({
       <div className="mt-5 grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
         <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
           <p className="ta-label text-brand-600">Metadata Final</p>
+          <div className="mt-3 rounded-2xl border border-brand-100 bg-white p-4">
+            <p className="ta-label text-brand-600">Judul Shorts</p>
+            <strong className="mt-2 block text-gray-900">{summaryText(selectedTitle)}</strong>
+            <p className="mt-2 text-xs text-gray-500">Judul ini mengikuti output engine dan bisa disesuaikan sebelum upload.</p>
+            <div className="mt-3">
+              <HashtagPills hashtags={selectedHashtags} />
+            </div>
+          </div>
+          <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-4">
+            <p className="ta-label text-brand-600">Title Variants Engine</p>
+            <div className="mt-3">
+              <TitleVariantList variants={titleVariants} />
+            </div>
+          </div>
           <div className="mt-3 space-y-2">
             <SummaryRow label="Judul Final" value={summaryText(summary.final_title || summary.recommended_title)} />
             <SummaryRow label="Caption Final" value={summaryText(summary.final_caption || summary.recommended_caption)} />

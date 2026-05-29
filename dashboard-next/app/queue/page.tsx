@@ -63,7 +63,7 @@ export default async function QueuePage({
           { href: "/", label: "Dashboard" },
           { href: "/queue", label: "Produksi Video" },
         ]}
-        description="Halaman ini dipakai untuk membuat video baru, memantau proses, dan melihat antrian dalam format ringkas."
+        description="Halaman ini dipakai untuk membuat video manual, memantau proses, dan melihat antrian auto yang sekarang berjalan satu per satu."
         eyebrow="Produksi Video"
         title="Buat video baru dan pantau proses."
       />
@@ -71,7 +71,7 @@ export default async function QueuePage({
       {createdJobId ? (
         <section className="mt-6 rounded-2xl border border-success-200 bg-success-50 p-5 text-sm text-success-900">
           <p className="ta-label text-success-700">Video masuk antrian</p>
-          <p className="mt-2">Langkah berikutnya: pantau proses.</p>
+          <p className="mt-2">Langkah berikutnya: pantau proses. Scheduler hanya akan menyiapkan job berikutnya setelah job ini selesai.</p>
           <div className="mt-4 flex flex-wrap gap-3">
             <Link className="rounded-lg border border-success-200 bg-white px-4 py-2 font-semibold text-success-700 hover:bg-success-50" href="/queue#antrian">
               Lihat Antrian Video

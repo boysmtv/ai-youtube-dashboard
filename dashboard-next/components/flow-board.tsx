@@ -3,7 +3,7 @@ import type { OverviewPayload } from "../lib/engine-types";
 const flowSections = [
   {
     title: "Rencana",
-    description: "Scheduler menyiapkan video yang akan diproses.",
+    description: "Scheduler menyiapkan satu video berikutnya, bukan batch besar sekaligus.",
     items: [
       { key: "queued", label: "Menunggu" },
       { key: "paused", label: "Dijeda" },
@@ -48,7 +48,7 @@ export function FlowBoard({ overview }: Readonly<{ overview: OverviewPayload }>)
           <h3 className="mt-2 text-xl font-semibold text-gray-900">Rencana sampai publish.</h3>
         </div>
         <p className="max-w-xl text-sm text-gray-500">
-          Tampilan ini mengelompokkan status teknis ke proses bisnis yang lebih mudah dibaca.
+          Tampilan ini mengelompokkan status teknis ke proses bisnis yang lebih mudah dibaca, termasuk antrian auto yang kini berjalan satu per satu.
         </p>
       </div>
       <div className="mt-5 grid gap-4 xl:grid-cols-4">

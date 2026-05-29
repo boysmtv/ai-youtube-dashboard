@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { AppShell } from "../../../components/app-shell";
 import { JobControlPanel } from "../../../components/job-control-panel";
+import { JobDetailFallbackTechnical } from "../../../components/job-detail-fallback-technical";
 import { JobRealtimePanel } from "../../../components/job-realtime-panel";
 import { JobReviewPanel } from "../../../components/job-review-panel";
 import { PageHeader } from "../../../components/page-header";
@@ -88,6 +89,58 @@ function JobDetailSkeleton() {
   );
 }
 
+function JobDetailUnavailable({
+  jobId,
+  overview,
+  errorMessage,
+}: Readonly<{
+  jobId: number;
+  overview: Awaited<ReturnType<typeof getOverview>> | null;
+  errorMessage: string;
+}>) {
+  return (
+    <section className="mt-6 grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+      <div className="space-y-6">
+        <div className="ta-panel p-5">
+          <p className="ta-label text-brand-600">Review & Upload</p>
+          <h3 className="mt-2 text-xl font-semibold text-gray-900">Data job tidak tersedia</h3>
+          <p className="mt-3 text-sm text-gray-600">
+            Job #{jobId} tidak ditemukan di engine atau detailnya belum siap dimuat. Dashboard menampilkan state aman tanpa melempar exception.
+          </p>
+          <p className="mt-3 text-sm text-gray-500">{errorMessage}</p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Link className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100" href="/queue">
+              Kembali ke Antrian
+            </Link>
+            <Link className="rounded-lg border border-brand-100 bg-brand-25 px-3 py-2 text-sm font-semibold text-brand-700 hover:border-brand-200" href="/publish">
+              Review & Upload
+            </Link>
+          </div>
+        </div>
+        <JobDetailFallbackTechnical
+          jobId={jobId}
+          storageBackend={overview?.storage_backend || "postgres"}
+          postgresRequired={overview?.postgres_required !== false}
+          sqliteSupported={overview?.sqlite_supported === true}
+        />
+      </div>
+
+      <div className="space-y-6">
+        <div className="ta-panel p-5">
+          <p className="ta-label text-brand-600">Ringkas Sistem</p>
+          <h3 className="mt-2 text-lg font-semibold text-gray-900">Overview tetap dimuat</h3>
+          <div className="mt-4 space-y-3">
+            <DetailRow label="Storage backend" value={overview?.storage_backend || "postgres"} />
+            <DetailRow label="PostgreSQL required" value={overview?.postgres_required === false ? "false" : "true"} />
+            <DetailRow label="SQLite supported" value={overview?.sqlite_supported === true ? "true" : "false"} />
+            <DetailRow label="Status engine" value={overview ? "Tersambung" : "Tidak tersedia"} />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function JobDetailPage({
   params,
   searchParams,
@@ -132,7 +185,31 @@ async function JobDetailContent({
   stateView: "default" | "redis";
   syncSettings: ReturnType<typeof parseEngineSyncSettings>;
 }>) {
-  const [summary, overview, detail] = await Promise.all([getJobSummary(jobId, stateView), getOverview(syncSettings.stateView), getJobDetail(jobId, stateView)]);
+  const [summaryResult, overviewResult, detailResult] = await Promise.allSettled([
+    getJobSummary(jobId, stateView),
+    getOverview(syncSettings.stateView),
+    getJobDetail(jobId, stateView),
+  ]);
+  const summary = summaryResult.status === "fulfilled" ? summaryResult.value : null;
+  const overview = overviewResult.status === "fulfilled" ? overviewResult.value : null;
+  const detail = detailResult.status === "fulfilled" ? detailResult.value : null;
+  if (!summary || !overview || !detail) {
+    const errorMessage =
+      summaryResult.status === "rejected"
+        ? summaryResult.reason instanceof Error
+          ? summaryResult.reason.message
+          : String(summaryResult.reason)
+        : detailResult.status === "rejected"
+          ? detailResult.reason instanceof Error
+            ? detailResult.reason.message
+            : String(detailResult.reason)
+          : overviewResult.status === "rejected"
+            ? overviewResult.reason instanceof Error
+              ? overviewResult.reason.message
+              : String(overviewResult.reason)
+            : "Unknown job detail loading failure.";
+    return <JobDetailUnavailable jobId={jobId} overview={overview} errorMessage={errorMessage} />;
+  }
   const reviewSummary = summary.review_summary || null;
   const previewUrl = summary.preview.preview_url ? engineJobPreviewUrl(jobId, summary.preview.preview_url) : null;
   const downloadUrl = summary.preview.download_url ? engineJobPreviewUrl(jobId, summary.preview.download_url) : null;

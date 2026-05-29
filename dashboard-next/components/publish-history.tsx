@@ -137,16 +137,11 @@ export function PublishHistoryTable({
                   </td>
                 </tr>
               ))
-            ) : (
-              <tr>
-                <td className="px-4 py-6 text-gray-500" colSpan={4}>
-                  Belum ada riwayat publish.
-                </td>
-              </tr>
-            )}
+            ) : null}
           </tbody>
         </table>
       </div>
+      {!sorted.length ? <div className="border-t border-gray-100 px-4 py-6 text-sm text-gray-500">Belum ada riwayat publish.</div> : null}
     </div>
   );
 }

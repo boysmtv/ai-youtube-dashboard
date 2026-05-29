@@ -89,27 +89,6 @@ export function JobTable({ jobs, canOperate = true }: Readonly<{ jobs: JobRecord
   const [sortKey, setSortKey] = useState<SortKey>("updated");
   const [direction, setDirection] = useState<"asc" | "desc">("desc");
 
-  if (!jobs.length) {
-    return (
-      <div className="ta-panel p-5">
-        <p className="ta-label text-brand-600">Antrian kosong</p>
-        <h3 className="mt-2 text-lg font-semibold text-gray-900">Belum ada video.</h3>
-        <p className="mt-2 text-sm text-gray-500">Mulai dari buat video baru, atau buka Review & Upload jika ada video yang sudah siap dicek.</p>
-        <div className="mt-4 flex flex-wrap gap-3">
-          <Link className="ta-button" href="/queue#create-video">
-            Buat Video Baru
-          </Link>
-          <Link className="ta-button-muted" href="/publish">
-            Review & Upload
-          </Link>
-          <Link className="ta-button-muted" href="/channels">
-            Cek Channel
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   const filtered = jobs.filter((job) => {
     if (!query.trim()) return true;
     const haystack = [job.id, job.channel_id, job.niche, job.status, job.current_stage, job.last_error, job.selected_title, job.viral_score, job.publish_at]
@@ -151,7 +130,8 @@ export function JobTable({ jobs, canOperate = true }: Readonly<{ jobs: JobRecord
           onChange={(event) => setQuery(event.target.value)}
         />
       </div>
-      <div className="overflow-x-auto">
+      {jobs.length ? (
+        <div className="overflow-x-auto">
         <table className="w-full border-collapse text-left text-sm">
           <thead className="bg-gray-50 text-gray-500">
             <tr>
@@ -235,8 +215,25 @@ export function JobTable({ jobs, canOperate = true }: Readonly<{ jobs: JobRecord
             })}
           </tbody>
         </table>
-      </div>
-      {!sorted.length ? <div className="border-t border-gray-100 p-4 text-sm text-gray-500">Tidak ada hasil untuk pencarian ini.</div> : null}
+        </div>
+      ) : (
+        <div className="border-t border-gray-100 p-4 text-sm text-gray-500">
+          <p className="font-semibold text-gray-900">Antrian kosong</p>
+          <p className="mt-1">Mulai dari buat video baru, atau buka Review & Upload jika ada video yang sudah siap dicek.</p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link className="ta-button" href="/queue#create-video">
+              Buat Video Baru
+            </Link>
+            <Link className="ta-button-muted" href="/publish">
+              Review & Upload
+            </Link>
+            <Link className="ta-button-muted" href="/channels">
+              Cek Channel
+            </Link>
+          </div>
+        </div>
+      )}
+      {query.trim() && !sorted.length ? <div className="border-t border-gray-100 p-4 text-sm text-gray-500">Tidak ada hasil untuk pencarian ini.</div> : null}
     </div>
   );
 }

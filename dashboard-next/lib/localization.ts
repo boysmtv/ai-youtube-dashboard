@@ -48,7 +48,7 @@ const BLOCKER_LABELS: Record<string, string> = {
   missing_client_secret: "Client secret belum tersedia.",
   missing_curated_sources: "Sumber kurasi belum lengkap.",
   service_down: "Service perlu perhatian.",
-  database_unavailable: "Database belum tersedia.",
+  database_unavailable: "PostgreSQL belum tersedia.",
   queue_unavailable: "Antrian belum aktif.",
   worker_unavailable: "Worker belum aktif.",
   publisher_unavailable: "Publisher belum aktif.",

@@ -1,12 +1,18 @@
 export type HealthPayload = {
   status: string;
   generated_at: string;
+  storage_backend?: string;
+  postgres_required?: boolean;
+  sqlite_supported?: boolean;
 };
 
 export type RuntimeHealthPayload = {
   status: "ok" | "fail";
   generated_at: string;
   timezone: string;
+  storage_backend?: string;
+  postgres_required?: boolean;
+  sqlite_supported?: boolean;
   stuck_threshold_minutes: number;
   counts: {
     queued_jobs: number;
@@ -343,6 +349,9 @@ export type OverviewPayload = {
   generated_at: string;
   date: string;
   timezone: string;
+  storage_backend?: string;
+  postgres_required?: boolean;
+  sqlite_supported?: boolean;
   channels: {
     enabled: number;
     configured: number;

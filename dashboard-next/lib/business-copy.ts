@@ -165,7 +165,7 @@ export function friendlyErrorMessage(message: string) {
     return "Audio belum siap. Cek mode voice-over atau source audio.";
   }
   if (text.includes("database_unavailable")) {
-    return "Database belum tersedia.";
+    return "PostgreSQL belum tersedia.";
   }
   if (text.includes("queue_unavailable")) {
     return "Antrian belum aktif.";
@@ -243,9 +243,9 @@ export function businessBlockerDetail(message: string) {
   }
   if (text.includes("database_unavailable")) {
     return {
-      problem: "Database belum tersedia.",
+      problem: "PostgreSQL belum tersedia.",
       impact: "Sistem belum bisa membaca data runtime.",
-      nextStep: "Periksa koneksi database lalu muat ulang dashboard.",
+      nextStep: "Periksa koneksi PostgreSQL lalu muat ulang dashboard.",
     };
   }
   if (text.includes("queue_unavailable")) {

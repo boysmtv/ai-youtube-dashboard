@@ -55,7 +55,11 @@ for (const url of URLS) {
 
     if (url.endsWith("/api/runtime/config-contract")) {
       const redisEnabled = findValue(result.bodyJson, "redis_enabled");
+      const postgresRequired = findValue(result.bodyJson, "postgres_required");
+      const sqliteSupported = findValue(result.bodyJson, "sqlite_supported");
       expect(redisEnabled, `redis_enabled missing for ${url}`).toBe(true);
+      expect(postgresRequired, `postgres_required missing for ${url}`).toBe(true);
+      expect(sqliteSupported, `sqlite_supported missing for ${url}`).toBe(false);
     }
 
     if (url.endsWith("/api/overview")) {

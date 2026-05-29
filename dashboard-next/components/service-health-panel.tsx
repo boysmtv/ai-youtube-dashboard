@@ -15,7 +15,11 @@ export function ServiceHealthPanel({
 
   const items = [
     { label: "API", value: health.status, ok: health.status === "ok" },
-    { label: "Database", value: dbOk ? "tersambung" : "unknown", ok: dbOk },
+    {
+      label: "Database",
+      value: health.storage_backend === "postgres" ? "PostgreSQL aktif" : dbOk ? "tersambung" : "unknown",
+      ok: health.storage_backend === "postgres" || dbOk,
+    },
     { label: "Disk", value: `${overview.storage.free_gb ?? 0} GB kosong`, ok: diskOk },
     { label: "Lead time", value: `${overview.worker.publish_lead_time_hours} jam`, ok: true },
     { label: "Kapasitas worker", value: `${overview.worker.max_active_jobs} aktif`, ok: true },

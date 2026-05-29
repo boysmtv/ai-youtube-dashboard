@@ -95,10 +95,10 @@ export default async function SettingsPage() {
           detail={`${registryBackups.length} snapshot registry tersedia.`}
         />
         <StatusCard
-          label="Backup Database"
+          label="Database Aktif"
           value={formatSettingStatus(databaseBackups.length ? "aktif" : "missing")}
           tone={databaseBackups.length ? "aktif" : "missing"}
-          detail={`${databaseBackups.length} snapshot database tersedia.`}
+          detail={`${databaseBackups.length} snapshot PostgreSQL tersedia.`}
         />
         <StatusCard
           label="Akses Admin"

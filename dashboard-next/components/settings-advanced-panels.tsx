@@ -42,7 +42,7 @@ export function SettingsAdvancedPanels({
       <div className="ta-panel p-5">
         <p className="ta-label text-brand-600">Advanced / Admin</p>
         <h3 className="mt-2 text-lg font-semibold text-gray-900">Registry, backup, dan pemulihan</h3>
-        <p className="mt-2 text-sm text-gray-500">Panel teknis ini dimuat bertahap supaya halaman utama tetap ringan.</p>
+        <p className="mt-2 text-sm text-gray-500">Panel teknis ini dimuat bertahap supaya halaman utama tetap ringan dan tetap memakai PostgreSQL sebagai storage aktif.</p>
         <div className="mt-4 flex flex-wrap gap-2">
           {[
             ["overview", "Ringkas"],
@@ -124,13 +124,13 @@ export function SettingsAdvancedPanels({
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <p className="ta-label text-brand-600">Backup and restore</p>
-                  <h3 className="mt-2 text-lg font-semibold text-gray-900">Snapshot registry dan database</h3>
-                  <p className="mt-2 text-sm text-gray-500">Backup disimpan ke folder host. Restore database tetap dibatasi jika masih ada video aktif.</p>
+                  <h3 className="mt-2 text-lg font-semibold text-gray-900">Snapshot registry dan PostgreSQL</h3>
+                  <p className="mt-2 text-sm text-gray-500">Backup disimpan ke folder host. Restore PostgreSQL tetap dibatasi jika masih ada video aktif.</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <form action={createBackupSnapshot}>
                     <input name="target" type="hidden" value="all" />
-                    <ConfirmSubmitButton className="px-4 py-2 text-sm" message="Buat backup registry dan database?" pendingText="Creating...">
+                    <ConfirmSubmitButton className="px-4 py-2 text-sm" message="Buat backup registry dan PostgreSQL?" pendingText="Creating...">
                       Backup all
                     </ConfirmSubmitButton>
                   </form>
@@ -142,8 +142,8 @@ export function SettingsAdvancedPanels({
                   </form>
                   <form action={createBackupSnapshot}>
                     <input name="target" type="hidden" value="database" />
-                    <ConfirmSubmitButton className="px-4 py-2 text-sm" message="Buat backup database?" tone="muted" pendingText="Creating...">
-                      Backup database
+                    <ConfirmSubmitButton className="px-4 py-2 text-sm" message="Buat backup PostgreSQL?" tone="muted" pendingText="Creating...">
+                      Backup PostgreSQL
                     </ConfirmSubmitButton>
                   </form>
                 </div>
@@ -183,7 +183,7 @@ export function SettingsAdvancedPanels({
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-900">Database backups</h4>
+                  <h4 className="text-sm font-semibold text-gray-900">PostgreSQL backups</h4>
                   <p className="mt-1 text-xs text-gray-500">Lokasi aktif tersedia di mode teknis.</p>
                   <div className="mt-3 space-y-3">
                     {databaseBackups.length ? (
@@ -209,7 +209,7 @@ export function SettingsAdvancedPanels({
                         </form>
                       ))
                     ) : (
-                      <div className="ta-empty">Belum ada backup database.</div>
+                      <div className="ta-empty">Belum ada backup PostgreSQL.</div>
                     )}
                   </div>
                 </div>

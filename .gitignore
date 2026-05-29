@@ -2,4 +2,6 @@
 dashboard-next/.next/
 dashboard-next/node_modules/
 dashboard-next/tsconfig.tsbuildinfo
+/.env.production
+/dashboard-next/.env.production
 

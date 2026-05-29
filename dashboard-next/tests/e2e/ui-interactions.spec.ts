@@ -108,9 +108,9 @@ test.describe("ui interactions", () => {
           await search.fill("1836");
           await expect(search).toHaveValue("1836");
           await page.getByRole("link", { name: "Semua" }).click();
-          await page.getByRole("link", { name: "Menunggu" }).click();
+          await page.getByRole("link", { name: "Menunggu", exact: true }).click();
           await page.getByRole("link", { name: "Sedang Diproses" }).click();
-          await page.getByRole("link", { name: "Siap Review" }).click();
+          await page.getByRole("link", { name: "Menunggu Approval" }).click();
           const row = page.locator("table tbody tr").first();
           if (await row.isVisible()) {
             await row.click();

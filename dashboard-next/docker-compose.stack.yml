@@ -27,21 +27,21 @@ services:
 
   automation-api:
     build:
-      context: ../ai-youtube-langchain
+      context: ../../ai-youtube-langchain
       dockerfile: Dockerfile
     image: ai-youtube-langchain:local
     container_name: ai-youtube-langchain-api
     restart: unless-stopped
     env_file:
-      - ../ai-youtube-langchain/.env
+      - ../../ai-youtube-langchain/.env
     environment:
       PYTHONUNBUFFERED: "1"
       ENABLE_YOUTUBE_UPLOAD: "${ENABLE_YOUTUBE_UPLOAD:-0}"
       LLM_PROVIDER: "local_disabled"
       AUTOMATION_API_CORS_ORIGINS: "${AUTOMATION_API_CORS_ORIGINS:-*}"
       AUTOMATION_AUTO_BACKUP_ENABLED: "${AUTOMATION_AUTO_BACKUP_ENABLED:-0}"
-      AUTOMATION_BACKUP_INTERVAL_HOURS: "${AUTOMATION_BACKUP_INTERVAL_HOURS:-6}"
-      AUTOMATION_BACKUP_KEEP_COUNT: "${AUTOMATION_BACKUP_KEEP_COUNT:-24}"
+      AUTOMATION_BACKUP_INTERVAL_HOURS: "${AUTOMATION_BACKUP_INTERVAL_HOURS:-24}"
+      AUTOMATION_BACKUP_KEEP_COUNT: "${AUTOMATION_BACKUP_KEEP_COUNT:-1}"
     command:
       - uvicorn
       - src.automation.api:app
@@ -52,29 +52,29 @@ services:
     ports:
       - "${AUTOMATION_API_PORT:-8080}:8080"
     volumes:
-      - ../ai-youtube-langchain/config:/app/config
-      - ../ai-youtube-langchain/data:/app/data
-      - ../ai-youtube-langchain/output:/app/output
-      - ../ai-youtube-langchain/downloads:/app/downloads
-      - ../ai-youtube-langchain/.ai-agent:/app/.ai-agent
-      - ../ai-youtube-langchain/credentials:/app/credentials
+      - ../../ai-youtube-langchain/config:/app/config
+      - ../../ai-youtube-langchain/data:/app/data
+      - ../../ai-youtube-langchain/output:/app/output
+      - ../../ai-youtube-langchain/downloads:/app/downloads
+      - ../../ai-youtube-langchain/.ai-agent:/app/.ai-agent
+      - ../../ai-youtube-langchain/credentials:/app/credentials
 
   automation-scheduler:
     build:
-      context: ../ai-youtube-langchain
+      context: ../../ai-youtube-langchain
       dockerfile: Dockerfile
     image: ai-youtube-langchain:local
     container_name: ai-youtube-langchain-scheduler
     restart: unless-stopped
     env_file:
-      - ../ai-youtube-langchain/.env
+      - ../../ai-youtube-langchain/.env
     environment:
       PYTHONUNBUFFERED: "1"
       ENABLE_YOUTUBE_UPLOAD: "${ENABLE_YOUTUBE_UPLOAD:-0}"
       LLM_PROVIDER: "local_disabled"
       AUTOMATION_AUTO_BACKUP_ENABLED: "${AUTOMATION_AUTO_BACKUP_ENABLED:-0}"
-      AUTOMATION_BACKUP_INTERVAL_HOURS: "${AUTOMATION_BACKUP_INTERVAL_HOURS:-6}"
-      AUTOMATION_BACKUP_KEEP_COUNT: "${AUTOMATION_BACKUP_KEEP_COUNT:-24}"
+      AUTOMATION_BACKUP_INTERVAL_HOURS: "${AUTOMATION_BACKUP_INTERVAL_HOURS:-24}"
+      AUTOMATION_BACKUP_KEEP_COUNT: "${AUTOMATION_BACKUP_KEEP_COUNT:-1}"
     command:
       - python
       - -m
@@ -85,12 +85,12 @@ services:
       - --interval-minutes
       - "${SCHEDULER_INTERVAL_MINUTES:-30}"
     volumes:
-      - ../ai-youtube-langchain/config:/app/config
-      - ../ai-youtube-langchain/data:/app/data
-      - ../ai-youtube-langchain/output:/app/output
-      - ../ai-youtube-langchain/downloads:/app/downloads
-      - ../ai-youtube-langchain/.ai-agent:/app/.ai-agent
-      - ../ai-youtube-langchain/credentials:/app/credentials
+      - ../../ai-youtube-langchain/config:/app/config
+      - ../../ai-youtube-langchain/data:/app/data
+      - ../../ai-youtube-langchain/output:/app/output
+      - ../../ai-youtube-langchain/downloads:/app/downloads
+      - ../../ai-youtube-langchain/.ai-agent:/app/.ai-agent
+      - ../../ai-youtube-langchain/credentials:/app/credentials
     healthcheck:
       test: ["CMD", "python", "-m", "src.automation.cli", "health", "--recover-stuck", "--stuck-minutes", "${AUTOMATION_STUCK_JOB_MINUTES:-60}", "--max-retries", "${WORKER_MAX_RETRIES:-3}"]
       interval: 60s
@@ -100,17 +100,20 @@ services:
 
   automation-worker:
     build:
-      context: ../ai-youtube-langchain
+      context: ../../ai-youtube-langchain
       dockerfile: Dockerfile
     image: ai-youtube-langchain:local
     container_name: ai-youtube-langchain-worker
     restart: unless-stopped
     env_file:
-      - ../ai-youtube-langchain/.env
+      - ../../ai-youtube-langchain/.env
     environment:
       PYTHONUNBUFFERED: "1"
       ENABLE_YOUTUBE_UPLOAD: "${ENABLE_YOUTUBE_UPLOAD:-0}"
       LLM_PROVIDER: "local_disabled"
+      AUTOMATION_AUTO_BACKUP_ENABLED: "${AUTOMATION_AUTO_BACKUP_ENABLED:-0}"
+      AUTOMATION_BACKUP_INTERVAL_HOURS: "${AUTOMATION_BACKUP_INTERVAL_HOURS:-24}"
+      AUTOMATION_BACKUP_KEEP_COUNT: "${AUTOMATION_BACKUP_KEEP_COUNT:-1}"
     command:
       - python
       - -m
@@ -128,12 +131,12 @@ services:
       - --stuck-minutes
       - "${AUTOMATION_STUCK_JOB_MINUTES:-60}"
     volumes:
-      - ../ai-youtube-langchain/config:/app/config
-      - ../ai-youtube-langchain/data:/app/data
-      - ../ai-youtube-langchain/output:/app/output
-      - ../ai-youtube-langchain/downloads:/app/downloads
-      - ../ai-youtube-langchain/.ai-agent:/app/.ai-agent
-      - ../ai-youtube-langchain/credentials:/app/credentials
+      - ../../ai-youtube-langchain/config:/app/config
+      - ../../ai-youtube-langchain/data:/app/data
+      - ../../ai-youtube-langchain/output:/app/output
+      - ../../ai-youtube-langchain/downloads:/app/downloads
+      - ../../ai-youtube-langchain/.ai-agent:/app/.ai-agent
+      - ../../ai-youtube-langchain/credentials:/app/credentials
     healthcheck:
       test: ["CMD", "python", "-m", "src.automation.cli", "health", "--recover-stuck", "--stuck-minutes", "${AUTOMATION_STUCK_JOB_MINUTES:-60}", "--max-retries", "${WORKER_MAX_RETRIES:-3}"]
       interval: 60s

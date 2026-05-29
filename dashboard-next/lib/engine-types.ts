@@ -781,6 +781,13 @@ export type PublishQueueItem = {
     auto_copyright_approved?: boolean;
     asset_policy_passed?: boolean;
     production_requirements_passed?: boolean;
+    production_ready?: boolean;
+    private_test_ready?: boolean;
+    upload_ready?: boolean;
+    system_health_summary?: Record<string, unknown> | null;
+    operator_alerts?: Array<Record<string, unknown>>;
+    operator_action_required_type?: string;
+    operator_alert_count?: number;
     selected_upload_mode?: UploadMode | string | null;
     final_title?: string | null;
     caption_editable?: boolean;

@@ -142,21 +142,30 @@ export function UploadApprovalPanel({
         {items.length === 0 ? (
           <div className="ta-empty">Belum ada video yang menunggu keputusan upload.</div>
         ) : (
-          items.map((item) => (
-            <div key={item.job.id} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-              {(() => {
-                const reviewSummary = item.review_summary as
-                  | {
-                      final_title?: string | null;
-                      recommended_title?: string | null;
-                      final_hashtags?: string[];
-                      recommended_hashtags?: string[];
-                    }
-                  | undefined;
-                const hashtagSource = reviewSummary?.final_hashtags?.length ? reviewSummary.final_hashtags : reviewSummary?.recommended_hashtags || [];
-                const titleSource = reviewSummary?.final_title || reviewSummary?.recommended_title || item.selected_title || "Belum dipilih";
+          items.map((item) => {
+            const reviewSummary = item.review_summary as
+              | {
+                  final_title?: string | null;
+                  recommended_title?: string | null;
+                  final_hashtags?: string[];
+                  recommended_hashtags?: string[];
+                  production_ready?: boolean;
+                  system_compliance_reason?: string | null;
+                  system_compliance_label?: string | null;
+                }
+              | undefined;
+            const hashtagSource = reviewSummary?.final_hashtags?.length ? reviewSummary.final_hashtags : reviewSummary?.recommended_hashtags || [];
+            const titleSource = reviewSummary?.final_title || reviewSummary?.recommended_title || item.selected_title || "Belum dipilih";
+            const previewReady = Boolean(item.publish_state.youtube.available);
+            const productionReady = Boolean(reviewSummary?.production_ready ?? item.review_summary?.auto_copyright_approved);
+            const approvalBlockedReason = !previewReady
+              ? "Preview video belum tersedia. Buka detail video untuk meninjau hasil render."
+              : !productionReady
+                ? reviewSummary?.system_compliance_reason || reviewSummary?.system_compliance_label || "Aset belum aman untuk approval."
+                : null;
 
-                return (
+            return (
+            <div key={item.job.id} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <Link className="text-sm font-semibold text-brand-600 underline-offset-4 hover:underline" href={`/jobs/${item.job.id}`}>
@@ -169,6 +178,12 @@ export function UploadApprovalPanel({
                   <div className="mt-2">
                     <HashtagPills hashtags={hashtagSource} />
                   </div>
+                  <div className="mt-3 rounded-xl border border-gray-200 bg-white p-3 text-xs text-gray-600">
+                    <p className="font-semibold text-gray-900">Review gate</p>
+                    <p className="mt-1">Preview video: {previewReady ? "Tersedia" : "Belum tersedia"}</p>
+                    <p className="mt-1">Production gate: {productionReady ? "Lulus" : "Belum lulus"}</p>
+                    {approvalBlockedReason ? <p className="mt-2 text-warning-700">{approvalBlockedReason}</p> : null}
+                  </div>
                   <p className="mt-1 text-xs text-gray-500">Waktu target {item.job.publish_at}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -179,8 +194,6 @@ export function UploadApprovalPanel({
                   </span>
                 </div>
               </div>
-                );
-              })()}
 
               {item.review_summary ? (
                 <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-4 text-sm text-gray-700">
@@ -245,11 +258,12 @@ export function UploadApprovalPanel({
                           <input name="expires_in_minutes" placeholder={`${uploadGuard.session_minutes}`} defaultValue={String(uploadGuard.session_minutes)} />
                           <button
                             className="inline-flex items-center justify-center rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-                            disabled={isPending && pendingKey === `${item.job.id}:${platform}:approve`}
+                            disabled={Boolean(approvalBlockedReason) || (isPending && pendingKey === `${item.job.id}:${platform}:approve`)}
                             type="submit"
                           >
                             Setujui {platformLabel(platform)}
                           </button>
+                          {approvalBlockedReason ? <p className="text-xs text-warning-700">{approvalBlockedReason}</p> : null}
                         </form>
                       )}
                     </div>
@@ -257,7 +271,8 @@ export function UploadApprovalPanel({
                 })}
               </div>
             </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

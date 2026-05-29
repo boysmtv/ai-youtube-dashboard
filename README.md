@@ -182,3 +182,5 @@ The MVP is ready when all of these are true:
 - `youtube-dashboard-next` is the recommended MVP UI.
 - `youtube-dashboard` is the legacy static fallback and only starts with `--profile legacy`.
 - The stack includes PostgreSQL, Redis, engine API, scheduler, worker, publisher, and the dashboard.
+- For production, copy [`.env.production.example`](/D:/Boys/Ai/ai-youtube-dashboard/.env.production.example) to `.env.production`, fill the auth and public URL values, then run `docker compose --env-file .env.production -f docker-compose.yml -f docker-compose.production.yml up -d --build`.
+- Before go-live, review [`.brief/brief.production-checklist.md`](/D:/Boys/Ai/ai-youtube-dashboard/.brief/brief.production-checklist.md) and [`.brief/brief.local-storage-audit.md`](/D:/Boys/Ai/ai-youtube-dashboard/.brief/brief.local-storage-audit.md).

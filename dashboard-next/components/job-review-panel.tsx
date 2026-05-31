@@ -138,6 +138,9 @@ export function JobReviewPanel({
   canOperate,
   previewReady,
   previewUrl,
+  sourceTitle,
+  sourceDescription,
+  sourceUrl,
   stateView,
   technicalHref,
 }: Readonly<{
@@ -148,6 +151,9 @@ export function JobReviewPanel({
   canOperate: boolean;
   previewReady: boolean;
   previewUrl: string | null;
+  sourceTitle: string | null;
+  sourceDescription: string | null;
+  sourceUrl: string | null;
   stateView: "default" | "redis";
   technicalHref: string;
 }>) {
@@ -257,6 +263,14 @@ export function JobReviewPanel({
         </div>
 
         <div className="space-y-4">
+          <div className="rounded-2xl border border-gray-200 bg-white p-4">
+            <p className="ta-label text-brand-600">Sumber Asli</p>
+            <div className="mt-3 space-y-2">
+              <SummaryRow label="Judul sumber" value={sourceTitle || job.selected_title || "Belum tersedia"} />
+              <SummaryRow label="Deskripsi sumber" value={sourceDescription || "Deskripsi sumber tidak tersimpan di manifest."} />
+              <SummaryRow label="URL sumber" value={sourceUrl || "Belum tersedia"} />
+            </div>
+          </div>
           <div className="rounded-2xl border border-gray-200 bg-white p-4">
             <p className="ta-label text-brand-600">Cek Keamanan Sistem</p>
             <div className="mt-3 space-y-2">

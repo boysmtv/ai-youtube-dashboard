@@ -38,8 +38,23 @@ export function engineBaseUrl() {
   return (process.env.ENGINE_API_BASE_URL || DEFAULT_ENGINE_URL).replace(/\/$/, "");
 }
 
+function isPlaceholderEngineBrowserUrl(value: string) {
+  const normalized = value.trim().toLowerCase();
+  return (
+    !normalized ||
+    normalized.includes("your-public-dashboard-or-engine-host") ||
+    normalized.includes("replace-with") ||
+    normalized.includes("example.com") ||
+    normalized.includes("localhost:3000")
+  );
+}
+
 export function engineBrowserBaseUrl() {
-  return (process.env.NEXT_PUBLIC_ENGINE_API_BASE_URL || DEFAULT_ENGINE_URL).replace(/\/$/, "");
+  const configured = (process.env.NEXT_PUBLIC_ENGINE_API_BASE_URL || "").trim();
+  if (isPlaceholderEngineBrowserUrl(configured)) {
+    return DEFAULT_ENGINE_URL;
+  }
+  return configured.replace(/\/$/, "");
 }
 
 export function engineBrowserUrl(path: string) {

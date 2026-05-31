@@ -61,11 +61,13 @@ services:
       AUTOMATION_AUTO_BACKUP_ENABLED: "0"
       AUTOMATION_BACKUP_INTERVAL_HOURS: "24"
       AUTOMATION_BACKUP_KEEP_COUNT: "1"
-      YOUTUBE_OAUTH_CLIENT_FILE: "/app/credentials/youtube-oauth-client.json"
-      YOUTUBE_OAUTH_TOKEN_FILE: "/app/credentials/youtube-oauth-token.json"
+      YOUTUBE_OAUTH_CLIENT_FILE: "/app/credentials/gcp_project_a/youtube-oauth-client-dsrv.json"
+      YOUTUBE_OAUTH_TOKEN_FILE: "/app/credentials/gcp_project_a/channel_hottalk/oauth-token.pickle"
       LLM_PROVIDER: "local_disabled"
       YTDLP_COOKIES_FILE: "/app/assets/cookies/youtube.txt"
       LOCAL_SOURCE_ROOTS: "downloads,assets/sources"
+      LOCAL_SOURCE_MIN_FILE_MB: "5"
+      LOCAL_SOURCE_MAX_FILE_MB: "500"
       AUTOMATION_API_CORS_ORIGINS: "http://localhost:3001,http://127.0.0.1:3001,http://localhost:8088,http://127.0.0.1:8088"
       DATABASE_URL: "postgresql://automation_local:change-me-local-postgres-password@automation-postgres:5432/automation_local"
       AUTOMATION_DASHBOARD_REDIS_ENABLED: "1"
@@ -87,6 +89,7 @@ services:
       - ../ai-youtube-langchain/data:/app/data
       - ../ai-youtube-langchain/output:/app/output
       - ../ai-youtube-langchain/downloads:/app/downloads
+      - ../ai-youtube-langchain/assets/sources:/app/assets/sources
       - ../ai-youtube-langchain/assets/cookies:/app/assets/cookies
       - ../ai-youtube-langchain/.ai-agent:/app/.ai-agent
       - ../ai-youtube-langchain/credentials:/app/credentials
@@ -133,11 +136,13 @@ services:
       AUTOMATION_AUTO_BACKUP_ENABLED: "0"
       AUTOMATION_BACKUP_INTERVAL_HOURS: "24"
       AUTOMATION_BACKUP_KEEP_COUNT: "1"
-      YOUTUBE_OAUTH_CLIENT_FILE: "/app/credentials/youtube-oauth-client.json"
-      YOUTUBE_OAUTH_TOKEN_FILE: "/app/credentials/youtube-oauth-token.json"
+      YOUTUBE_OAUTH_CLIENT_FILE: "/app/credentials/gcp_project_a/youtube-oauth-client-dsrv.json"
+      YOUTUBE_OAUTH_TOKEN_FILE: "/app/credentials/gcp_project_a/channel_hottalk/oauth-token.pickle"
       LLM_PROVIDER: "local_disabled"
       YTDLP_COOKIES_FILE: "/app/assets/cookies/youtube.txt"
       LOCAL_SOURCE_ROOTS: "downloads,assets/sources"
+      LOCAL_SOURCE_MIN_FILE_MB: "5"
+      LOCAL_SOURCE_MAX_FILE_MB: "500"
       DATABASE_URL: "postgresql://automation_local:change-me-local-postgres-password@automation-postgres:5432/automation_local"
       AUTOMATION_DASHBOARD_REDIS_ENABLED: "1"
       AUTOMATION_DASHBOARD_REDIS_URL: "redis://automation-redis:6379/0"
@@ -156,6 +161,7 @@ services:
       - ../ai-youtube-langchain/data:/app/data
       - ../ai-youtube-langchain/output:/app/output
       - ../ai-youtube-langchain/downloads:/app/downloads
+      - ../ai-youtube-langchain/assets/sources:/app/assets/sources
       - ../ai-youtube-langchain/assets/cookies:/app/assets/cookies
       - ../ai-youtube-langchain/.ai-agent:/app/.ai-agent
       - ../ai-youtube-langchain/credentials:/app/credentials
@@ -198,11 +204,13 @@ services:
       AUTOMATION_AUTO_BACKUP_ENABLED: "0"
       AUTOMATION_BACKUP_INTERVAL_HOURS: "24"
       AUTOMATION_BACKUP_KEEP_COUNT: "1"
-      YOUTUBE_OAUTH_CLIENT_FILE: "/app/credentials/youtube-oauth-client.json"
-      YOUTUBE_OAUTH_TOKEN_FILE: "/app/credentials/youtube-oauth-token.json"
+      YOUTUBE_OAUTH_CLIENT_FILE: "/app/credentials/gcp_project_a/youtube-oauth-client-dsrv.json"
+      YOUTUBE_OAUTH_TOKEN_FILE: "/app/credentials/gcp_project_a/channel_hottalk/oauth-token.pickle"
       LLM_PROVIDER: "local_disabled"
       YTDLP_COOKIES_FILE: "/app/assets/cookies/youtube.txt"
       LOCAL_SOURCE_ROOTS: "downloads,assets/sources"
+      LOCAL_SOURCE_MIN_FILE_MB: "5"
+      LOCAL_SOURCE_MAX_FILE_MB: "500"
       DATABASE_URL: "postgresql://automation_local:change-me-local-postgres-password@automation-postgres:5432/automation_local"
       AUTOMATION_DASHBOARD_REDIS_ENABLED: "1"
       AUTOMATION_DASHBOARD_REDIS_URL: "redis://automation-redis:6379/0"
@@ -222,6 +230,7 @@ services:
       - ../ai-youtube-langchain/data:/app/data
       - ../ai-youtube-langchain/output:/app/output
       - ../ai-youtube-langchain/downloads:/app/downloads
+      - ../ai-youtube-langchain/assets/sources:/app/assets/sources
       - ../ai-youtube-langchain/assets/cookies:/app/assets/cookies
       - ../ai-youtube-langchain/.ai-agent:/app/.ai-agent
       - ../ai-youtube-langchain/credentials:/app/credentials
@@ -263,9 +272,11 @@ services:
       AUTOMATION_AUTO_BACKUP_ENABLED: "0"
       AUTOMATION_BACKUP_INTERVAL_HOURS: "24"
       AUTOMATION_BACKUP_KEEP_COUNT: "1"
-      YOUTUBE_OAUTH_CLIENT_FILE: "/app/credentials/youtube-oauth-client.json"
-      YOUTUBE_OAUTH_TOKEN_FILE: "/app/credentials/youtube-oauth-token.json"
+      YOUTUBE_OAUTH_CLIENT_FILE: "/app/credentials/gcp_project_a/youtube-oauth-client-dsrv.json"
+      YOUTUBE_OAUTH_TOKEN_FILE: "/app/credentials/gcp_project_a/channel_hottalk/oauth-token.pickle"
       LOCAL_SOURCE_ROOTS: "downloads,assets/sources"
+      LOCAL_SOURCE_MIN_FILE_MB: "5"
+      LOCAL_SOURCE_MAX_FILE_MB: "500"
       AUTOMATION_PUBLISHER_SERVICE_URL: "http://automation-publisher:8092"
     command:
       - uvicorn
@@ -281,6 +292,7 @@ services:
       - ../ai-youtube-langchain/data:/app/data
       - ../ai-youtube-langchain/output:/app/output
       - ../ai-youtube-langchain/downloads:/app/downloads
+      - ../ai-youtube-langchain/assets/sources:/app/assets/sources
       - ../ai-youtube-langchain/.ai-agent:/app/.ai-agent
       - ../ai-youtube-langchain/credentials:/app/credentials
     depends_on:

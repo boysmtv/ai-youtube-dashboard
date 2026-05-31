@@ -23,6 +23,7 @@ This stack is **infra-ready**, **content-ready**, and **low-storage ready**. The
 - Engine processing and review
 - Auth-protected dashboard access
 - Low-storage retention and cleanup
+- Fresh-source enforcement per job
 - Manual approval workflow
 
 ## What Is Not Yet Go-Live Safe
@@ -30,6 +31,7 @@ This stack is **infra-ready**, **content-ready**, and **low-storage ready**. The
 - Automatic publish of new content without operator gate
 - Any job that fails rights or asset provenance checks
 - Any job that depends on unapproved source audio or unlicensed music
+- Any job that reuses a source already seen in history
 
 ## Required Next Step For Go-Live
 

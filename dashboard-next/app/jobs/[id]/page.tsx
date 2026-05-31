@@ -25,6 +25,14 @@ function DetailRow({ label, value }: Readonly<{ label: string; value: string }>)
   );
 }
 
+function manifestText(manifest: Record<string, unknown> | null, key: string) {
+  if (!manifest) return null;
+  const source = manifest[key];
+  if (typeof source !== "string") return null;
+  const text = source.trim();
+  return text || null;
+}
+
 function ResultCard({
   previewUrl,
   downloadUrl,
@@ -215,6 +223,11 @@ async function JobDetailContent({
   const downloadUrl = summary.preview.download_url ? engineJobPreviewUrl(jobId, summary.preview.download_url) : null;
   const technicalHref = `/jobs/${jobId}?technical=1#detail-teknis`;
   const publishState = summary.publish_state;
+  const manifest = detail.manifest && typeof detail.manifest === "object" ? detail.manifest : null;
+  const source = manifest && "source" in manifest && typeof manifest.source === "object" ? (manifest.source as Record<string, unknown>) : null;
+  const sourceTitle = source ? manifestText(source, "title") : null;
+  const sourceDescription = source ? manifestText(source, "description") : null;
+  const sourceUrl = source ? manifestText(source, "source_url") || manifestText(source, "url") : null;
 
   return (
     <>
@@ -267,6 +280,9 @@ async function JobDetailContent({
               job={summary.job}
               previewReady={summary.preview.available}
               previewUrl={previewUrl}
+              sourceTitle={sourceTitle}
+              sourceDescription={sourceDescription}
+              sourceUrl={sourceUrl}
               publishState={publishState}
               reviewSummary={reviewSummary}
               titleVariants={detail.title_variants}

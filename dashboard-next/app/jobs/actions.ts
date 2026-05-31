@@ -6,6 +6,7 @@ import { assertDashboardRole, engineAuditHeaders } from "../../lib/dashboard-aut
 import {
   cancelJob,
   createJob,
+  getJobs,
   pauseJob,
   pushTiktokJob,
   pushYoutubeJob,
@@ -23,6 +24,42 @@ function optionalNumber(value: FormDataEntryValue | null) {
 
 function checked(value: FormDataEntryValue | null) {
   return value === "on" || value === "true";
+}
+
+function formatPublishAt(date: Date) {
+  return date.toISOString().slice(0, 16);
+}
+
+function parsePublishAt(value: string) {
+  const normalized = value.trim();
+  if (!normalized) {
+    return null;
+  }
+  const parsed = new Date(normalized);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+  return parsed;
+}
+
+async function resolveUniquePublishAt(channelId: string, requestedPublishAt: string) {
+  const existingJobs = await getJobs(500);
+  const takenSlots = new Set(
+    existingJobs.items
+      .filter((job) => job.channel_id === channelId)
+      .map((job) => String(job.publish_at || "").trim().slice(0, 16))
+      .filter(Boolean),
+  );
+
+  let candidate = parsePublishAt(requestedPublishAt) || new Date(Date.now() + 24 * 60 * 60 * 1000);
+  for (let index = 0; index < 1440; index += 1) {
+    const normalized = formatPublishAt(candidate);
+    if (!takenSlots.has(normalized)) {
+      return normalized;
+    }
+    candidate = new Date(candidate.getTime() + 60 * 1000);
+  }
+  return formatPublishAt(candidate);
 }
 
 function publishPayload(formData: FormData) {
@@ -60,9 +97,12 @@ export async function createDashboardJob(formData: FormData) {
   const session = assertDashboardRole("operator");
   const nicheOverride = String(formData.get("niche_override") || "").trim();
   const languageOverride = String(formData.get("language_override") || "").trim();
+  const channelId = String(formData.get("channel_id") || "").trim();
+  const requestedPublishAt = String(formData.get("publish_at") || "").trim();
+  const publishAt = await resolveUniquePublishAt(channelId, requestedPublishAt);
   const result = await createJob({
-    channel_id: String(formData.get("channel_id") || ""),
-    publish_at: String(formData.get("publish_at") || ""),
+    channel_id: channelId,
+    publish_at: publishAt,
     niche: nicheOverride || String(formData.get("niche") || "") || undefined,
     language: languageOverride || String(formData.get("language") || "") || undefined,
     status: "queued",
